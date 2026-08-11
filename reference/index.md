@@ -19,6 +19,7 @@
 - [`method_cbps`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md)
   : Covariate Balancing Propensity Score Weighting
 - [`method_cfd`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md)
+  [`method_kernel`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md)
   : Characteristic Function Distance Balancing
 - [`method_ebal`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
   [`method_entropy`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
@@ -36,6 +37,8 @@
 - [`method_optweight`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md)
   [`method_sbw`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md)
   : Stable Balancing Weights
+- [`method_ps`](https://ngreifer.github.io/WeightIt/reference/method_ps.md)
+  : Weighting from Supplied Propensity Scores
 - [`method_super`](https://ngreifer.github.io/WeightIt/reference/method_super.md)
   : Propensity Score Weighting Using SuperLearner
 - [`method_user`](https://ngreifer.github.io/WeightIt/reference/method_user.md)

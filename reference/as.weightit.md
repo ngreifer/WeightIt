@@ -56,7 +56,7 @@ as.weightitMSM(
 
 - covs:
 
-  an optional `data.frame` of covariates. For using WeightIt functions,
+  an optional data frame of covariates. For using WeightIt functions,
   this is not necessary, but for use with cobalt it is. Note that when
   using with a `weightit.fit` object, this should not be the matrix
   supplied to the `covs` argument of
@@ -89,9 +89,9 @@ as.weightitMSM(
 
 - covs.list:
 
-  an optional list of `data.frame`s of covariates of covariates at each
-  time point. For using WeightIt functions, this is not necessary, but
-  for use with cobalt it is.
+  an optional list of data frames of covariates at each time point. For
+  using WeightIt functions, this is not necessary, but for use with
+  cobalt it is.
 
 - ps.list:
 
@@ -113,26 +113,26 @@ W <- as.weightit(weights, treat = treat, estimand = "ATE")
 summary(W)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 0.019 |-------------------|          8.843
-#> control 0.004 |---------------------------| 12.028
+#> Treated 0.019 ╞═══════════════════╡          8.843
+#> Control 0.004 ╞═══════════════════════════╡ 12.028
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                         
 #>             88   271    60    403     99
-#>  treated  6.23 7.314 7.614   7.65  8.843
+#>  Treated  6.23 7.314 7.614   7.65  8.843
 #>            169   187   430     50    415
-#>  control 8.826  8.83 9.904 11.167 12.028
+#>  Control 8.826  8.83 9.904 11.167 12.028
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.947 0.766   0.411       0
-#> control       1.002 0.734   0.43        0
+#> Treated       0.947 0.766   0.411       0
+#> Control       1.002 0.734   0.43        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  346.    154.  

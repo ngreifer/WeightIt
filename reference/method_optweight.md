@@ -55,9 +55,9 @@ still under observation whose weighted covariate means equal those of
 the full at-risk sample, without estimating any weights for the censored
 units, which receive a weight of 0. `tols` are standardized using the
 units still under observation. Note the resulting weights have a mean of
-1 among those units, whereas the other methods put them on the
-`1/P(C = 0 | X)` scale; the two differ by a constant factor.
-M-estimation is not supported.
+1 among those units, whereas the other methods put them on the \\1/P(C =
+0 \| X)\\ scale; the two differ by a constant factor. M-estimation is
+not supported.
 
 ### Longitudinal Treatments
 
@@ -65,12 +65,14 @@ For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield
 exact balance at each time point. **NOTE: the use of stable balancing
 weights with longitudinal treatments has not been validated and should
-not be done!**
+not be done!** Because of this,
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+errors when this method is requested; set `weightit.force = TRUE` to
+bypass that error.
 
 ### Sampling Weights
 
-Sampling weights are supported through `s.weights` in all scenarios, but
-only for versions of optweight greater than or equal to 1.0.0.
+Sampling weights are supported through `s.weights` in all scenarios.
 
 ### Missing Data
 
@@ -145,6 +147,21 @@ Seriously, just use
 
 ## Additional Arguments
 
+- `base.weights`:
+
+  a vector of base weights, one for each unit. The estimated weights
+  minimize the chosen divergence from the base weights rather than from
+  a vector of 1s, subject to the balance constraints. These can be used
+  to supply previously estimated weights so that the newly estimated
+  weights retain some of the properties of the original weights.
+  Sampling weights should not be passed to `base.weights` but can be
+  included in a
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  call that includes `s.weights`. Can also be supplied as `b.weights` or
+  `base.weight`.
+
+&nbsp;
+
 - `moments`:
 
   `integer`; the highest power of each covariate to be balanced. For
@@ -164,7 +181,7 @@ Seriously, just use
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -234,7 +251,7 @@ Treatments Using Constrained Optimization*.
 [`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
 for the fitting function.
 
-[`method_entropy`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
+[`method_ebal`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
 for entropy balancing, which is a special case of stable balancing
 weights.
 
@@ -263,26 +280,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>         Min                                 Max
-#> treated   1      ||                       1.   
-#> control   0 |---------------------------| 6.174
+#> Treated   1        │                      1.   
+#> Control   0 ╞═══════════════════════════╡ 6.174
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            573   303   553   593   560
-#>  control 5.515 5.539 6.028 6.174 6.174
+#>  Control 5.515 5.539 6.028 6.174 6.174
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       1.693 1.318   1.194       0
+#> Treated       0.    0.      0.          0
+#> Control       1.693 1.318   1.194       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -323,14 +340,14 @@ plot(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                 Max
-#> black  0.374    |------------------------| 3.624
-#> hispan 0.    |-------------------|         2.659
-#> white  0.243   |---------|                 1.684
+#> black  0.374    ╞════════════════════════╡ 3.624
+#> hispan 0.    ╞═══════════════════╡         2.659
+#> white  0.243   ╞═════════╡                 1.684
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>           184   190   485   181   182
 #>   black 2.363 2.407 2.611 2.887 3.624
@@ -339,14 +356,14 @@ summary(W2)
 #>            68   324   589   599   531
 #>   white 1.588 1.593 1.602  1.61 1.684
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.567 0.454   0.139       0
 #> hispan       0.581 0.458   0.187       0
 #> white        0.365 0.305   0.07        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            black hispan  white
 #> Unweighted 243.   72.   299.  
@@ -383,22 +400,22 @@ plot(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>     Min                                 Max
-#> all   0 |---------------------------| 4.674
+#> All   0 ╞═══════════════════════════╡ 4.674
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                  
 #>       483   482   481   178   200
-#>  all 3.34 3.381 3.389 4.158 4.674
+#>  All 3.34 3.381 3.389 4.158 4.674
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       0.634 0.479   0.202       0
+#> All       0.634 0.479   0.202       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Total
 #> Unweighted 614. 

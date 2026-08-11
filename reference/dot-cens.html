@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,8 +102,9 @@
     <h2 id="assessing-balance">Assessing balance<a class="anchor" aria-label="anchor" href="#assessing-balance"></a></h2>
 
 
-<p><code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> cannot be used directly on the output of a censoring model. For a point-treatment <code>weightit</code> object it errors because every censored unit has a weight of 0, leaving one "treatment group" with no weight; for a <code>weightitMSM</code> object it errors because censoring leaves missing values in the later treatments, which <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> does not allow.</p>
-<p>Because the target of a censoring model is the full at-risk sample rather than another treatment group, balance is assessed by comparing the weighted uncensored units against that sample. This can be done by stacking the two:</p>
+<p>Because the target of a censoring model is the full at-risk sample rather than another treatment group, balance is assessed by comparing the weighted uncensored units against that sample.</p>
+<p>Recent versions of <a href="https://CRAN.R-project.org/package=cobalt" class="external-link"><span class="pkg">cobalt</span></a> do this directly: <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> accepts a <code>weightit</code> object fit with a censoring model, as well as a <code>weightitMSM</code> object with censoring among its time points, and produces the comparison described above for each. See <code>cobalt::class-bal.tab.cens</code>.</p>
+<p>With an older <span class="pkg">cobalt</span>, the comparison has to be built by hand, since <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> would reject a point-treatment censoring object (every censored unit has a weight of 0, leaving one "treatment group" with no weight) and a <code>weightitMSM</code> object with censoring (which leaves missing values in the later treatments). Stacking the two samples produces the same quantity:</p>
 <p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>u <span class="ot">&lt;-</span> <span class="fu">which</span>(W<span class="sc">$</span>treat <span class="sc">==</span> <span class="dv">0</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">bal.tab</span>(<span class="fu">rbind</span>(covs[u, ], covs),</span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>        <span class="at">treat =</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span><span class="dt">L</span>, <span class="fu">length</span>(u)), <span class="fu">rep</span>(<span class="dv">1</span><span class="dt">L</span>, <span class="fu">nrow</span>(covs))),</span>

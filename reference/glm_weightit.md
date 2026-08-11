@@ -104,7 +104,7 @@ lm_weightit(
   thereof, or a one-sided formula specifying which variable(s) from the
   fitted model should be used. Note the cluster-robust variance matrix
   uses a correction for small samples, as is done in
-  [`sandwich::vcovCL()`](https://sandwich.R-Forge.R-project.org/reference/vcovCL.html)
+  [`sandwich::vcovCL()`](https://zeileis.codeberg.page/sandwich/reference/vcovCL.html)
   by default. Cluster-robust variance calculations are available only
   when `vcov` is `"asympt"`, `"HC0"`, `"BS"`, or `"FWB"`.
 
@@ -220,7 +220,7 @@ reliable but requires the weighting method to accept sampling weights
 performs the resampling-based bootstrap but with the additional features
 fwb provides (e.g., a progress bar and parallelization).
 
-Functions in the sandwich package can be to compute standard errors
+Functions in the sandwich package can be used to compute standard errors
 after fitting, regardless of how `vcov` was specified, though these will
 ignore estimation of the weights, if any. When no adjustment is done for
 estimation of the weights (i.e., because no `weightit` argument was

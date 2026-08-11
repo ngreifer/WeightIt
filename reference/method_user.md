@@ -19,7 +19,7 @@ function, which should have named parameters corresponding to them:
 - `treat`: a vector of treatment status for each unit. This comes
   directly from the left hand side of the formula passed to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-  and so will have it's type (e.g., numeric, factor, etc.), which may
+  and so will have its type (e.g., numeric, factor, etc.), which may
   need to be converted.
 
 - `covs`: a data frame of covariate values for each unit. This comes
@@ -39,7 +39,7 @@ function, which should have named parameters corresponding to them:
 
 - `subset`: a logical vector the same length as `treat` that is `TRUE`
   for units to be included in the estimation and `FALSE` otherwise. This
-  is used to subset the input objects when `exact` is used. `treat`,
+  is used to subset the input objects when `by` is used. `treat`,
   `covs`, `s.weights`, and `ps`, if supplied, will already have been
   subsetted by `subset`.
 
@@ -60,6 +60,14 @@ function, which should have named parameters corresponding to them:
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   before it reaches the fitting function.
 
+- `missing`: a character vector of length 1 containing the missingness
+  method in effect, or `""` when no missing data are present. See the
+  `missing` argument of
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
+
+- `verbose`: a logical vector of length 1 indicating whether the fitting
+  function should print additional output.
+
 None of these parameters are required to be in the fitting function.
 These are simply those that are automatically available.
 
@@ -72,7 +80,7 @@ function and throws an error if an incorrectly named argument is
 supplied and the fitting function doesn't include `...` as a parameter.
 
 The fitting function must output either a numeric vector of weights or a
-list (or list-like object) with an entry named wither "w" or "weights".
+list (or list-like object) with an entry named either "w" or "weights".
 If a list, the list can contain other named entries, but only entries
 named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a
 vector of propensity scores and "fit.obj" should be an object used in
@@ -131,26 +139,26 @@ my.ps <- function(treat, covs, estimand, focal = NULL, ...) {
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                  ||              1.   
-#> control 0.022 |---------------------------| 2.044
+#> Treated 1.                    │             1.   
+#> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                    
 #>             5     4   3     2     1
-#>  treated    1     1   1     1     1
+#>  Treated    1     1   1     1     1
 #>           411   595 269   409   296
-#>  control 1.33 1.437 1.5 1.637 2.044
+#>  Control 1.33 1.437 1.5 1.637 2.044
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.       0.         0
-#> control       0.823 0.701    0.33       0
+#> Treated       0.    0.       0.         0
+#> Control       0.823 0.701    0.33       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -185,93 +193,98 @@ data("msmdata")
 #>  - sampling weights: none
 #>  - number of time points: 3 (A_1, A_2, A_3)
 #>  - treatment:
-#>     + time 1: 2-category
-#>     + time 2: 2-category
-#>     + time 3: 2-category
+#>     + time 1 (A_1): 2-category
+#>     + time 2 (A_2): 2-category
+#>     + time 3 (A_3): 2-category
 #>  - covariates:
-#>     + baseline: X1_0, X2_0
-#>     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0
-#>     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
+#>     + time 1 (A_1): X1_0, X2_0
+#>     + time 2 (A_2): X1_1, X2_1, A_1, X1_0, X2_0
+#>     + time 3 (A_3): X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
 
 summary(W2)
-#>                         Time 1                        
-#> - Weight ranges:
+#>                   Summary of weights
+#> 
+#> 
+#> ─── 1. Treatment: A_1 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |-------------------|         284.764
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞═══════════════════╡         284.764
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             5488    3440    3593    1286    5685
-#>  treated 166.992 170.555 196.414 213.193 403.483
+#>  Treated 166.992 170.555 196.414 213.193 403.483
 #>             2594    2932    5226    1875    2533
-#>  control 155.625 168.964  172.42 245.882 284.764
+#>  Control 155.625 168.964  172.42 245.882 284.764
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.914 0.816   0.649       0
-#> control       1.706 0.862   0.67        0
+#> Treated       1.914 0.816   0.649       0
+#> Control       1.706 0.862   0.67        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3306.    4194. 
 #> Weighted    845.79   899.4
 #> 
-#>                         Time 2                        
-#> - Weight ranges:
+#> ─── 2. Treatment: A_2 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |----------------|            245.882
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞════════════════╡            245.882
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             2932    3440    3593    2533    5685
-#>  treated 168.964 170.555 196.414 284.764 403.483
+#>  Treated 168.964 170.555 196.414 284.764 403.483
 #>             2594    5488    5226    1286    1875
-#>  control 155.625 166.992  172.42 213.193 245.882
+#>  Control 155.625 166.992  172.42 213.193 245.882
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.892 0.819   0.652       0
-#> control       1.748 0.869   0.686       0
+#> Treated       1.892 0.819   0.652       0
+#> Control       1.748 0.869   0.686       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3701.   3799.  
 #> Weighted    912.87  829.87
 #> 
-#>                         Time 3                        
-#> - Weight ranges:
+#> ─── 3. Treatment: A_3 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |---------|                   148.155
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞═════════╡                   148.155
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             3593    1286    1875    2533    5685
-#>  treated 196.414 213.193 245.882 284.764 403.483
+#>  Treated 196.414 213.193 245.882 284.764 403.483
 #>             6862     168    3729    6158    3774
-#>  control  88.072  97.827 104.623 121.845 148.155
+#>  Control  88.072  97.827 104.623 121.845 148.155
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.832 0.975   0.785       0
-#> control       1.254 0.683   0.412       0
+#> Treated       1.832 0.975   0.785       0
+#> Control       1.254 0.683   0.412       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 4886.   2614.  
 #> Weighted   1900.26  600.12
-#> 
 cobalt::bal.tab(W2)
 #> Balance summary across all time points
 #>        Times    Type Max.Diff.Adj

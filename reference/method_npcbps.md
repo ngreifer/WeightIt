@@ -47,7 +47,10 @@ the entropy analogue, use `method = "ebal"`.
 
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. **NOTE: the use of npCBPS with
-longitudinal treatments has not been validated!**
+longitudinal treatments has not been validated!** Because of this,
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+errors when this method is requested; set `weightit.force = TRUE` to
+bypass that error.
 
 ### Sampling Weights
 
@@ -84,7 +87,7 @@ balancing](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
 and will generally produce similar results. Because the optimization
 problem of npCBPS is not convex it can be slow to converge or not
 converge at all, so approximate balance is allowed instead using the
-`cor.prior` argument, which controls the average deviation from zero
+`corprior` argument, which controls the average deviation from zero
 correlation between the treatment and covariates allowed.
 
 ## Additional Arguments
@@ -108,7 +111,7 @@ correlation between the treatment and covariates allowed.
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -145,8 +148,7 @@ political advertisements. *The Annals of Applied Statistics*, 12(1),
 
 [`method_optweight`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md),
 which can also be used to perform npCBPS by setting `norm = "log"`. In
-generally, this `"optweight"` implementation is more stable and
-flexible.
+general, this `"optweight"` implementation is more stable and flexible.
 
 [`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html) for the
 fitting function
@@ -162,7 +164,7 @@ data("lalonde", package = "cobalt")
                     nodegree + re74, data = lalonde,
                   method = "npcbps", estimand = "ATE"))
 #> A weightit object
-#>  - method: "npcbps" (non-parametric covariate balancing propensity score weighting)
+#>  - method: "npcbps" (nonparametric covariate balancing propensity score weighting)
 #>  - number of obs.: 614
 #>  - sampling weights: none
 #>  - treatment: 2-category
@@ -172,26 +174,26 @@ data("lalonde", package = "cobalt")
   summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 0.559 |---------------------------| 9.886
-#> control 0.559 |---|                         2.129
+#> Treated 0.559 ╞═══════════════════════════╡ 9.886
+#> Control 0.559 ╞═══╡                         2.129
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>            172    69    58   181   182
-#>  treated 3.363 4.199 8.369  8.44 9.886
+#>  Treated 3.363 4.199 8.369  8.44 9.886
 #>            411   595   269   409   296
-#>  control 1.645 1.663 1.741 1.825 2.129
+#>  Control 1.645 1.663 1.741 1.825 2.129
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.143 0.512   0.302       0
-#> control       0.269 0.23    0.035       0
+#> Treated       1.143 0.512   0.302       0
+#> Control       0.269 0.23    0.035       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
@@ -216,7 +218,7 @@ data("lalonde", package = "cobalt")
                     nodegree + re74, data = lalonde,
                   method = "npcbps", estimand = "ATE"))
 #> A weightit object
-#>  - method: "npcbps" (non-parametric covariate balancing propensity score weighting)
+#>  - method: "npcbps" (nonparametric covariate balancing propensity score weighting)
 #>  - number of obs.: 614
 #>  - sampling weights: none
 #>  - treatment: 3-category (black, hispan, white)
@@ -226,47 +228,47 @@ data("lalonde", package = "cobalt")
   summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                 Max
-#> black  0.642  |--------------------------| 9.367
-#> hispan 0.285 |---------------|             5.525
-#> white  0.468 |-----|                       2.515
+#> black  0.643  ╞══════════════════════════╡ 9.266
+#> hispan 0.286 ╞═══════════════╡             5.499
+#> white  0.469  ╞════╡                       2.51 
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>           226   244   605   181   182
-#>   black 2.537 2.728 3.089 4.505 9.367
+#>   black 2.531 2.722 3.066 4.479 9.266
 #>           392   564   269   371   345
-#>  hispan 2.006 2.232 3.075 4.275 5.525
+#>  hispan 1.998 2.245 3.077 4.286 5.499
 #>            68   457   599   589   531
-#>   white  1.95 1.971 2.017 2.134 2.515
+#>   white 1.949 1.968 2.015  2.13  2.51
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.753 0.413   0.16        0
-#> hispan       0.82  0.462   0.22        0
-#> white        0.414 0.331   0.079       0
+#> black        0.747 0.412   0.159       0
+#> hispan       0.818 0.461   0.219       0
+#> white        0.413 0.331   0.079       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
-#>            black hispan  white
-#> Unweighted 243.   72.   299.  
-#> Weighted   155.3  43.31 255.36
+#>             black hispan  white
+#> Unweighted 243.    72.   299.  
+#> Weighted   156.22  43.38 255.47
 
   cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.0310
-#> educ     Contin.       0.0431
-#> married   Binary       0.0225
-#> nodegree  Binary       0.0158
-#> re74     Contin.       0.0432
+#> age      Contin.       0.0314
+#> educ     Contin.       0.0415
+#> married   Binary       0.0215
+#> nodegree  Binary       0.0153
+#> re74     Contin.       0.0397
 #> 
 #> Effective sample sizes
-#>            black hispan  white
-#> Unadjusted 243.   72.   299.  
-#> Adjusted   155.3  43.31 255.36
+#>             black hispan  white
+#> Unadjusted 243.    72.   299.  
+#> Adjusted   156.22  43.38 255.47
 # }
 ```

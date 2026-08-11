@@ -50,7 +50,10 @@ receive a weight of 0.
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield
 optimal balance at each time point. **NOTE: the use of CFD balancing
-with longitudinal treatments has not been validated!**
+with longitudinal treatments has not been validated!** Because of this,
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+errors when this method is requested; set `weightit.force = TRUE` to
+bypass that error.
 
 ### Sampling Weights
 
@@ -109,13 +112,13 @@ increase the effective sample size at the expense of balance.
 
 ### Reproducibility
 
-Although there are no stochastic components to the optimization, a
-feature turned off by default is to update the optimization based on how
-long the optimization has been running, which will vary across runs even
-when a seed is set and no parameters have been changed. See the
-discussion [here](https://github.com/osqp/osqp-r/issues/19) for more
-details. To ensure reproducibility by default, `adaptive_rho_interval`
-is set to 10. See
+Although there are no stochastic components to the optimization, osqp by
+default updates the optimization based on how long the optimization has
+been running, which will vary across runs even when a seed is set and no
+parameters have been changed. See the discussion
+[here](https://github.com/osqp/osqp-r/issues/19) for more details. To
+ensure reproducibility by default, `adaptive_rho_interval` is set to 50,
+which fixes the update schedule at a set number of iterations. See
 [`osqp::osqpSettings()`](https://rdrr.io/pkg/osqp/man/osqpSettings.html)
 for details.
 
@@ -145,7 +148,7 @@ should yield slightly improved solutions but may be a little slower.
 
 ## Additional Arguments
 
-The following following additional arguments can be specified:
+The following additional arguments can be specified:
 
 - `kernel`:
 
@@ -195,14 +198,21 @@ The following following additional arguments can be specified:
 - `tols`:
 
   when `moments` is positive, a number corresponding to the maximum
-  allowed standardized mean difference (for binary and multi-category
-  treatments) or treatment-covariate correlation (for continuous
-  treatments) allowed. Default is 0. Ignored when `moments = 0`.
+  allowed standardized mean difference allowed. Default is 0. Ignored
+  when `moments = 0`.
 
 - `min.w`:
 
   the minimum allowable weight. Negative values (including `-Inf`) are
   allowed. Default is `1e-8`.
+
+- `bw_scale`:
+
+  a positive numeric scalar multiplying the kernel bandwidth, which is
+  set by default to the median of the pairwise distances between units.
+  Values below 1 make the kernel more local and values above 1 make it
+  more diffuse. Default is 1. Ignored when `kernel = "energy"`, which
+  has no bandwidth.
 
 For binary and multi-category treatments, the following additional
 arguments can be specified:
@@ -218,7 +228,7 @@ arguments can be specified:
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -280,26 +290,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>         Min                                  Max
-#> treated   0 |----------------------|      11.685
-#> control   0 |---------------------------| 14.136
+#> Treated   0 ╞══════════════════════╡      11.685
+#> Control   0 ╞═══════════════════════════╡ 14.136
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            131    172    176     82    184
-#>  treated  8.28  8.609  9.161 10.923 11.685
+#>  Treated  8.28  8.609  9.161 10.923 11.685
 #>            518    321    608    303    222
-#>  control 8.557 10.199 11.256  12.79 14.136
+#>  Control 8.557 10.199 11.256  12.79 14.136
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       2.169 1.453   1.534       0
-#> control       1.864 1.242   1.186       0
+#> Treated       2.169 1.453   1.534       0
+#> Control       1.864 1.242   1.186       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
@@ -335,26 +345,26 @@ cobalt::bal.tab(W1)
 summary(W1b)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>         Min                                  Max
-#> treated   0 |---------------------------| 11.198
-#> control   0 |--------------------|         8.343
+#> Treated   0 ╞═══════════════════════════╡ 11.198
+#> Control   0 ╞════════════════════╡         8.343
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                        
 #>            185    44   181    82    184
-#>  treated 6.959 7.514 7.831 8.376 11.198
+#>  Treated 6.959 7.514 7.831 8.376 11.198
 #>            303   222   511   600    608
-#>  control 5.626  5.73  5.74 5.919  8.343
+#>  Control 5.626  5.73  5.74 5.919  8.343
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       2.038 1.431   1.461       0
-#> control       1.158 0.847   0.61        0
+#> Treated       2.038 1.431   1.461       0
+#> Control       1.158 0.847   0.61        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
@@ -390,14 +400,14 @@ cobalt::bal.tab(W1b)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>        Min                                  Max
-#> black    1   ||                           1.   
-#> hispan   0 |-----------------|           10.955
-#> white    0 |---------------------------| 16.951
+#> black    1     │                          1.   
+#> hispan   0 ╞═════════════════╡           10.955
+#> white    0 ╞═══════════════════════════╡ 16.951
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                         
 #>              6      5      4    3      1
 #>   black      1      1      1    1      1
@@ -406,14 +416,14 @@ summary(W2)
 #>             76    166     23  140     42
 #>   white 10.795 11.883 12.356 12.8 16.951
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.    0.      0.          0
 #> hispan       1.963 1.356   1.337       0
 #> white        2.342 1.414   1.546       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            black hispan  white
 #> Unweighted   243  72.   299.  

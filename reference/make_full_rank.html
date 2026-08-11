@@ -19,7 +19,7 @@ This function performs that operation."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,7 @@ will be dropped first.</p>
     <p>Older versions would drop all columns that only had one value. With
 <code>with.intercept = FALSE</code>, if only one column has only one value, it will not
 be removed, and it will function as though there was an intercept present; if
-more than only column has only one value, only the first one will remain.</p>
+more than one column has only one value, only the first one will remain.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -120,7 +120,7 @@ more than only column has only one value, only the first one will remain.</p>
 <span class="r-in"><span><span class="va">c4</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="va">c3</span></span></span>
 <span class="r-in"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">c1</span>, <span class="va">c2</span>, <span class="va">c3</span>, <span class="va">c4</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">make_full_rank</span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="co">#leaves c2 and c4</span></span></span>
+<span class="r-in"><span><span class="fu">make_full_rank</span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="co">#keeps c1 and c3</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    c1          c3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   0 -0.47719270</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2   1 -0.99838644</span>
@@ -143,7 +143,7 @@ more than only column has only one value, only the first one will remain.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 19  0 -0.01513830</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 20  0 -0.93594860</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">make_full_rank</span><span class="op">(</span><span class="va">mat</span>, with.intercept <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co">#leaves c1, c2, and c4</span></span></span>
+<span class="r-in"><span><span class="fu">make_full_rank</span><span class="op">(</span><span class="va">mat</span>, with.intercept <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co">#keeps c1, c2, and c3</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    c1 c2          c3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   0  1 -0.47719270</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2   1  0 -0.99838644</span>

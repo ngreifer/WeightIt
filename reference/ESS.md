@@ -59,26 +59,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 1.556  |--------------------------| 73.332
-#> control 1.022 ||                             3.044
+#> Treated 1.556  ╞══════════════════════════╡ 73.332
+#> Control 1.022 ╞╡                             3.044
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                            
 #>             124    184    172    181    182
-#>  treated 11.228 11.344 12.085 26.178 73.332
+#>  Treated 11.228 11.344 12.085 26.178 73.332
 #>             411    595    269    409    296
-#>  control   2.33  2.437    2.5  2.637  3.044
+#>  Control   2.33  2.437    2.5  2.637  3.044
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.609 0.555   0.403       0
-#> control       0.247 0.211   0.029       0
+#> Treated       1.609 0.555   0.403       0
+#> Control       0.247 0.211   0.029       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  

@@ -50,7 +50,7 @@ See example at
 Older versions would drop all columns that only had one value. With
 `with.intercept = FALSE`, if only one column has only one value, it will
 not be removed, and it will function as though there was an intercept
-present; if more than only column has only one value, only the first one
+present; if more than one column has only one value, only the first one
 will remain.
 
 ## See also
@@ -69,7 +69,7 @@ c3 <- rnorm(n)
 c4 <- 10 * c3
 mat <- data.frame(c1, c2, c3, c4)
 
-make_full_rank(mat) #leaves c2 and c4
+make_full_rank(mat) #keeps c1 and c3
 #>    c1          c3
 #> 1   0 -0.47719270
 #> 2   1 -0.99838644
@@ -92,7 +92,7 @@ make_full_rank(mat) #leaves c2 and c4
 #> 19  0 -0.01513830
 #> 20  0 -0.93594860
 
-make_full_rank(mat, with.intercept = FALSE) #leaves c1, c2, and c4
+make_full_rank(mat, with.intercept = FALSE) #keeps c1, c2, and c3
 #>    c1 c2          c3
 #> 1   0  1 -0.47719270
 #> 2   1  0 -0.99838644

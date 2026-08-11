@@ -3,7 +3,7 @@
 [`anova()`](https://rdrr.io/r/stats/anova.html) is used to compare
 nested models fit with
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-`mutinom_weightit()`,
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
 [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
 or
 [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)

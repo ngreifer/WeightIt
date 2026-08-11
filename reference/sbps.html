@@ -25,7 +25,7 @@ criterion that includes subgroup as well as overall balance."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -140,7 +140,7 @@ contains all the information in <code>obj</code> with the weights, propensity sc
 call, and possibly covariates updated from <code>sbps()</code>. In addition, the
 <code>prop.subgroup</code> component contains the values of the coefficients \(C\) for the
 subgroups (which are either 0 or 1 for the standard SBPS), and the
-<code>moderator</code> component contains a data.frame with the moderator.</p>
+<code>moderator</code> component contains a data frame with the moderator.</p>
 <p>This object has its own summary method and is compatible with <span class="pkg">cobalt</span>
 functions. The <code>cluster</code> argument should be used with <span class="pkg">cobalt</span> functions
 to accurately reflect the performance of the weights in balancing the
@@ -237,82 +237,82 @@ and supply these to <code>sbps()</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall               0               0              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup              1               1              1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "black" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "black" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.         ||                       1.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.466 |---------------------------| 3.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.           │                      1.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.466 ╞═══════════════════════════╡ 3.59</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              6     5     4     3    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1     1     1     1    1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            559   381   573   303  411</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.949 2.949 3.006 3.064 3.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 2.949 2.949 3.006 3.064 3.59</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.425 0.366   0.093       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.425 0.366   0.093       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   87.       156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     73.82     156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "hispan" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "hispan" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                                 || 1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.021   |------------|                0.505</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                                 │ 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.021  ╞════════════╡                0.505</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            100    87    44    28     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1     1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            425   456   480   424   412</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.412 0.477 0.484 0.497 0.505</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 0.412 0.477 0.484 0.497 0.505</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.714 0.579   0.246       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.714 0.579   0.246       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   61.        11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     40.62      11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "white" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "white" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1                              || 1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0   |---------|                   0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated   1                              │ 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control   0  ╞═════════╡                   0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             60   42    23    22    10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1    1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            592  589   595   546   580</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.239 0.27 0.294 0.296 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 0.239 0.27 0.294 0.296 0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.154 0.952   0.619       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.154 0.952   0.619       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  281.        18</span>
@@ -392,82 +392,82 @@ and supply these to <code>sbps()</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall            0.17            0.25              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup           0.83            0.75              1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "black" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "black" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.         ||                       1.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.465 |---------------------------| 3.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.           │                      1.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.465 ╞═══════════════════════════╡ 3.57</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              6     5     4    3    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1    1    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1     1     1    1    1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            559   381   573  303  411</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.979 2.979 3.034 3.09 3.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 2.979 2.979 3.034 3.09 3.57</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.426 0.366   0.094       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.426 0.366   0.094       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   87.       156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     73.74     156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "hispan" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "hispan" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                                 || 1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.025   |-----------|                 0.474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                                 │ 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.025  ╞═══════════╡                 0.474</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            100   87    44   28     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1    1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1    1     1    1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            269  456   480  424   412</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.391 0.45 0.456 0.47 0.474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 0.391 0.45 0.456 0.47 0.474</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.679 0.553   0.225       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.679 0.553   0.225       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   61.        11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     41.95      11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "white" </span><span style="text-decoration: line-through;">                   </span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ───────────────────<span style="font-style: italic;"> Subgroup: race = "white" </span>───────────────────</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1                              || 1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0   |---------|                   0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated   1                              │ 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control   0  ╞═════════╡                   0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             60   42    23    22    10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1    1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            592  589   595   546   580</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.239 0.27 0.294 0.296 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 0.239 0.27 0.294 0.296 0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.154 0.952   0.619       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.154 0.952   0.619       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  281.        18</span>

@@ -27,7 +27,7 @@ interface that performs minimal argument checking."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -247,7 +247,7 @@ of the estimation method; all that is processed by <code><a href="weightit.html"
 crashes, and invalid weights, and error and warning messages may not be
 helpful in diagnosing the problem. <code>weightit.fit()</code> does check to make sure
 weights were actually estimated, though.</p>
-<p><code>weightit.fit()</code> may be most useful in speeding up simulation simulation
+<p><code>weightit.fit()</code> may be most useful in speeding up simulation
 studies that use <code><a href="weightit.html">weightit()</a></code> because the covariates can be supplied as a
 numeric matrix, which is often how they are generated in simulations, without
 having to go through the potentially slow process of extracting the
@@ -281,7 +281,7 @@ object.</p></div>
 <span class="r-in"><span><span class="va">WF1</span> <span class="op">&lt;-</span> <span class="fu">weightit.fit</span><span class="op">(</span><span class="va">covs_mat</span>, treat <span class="op">=</span> <span class="va">lalonde</span><span class="op">$</span><span class="va">treat</span>,</span></span>
 <span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"glm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">WF1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> List of 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of 9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ weights  : num [1:614] 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ treat    : 'treat' int [1:614] 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..- attr(*, "treat.type")= chr "binary"</span>
@@ -293,7 +293,6 @@ object.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ focal    : int 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ missing  : chr ""</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ fit.obj  : NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ info     : Named list()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - attr(*, "Mparts")=List of 6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ psi_treat :function (Btreat, Xtreat, A, SW)  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ wfun      :function (Btreat, Xtreat, A)  </span>
@@ -321,26 +320,26 @@ object.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.            ||                    1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.009 |---------------------------| 3.743</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.              │                   1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.009 ╞═══════════════════════════╡ 3.743</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             5     4    3     2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated    1     1    1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated    1     1    1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           597   573  381   411   303</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 3.03 3.059 3.24 3.523 3.743</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 3.03 3.059 3.24 3.523 3.743</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.818 1.289   1.098       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.818 1.289   1.098       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>

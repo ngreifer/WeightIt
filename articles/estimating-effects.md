@@ -23,11 +23,10 @@ mistakes are presented.
 ### Identifying the estimand
 
 Before an effect is estimated, the estimand must be specified and
-clarified. Although some aspects of the estimand depend not only on how
-the effect is estimated after weighting but also on the weighting method
-itself, other aspects must be considered at the time of effect
-estimation and interpretation. Here, we consider three aspects of the
-estimand: the population the effect is meant to generalize to (the
+clarified. Although some aspects of the estimand are determined by the
+weighting method itself, other aspects must be considered at the time of
+effect estimation and interpretation. Here, we consider three aspects of
+the estimand: the population the effect is meant to generalize to (the
 target population), the effect measure, and whether the effect is
 marginal or conditional.
 
@@ -62,7 +61,7 @@ continuous, with the effect measured by the mean difference; binary,
 with the effect measured by the risk difference (RD), risk ratio (RR),
 or odds ratio (OR); and time-to-event (i.e., survival), with the effect
 measured by the hazard ratio (HR). The RR, OR, and HR are
-*noncollapsible* effect measures, which means the marginal effect on
+*non-collapsible* effect measures, which means the marginal effect on
 that scale is not a (possibly) weighted average of the conditional
 effects within strata, even if the stratum-specific effects are of the
 same magnitude. For these effect measures, it is critical to distinguish
@@ -146,14 +145,15 @@ outcome model should depend on the outcome type. For continuous
 outcomes, one can use a linear model regressing the outcome on the
 treatment; for binary outcomes, one can use a generalized linear model
 with, e.g., a logistic link; for time-to-event outcomes, one can use a
-Cox proportional hazards model. Note that the purpose of including the
-outcome model is not to arrive at a doubly robust estimator (i.e., one
-that is consistent if either the outcome or propensity score model is
-correct); rather, it is simply to increase the precision of the weighted
-estimate essentially for free. To take advantage of this feature, it is
-important to use a canonical link (i.e., the default link for a given
-family), as recommended by Gabriel et al.
-([2024](#ref-gabrielInverseProbabilityTreatment2024)).
+Cox proportional hazards model. Note that the primary purpose of
+including the outcome model is not to arrive at a doubly robust
+estimator (i.e., one that is consistent if either the outcome or
+propensity score model is correct), though that is a benefit of
+including covariates in it (see below); rather, it is to increase the
+precision of the weighted estimate essentially for free. To take
+advantage of this feature, it is important to use a canonical link
+(i.e., the default link for a given family), as recommended by Gabriel
+et al. ([2024](#ref-gabrielInverseProbabilityTreatment2024)).
 
 An additional decision to make is whether (and how) to include
 covariates in the outcome model. One may ask, why use weighting at all
@@ -165,7 +165,7 @@ to matching in their case). Including covariates in the outcome model
 after weighting has several functions: it can increase precision in the
 effect estimate, reduce the bias due to residual imbalance, and make the
 effect estimate “doubly robust”, which means it is consistent if either
-the weighting reduces sufficient imbalance in the covariates or if the
+the weighting removes sufficient imbalance in the covariates or if the
 outcome model is correct. For these reasons, we recommend covariate
 adjustment after weighting when possible. There is some evidence that
 covariate adjustment is most helpful for covariates with standardized
@@ -178,7 +178,7 @@ included due to sample size constraints.
 Although there are many possible ways to include covariates (e.g., not
 just main effects but interactions, smoothing terms like splines, or
 other nonlinear transformations), it is important not to engage in
-specification search (i.e., trying many outcomes models in search of the
+specification search (i.e., trying many outcome models in search of the
 “best” one). Doing so can invalidate results and yield a conclusion that
 fails to replicate. For this reason, we recommend only including the
 same terms included in the weighting model unless there is a strong *a
@@ -201,9 +201,9 @@ Uncertainty estimation (i.e., of SEs, confidence intervals, and
 p-values) may consider the variety of sources of uncertainty present in
 the analysis, including (but not limited to!) estimation of the
 propensity score (if used) and estimation of the treatment effect (i.e.,
-because of sampling error). For some methods, methods for analytically
-computing the correct asymptotic SE have been described and are
-implement in *WeightIt* when available. These methods rely on
+because of sampling error). For some methods, procedures for
+analytically computing the correct asymptotic SE have been described and
+are implemented in *WeightIt* when available. These methods rely on
 M-estimation ([Stefanski and Boos
 2002](#ref-stefanskiCalculusMEstimation2002); [Ross et al.
 2024](#ref-rossMestimationCommonEpidemiological2024)), a method of
@@ -306,7 +306,7 @@ confidence interval bounds. Bootstrapping tends to be most useful when
 no analytic estimator of a SE is possible or has been derived yet.
 Bootstrapping has been found to be effective at estimating SEs and
 confidence intervals after weighting, often performing better even than
-the asymptotically correct method when it is available, specially in
+the asymptotically correct method when it is available, especially in
 smaller samples ([Austin 2022](#ref-austin2022)).
 
 Typically, bootstrapping involves performing the entire estimation
@@ -380,7 +380,7 @@ analyses:
 - *marginaleffects* provides the
   [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
   function for performing g-computation and estimating the SEs and
-  confidence intervals of the average estimate potential outcomes and
+  confidence intervals of the average estimated potential outcomes and
   treatment effects
 - *survival* provides functionality to estimate the coefficients in a
   Cox proportional hazards model for the marginal hazard ratio, which is
@@ -434,7 +434,7 @@ bootstrap standard errors if requested.
 
 There are a few adjustments that need to be made for certain scenarios,
 which we describe in the section “Adjustments to the Standard Case”.
-These adjustments include for the following cases: when weighting for
+These adjustments are needed in the following cases: when weighting for
 the ATT or ATC, for estimating effects with binary outcomes, and for
 estimating effects with survival outcomes. Estimation for all estimands
 other than the ATT and ATC proceeds as it does for the ATE. You must
@@ -544,11 +544,7 @@ except that in the calls to
 [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 and
 [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html),
-the `newdata` argument must additionally be supplied to
-[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
-and
-[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
-as
+the `newdata` argument must additionally be supplied as
 
 ``` r
 
@@ -752,17 +748,17 @@ avg_comparisons(fit, variables = "A",
 
 A negative value for the survival probability difference indicates that
 the treatment decreases the probability of survival for 300 days (i.e.,
-increases the probability of death within 300 days), consistent with a
-positive HR (also indicating an increased probability of death). For the
-survival probability difference, additional covariates can be included
-in the Cox regression model and the estimate retains its interpretation
-as a marginal effect.
+increases the probability of death within 300 days), consistent with an
+HR greater than 1 (also indicating an increased probability of death).
+For the survival probability difference, additional covariates can be
+included in the Cox regression model and the estimate retains its
+interpretation as a marginal effect.
 
 The
 [*adjustedCurves*](https://cran.r-project.org/package=adjustedCurves)
-package provides limited integration with *WeightIt* to estimate
-adjusted survival estimands. We recommend using this package to estimate
-effects after weighting.
+package provides integration with *WeightIt* to estimate adjusted
+survival estimands. Although that integration is limited, we recommend
+using this package to estimate effects after weighting.
 
 #### Using sampling weights with complex surveys
 
@@ -847,7 +843,7 @@ Multi-category treatments work essentially the same way as binary
 treatments. The main practical differences are in choosing the estimand
 and estimating the weights. The ATE and ATO are straightforward. The ATT
 requires choosing one group to be the treated or “focal” group. Effects
-are the estimated for members of that group. The contrast in the focal
+are then estimated for members of that group. The contrast in the focal
 group between the expected potential outcomes under a non-focal
 treatment and the expected potential outcomes for the focal (actual)
 treatment can be interpreted similarly to how ATTs are interpreted for
@@ -900,7 +896,7 @@ effective sample size) but we will skip that for now. Next, we fit the
 outcome model and perform weighted g-computation. We use
 [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 first to compute the expected potential outcome under each treatment for
-the focal group, and the use
+the focal group, and then use
 [`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html)
 to test all pairwise comparisons.
 
@@ -1090,7 +1086,7 @@ For longitudinal treatments, estimation proceeds as usual, except that
 we estimate weights using
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 and fit a weighted outcome model that includes treatment at all time
-periods (and, optionally, and covariates measured prior to the first
+periods (and, optionally, any covariates measured prior to the first
 treatment). It is important not to include any covariates possibly
 caused by any of the treatments to avoid any bias; this is the whole
 point of using weighting to estimate the marginal structural model in
@@ -1110,7 +1106,7 @@ Below, we demonstrate using the usual inverse probability weights for a
 marginal structural model. Because these weights are computed from
 propensity scores estimated with logistic regression, we can use
 M-estimation to adjust for their estimation in computing the parameter
-covariance matrix. This also includes estimation of the standardization
+covariance matrix. This also includes estimation of the stabilization
 factor, if any. We’ll use the toy dataset `msmdata` that comes with
 *WeightIt*.
 
@@ -1131,7 +1127,7 @@ Wmsm <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 Next we’ll fit the outcome model using
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 which includes the baseline covariates (i.e., only those measured prior
-the first treatment).
+to the first treatment).
 
 ``` r
 
@@ -1207,7 +1203,7 @@ which does just this[^5]. There is also the possibility of using the
 subgroup balancing propensity score ([Dong et al.
 2020](#ref-dongSubgroupBalancingPropensity2020)) implemented using
 [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md), which
-determines whether a single weighting model fit to the whole or a
+determines whether a single weighting model fit to the whole sample or a
 subgroup-specific weighting model is best for each subgroup and overall.
 The chosen approach should be that which achieves the best balance,
 though we don’t demonstrate assessing balance here to maintain focus on
@@ -1255,8 +1251,8 @@ idea to simplify this model to include just the most important
 covariates to the outcome in order to avoid estimating too many
 parameters. At a minimum, you must include an interaction between the
 treatment and moderator. Here, we’ll fit a linear regression model
-including the just the first three covariates in addition to the
-treatment and moderator (allowing the covariates to interact with both).
+including just the first three covariates in addition to the treatment
+and moderator (allowing the covariates to interact with both).
 
 ``` r
 

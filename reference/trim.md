@@ -33,9 +33,10 @@ trim(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, ...)
 - at:
 
   `numeric`; either the quantile of the weights above which weights are
-  to be trimmed. A single number between .5 and 1, or the number of
-  weights to be trimmed (e.g., `at = 3` for the top 3 weights to be set
-  to the 4th largest weight).
+  to be trimmed, given as a single number between .5 and 1 (a value
+  below .5 is replaced by its complement), or the number of weights to
+  be trimmed, given as a number of 1 or greater (e.g., `at = 3` for the
+  top 3 weights to be set to the 4th largest weight).
 
 - lower:
 
@@ -79,15 +80,15 @@ specified quantile. All weights above that quantile are set to the
 weight at that quantile unless `drop = TRUE`, in which case they are set
 to 0. If `lower = TRUE`, all weights below 1 minus the quantile are
 trimmed. In general, trimming weights can increase imbalance but also
-decreases the variability of the weights, improving precision at the
+decrease the variability of the weights, improving precision at the
 potential expense of unbiasedness (Cole & Hernán, 2008). See Lee,
-Lessler, and Stuart (2011) and Thoemmes and Ong (2015) for discussions
+Lessler, and Stuart (2011) and Thoemmes and Ong (2016) for discussions
 and simulation results of trimming weights at various quantiles. Note
 that trimming weights can also change the target population and
 therefore the estimand.
 
 When using `trim()` on a numeric vector of weights, it is helpful to
-include the treatment vector as well. The helps determine the type of
+include the treatment vector as well. This helps determine the type of
 treatment and estimand, which are used to specify how trimming is
 performed. In particular, if the estimand is determined to be the ATT or
 ATC, the weights of the target (i.e., focal) group are ignored, since
@@ -137,26 +138,26 @@ data("lalonde", package = "cobalt")
 summary(W)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                  ||              1.   
-#> control 0.022 |---------------------------| 2.044
+#> Treated 1.                    │             1.   
+#> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                    
 #>             5     4   3     2     1
-#>  treated    1     1   1     1     1
+#>  Treated    1     1   1     1     1
 #>           411   595 269   409   296
-#>  control 1.33 1.437 1.5 1.637 2.044
+#>  Control 1.33 1.437 1.5 1.637 2.044
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.       0.         0
-#> control       0.823 0.701    0.33       0
+#> Treated       0.    0.       0.         0
+#> Control       0.823 0.701    0.33       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -189,26 +190,26 @@ trim(W, at = 5, lower = TRUE)
 summary(W.trim)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>           Min                                   Max
-#> treated 1.                                 || 1.   
-#> control 0.022   |-------------------------|   0.941
+#>           Min                                  Max
+#> Treated 1.                                 │ 1.   
+#> Control 0.022  ╞═════════════════════════╡   0.941
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            303   296   285   269   264
-#>  control 0.941 0.941 0.941 0.941 0.941
+#>  Control 0.941 0.941 0.941 0.941 0.941
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.766 0.682   0.303       0
+#> Treated       0.    0.      0.          0
+#> Control       0.766 0.682   0.303       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -236,26 +237,26 @@ all.equal(trim(W$weights, at = .9, treat = lalonde$treat),
 summary(W.trim)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>         Min                                   Max
-#> treated   1                              || 1.   
-#> control   0   |-------------------------|   0.941
+#>         Min                                  Max
+#> Treated   1                              │ 1.   
+#> Control   0  ╞═════════════════════════╡   0.941
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            467   466   373   369   356
-#>  control 0.941 0.941 0.941 0.941 0.941
+#>  Control 0.941 0.941 0.941 0.941 0.941
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.881 0.757   0.303      40
+#> Treated       0.    0.      0.          0
+#> Control       0.881 0.757   0.303      40
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -271,26 +272,26 @@ W <- as.weightit(weights, treat = treat,
 summary(W)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 0.004 |---------------------------| 13.9  
-#> control 0.005 |--------------------------|  13.524
+#> Treated 0.004 ╞═══════════════════════════╡ 13.9  
+#> Control 0.005 ╞══════════════════════════╡  13.524
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                          
 #>             12     18   481    156    351
-#>  treated 7.237 10.478 11.27 11.484   13.9
+#>  Treated 7.237 10.478 11.27 11.484   13.9
 #>            240    456    27    425    458
-#>  control 8.855  9.384 9.601 11.104 13.524
+#>  Control 8.855  9.384 9.601 11.104 13.524
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.155 0.815   0.533       0
-#> control       0.967 0.723   0.405       0
+#> Treated       1.155 0.815   0.533       0
+#> Control       0.967 0.723   0.405       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  363.    137.  
@@ -300,26 +301,26 @@ summary(trim(W, at = .95))
 #> Trimming weights to 95%.
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 0.004 |---------------------------| 6.404
-#> control 0.005 |---------------------------| 6.404
+#> Treated 0.004 ╞═══════════════════════════╡ 6.404
+#> Control 0.005 ╞═══════════════════════════╡ 6.404
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>            265   156   134    18    12
-#>  treated 6.404 6.404 6.404 6.404 6.404
+#>  Treated 6.404 6.404 6.404 6.404 6.404
 #>             94    54    30    27    11
-#>  control 6.404 6.404 6.404 6.404 6.404
+#>  Control 6.404 6.404 6.404 6.404 6.404
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.975 0.773   0.452       0
-#> control       0.881 0.705   0.37        0
+#> Treated       0.975 0.773   0.452       0
+#> Control       0.881 0.705   0.37        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  363.    137.  

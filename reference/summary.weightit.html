@@ -19,7 +19,7 @@ of observations."><meta property="og:image" content="https://ngreifer.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,10 +72,17 @@ of observations.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'weightitMSM'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, top <span class="op">=</span> <span class="fl">5L</span>, ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>, weight.range <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  top <span class="op">=</span> <span class="fl">5L</span>,</span>
+<span>  ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  weight.range <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">which.time</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'summary.weightitMSM'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, time <span class="op">=</span> <span class="fl">1L</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, which.time <span class="op">=</span> <span class="fl">1L</span>, <span class="va">...</span>, <span class="va">time</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -119,9 +126,22 @@ a call to <code>summary.weightit()</code> or <code>summary.weightitMSM()</code>.
 control the size and/or number of bins.</p></dd>
 
 
+<dt id="arg-which-time">which.time<a class="anchor" aria-label="anchor" href="#arg-which-time"></a></dt>
+<dd><p>for <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, which models to summarize, given as a vector
+of positions in <code>formula.list</code> or of treatment or censoring variable names;
+omit it to summarize all of them. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, which single model to display
+the distribution of weights for, given as one position or one name; default
+is the first. This mirrors the argument of the same name in
+<code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code>
+, except that a value matching no model is an error
+rather than a warning, since here it decides what is computed. Note that when
+censoring is modeled, the censoring models occupy positions of their own, so
+positions do not count treatment time points alone; naming the variable
+avoids having to count.</p></dd>
+
+
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p><code>numeric</code>; the time point for which to display the distribution
-of weights. Default is to plot the distribution for the first time points.</p></dd>
+<dd><p>for <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, the former name of <code>which.time</code>, which still works.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -141,7 +161,10 @@ a <code>summary.weightit</code> object with the following elements:</p>
 <dd><p>The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
 
 <dt>negative entropy (Entropy)</dt>
-<dd><p>The negative entropy (\(\sum w log(w)\)) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
+<dd><p>The negative entropy (\(\frac{1}{n}\sum w \log(w)\)) of the weights in each treatment group and overall, after dividing the weights by their mean in the corresponding group.</p></dd>
+
+<dt>weight.mean (Mean of Weights)</dt>
+<dd><p>The mean of the weights in each treatment group and overall. Only included when the weights are stabilized.</p></dd>
 
 <dt>num.zeros</dt>
 <dd><p>The number of weights equal to zero.</p></dd>
@@ -151,9 +174,19 @@ a <code>summary.weightit</code> object with the following elements:</p>
 
 
 </dl><p>For longitudinal treatments (i.e., <code>weightitMSM</code> objects), <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
-returns a list of the above elements for each treatment period.</p>
+returns a list of the above elements for each treatment period. When censoring
+is modeled (see <code><a href="dot-cens.html">.cens()</a></code>), each censoring model gets an entry of its own,
+placed among the treatment entries in the order the models were fit and named
+for its censoring indicator. Every entry summarizes the same weights – the
+product across all the models – and differs only in the sample it summarizes
+them over: a treatment entry splits by treatment group, and a censoring entry
+covers the units still under observation when that model was fit, since the
+censored units have a weight of exactly 0 and are not part of the weighted
+sample.</p>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> returns a <code>ggplot</code> object with a histogram displaying the
-distribution of the estimated weights. If the estimand is the ATT or ATC,
+distribution of the estimated weights. For a censoring model, only the weights
+of the units still under observation are displayed, matching what <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+reports. If the estimand is the ATT or ATC,
 only the weights for the non-focal group(s) will be displayed (since the
 weights for the focal group are all 1). A dotted line is displayed at the
 mean of the weights.</p>

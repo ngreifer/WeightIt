@@ -45,6 +45,12 @@ weightitMSM(
   requests a marginal model at that time point; see *Empty model
   formulas* in Details at
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
+  The formulas may also contain
+  [lme4](https://CRAN.R-project.org/package=lme4)-style random effects
+  terms (e.g., `A_1 ~ X1_0 + (1 | school)`) for methods that accept
+  them, in which case a multilevel model is fit at that time point. Note
+  this is intended for clustering, not for modeling the longitudinal
+  treatments in a single model.
 
 - data:
 
@@ -62,17 +68,20 @@ weightitMSM(
 
 - stabilize:
 
-  `logical`; whether or not to stabilize the weights. Stabilizing the
+  whether or not and how to stabilize the weights. Stabilizing the
   weights involves fitting a model predicting treatment at each time
   point from treatment status at prior time points. If `TRUE`, a fully
   saturated model will be fit (i.e., all interactions between all
   treatments up to each time point), essentially using the observed
   treatment probabilities in the numerator (for binary and
   multi-category treatments). This may yield an error if some
-  combinations are not observed. Default is `FALSE`. To manually specify
-  stabilization model formulas, e.g., to specify non-saturated models,
-  use `num.formula`. With many time points, saturated models may be
-  time-consuming or impossible to fit.
+  combinations are not observed, and with many time points, saturated
+  models may be time-consuming or impossible to fit. Can also be a
+  one-sided formula or list thereof, in which case `stabilize` replaces
+  `num.formula` (described below); as with `formula.list`, these
+  formulas may contain
+  [lme4](https://CRAN.R-project.org/package=lme4)-style random effects
+  terms. Default is `FALSE` for unstabilized weights.
 
 - by:
 
@@ -81,7 +90,7 @@ weightitMSM(
   the stratifying variable on the right-hand side. For example, if
   `by = "gender"` or `by = ~gender`, a separate propensity score model
   or optimization will occur within each level of the variable
-  `"gender"`. Only one `by` variable is allowed; to stratify by multiply
+  `"gender"`. Only one `by` variable is allowed; to stratify by multiple
   variables simultaneously, create a new variable that is a full cross
   of those variables using
   [`interaction()`](https://rdrr.io/r/base/interaction.html).
@@ -102,9 +111,8 @@ weightitMSM(
   to specify this model; including stabilization factors can change the
   estimand without proper adjustment, and should be done with caution.
   Can also be a list of one-sided formulas, one for each entry of
-  `formula.list`, including any censoring entries. Unless you know what
-  you are doing, we recommend setting `stabilize = TRUE` and ignoring
-  `num.formula`.
+  `formula.list`, including any censoring entries. Ignored if
+  `stabilize` is a formula or list thereof.
 
 - missing:
 
@@ -173,13 +181,20 @@ A `weightitMSM` object with the following elements:
 
 - treat.list:
 
-  A list of the values of the time-varying treatment variables.
+  A list of the values of the time-varying treatment variables, one
+  entry per entry of `formula.list` and named for the variable modeled
+  there. When censoring is modeled, the censoring indicators are
+  included in place among the treatments, in the order they were fit; an
+  entry's `"treat.type"` attribute is `"censoring"` when it is a
+  censoring indicator, which is 0 for units still under observation, 1
+  for units censored at that time point, and `NA` for units censored
+  earlier.
 
 - covs.list:
 
-  A list of the covariates used in the fitting at each time point. Only
-  includes the raw covariates, which may have been altered in the
-  fitting process.
+  A list of the covariates used in the fitting at each time point,
+  aligned with `treat.list`. Only includes the raw covariates, which may
+  have been altered in the fitting process.
 
 - estimand:
 
@@ -196,7 +211,7 @@ A `weightitMSM` object with the following elements:
 
 - by:
 
-  A data.frame containing the `by` variable when specified.
+  A data frame containing the `by` variable when specified.
 
 - stabilization:
 
@@ -205,34 +220,9 @@ A `weightitMSM` object with the following elements:
 When censoring is modeled (i.e., when any entry of `formula.list` has
 its left side wrapped in
 [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)),
-`treat.list` and `covs.list` describe the *treatment* models only, while
 `formula.list` is kept exactly as supplied, markers included, so that
-[`update()`](https://rdrr.io/r/stats/update.html) round-trips. The
-following additional components describe the censoring models:
-
-- cens.list:
-
-  A list of the values of the censoring indicators, one entry per
-  censoring time point. Each is 0 for units still under observation and
-  1 for units censored at that time point, and `NA` for units censored
-  earlier.
-
-- cens.covs.list:
-
-  A list of the covariates used to fit each censoring model. As with
-  `covs.list`, only the raw covariates are included.
-
-- cens.formula.list:
-
-  A list of the censoring model formulas, with the
-  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
-  marker retained on the left side.
-
-- cens.time:
-
-  The positions of the censoring models within `formula.list`, so that
-  `formula.list[cens.time]` recovers them and their timing relative to
-  the treatment models can be determined.
+[`update()`](https://rdrr.io/r/stats/update.html) round-trips, and one
+additional component is returned:
 
 - at.risk:
 
@@ -279,7 +269,7 @@ sets are supported, where each unit is represented by exactly one row
 that contains its covariate and treatment history encoded in separate
 variables. You can use
 [`reshape()`](https://rdrr.io/r/stats/reshape.html) or other functions
-to transform your data into this format; see example below.
+to transform a long data set into this format.
 
 ### Censoring weights (IPCW)
 
@@ -371,92 +361,97 @@ data("msmdata")
 #>  - sampling weights: none
 #>  - number of time points: 3 (A_1, A_2, A_3)
 #>  - treatment:
-#>     + time 1: 2-category
-#>     + time 2: 2-category
-#>     + time 3: 2-category
+#>     + time 1 (A_1): 2-category
+#>     + time 2 (A_2): 2-category
+#>     + time 3 (A_3): 2-category
 #>  - covariates:
-#>     + baseline: X1_0, X2_0
-#>     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0
-#>     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
+#>     + time 1 (A_1): X1_0, X2_0
+#>     + time 2 (A_2): X1_1, X2_1, A_1, X1_0, X2_0
+#>     + time 3 (A_3): X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
 summary(W1)
-#>                         Time 1                        
-#> - Weight ranges:
+#>                   Summary of weights
+#> 
+#> 
+#> ─── 1. Treatment: A_1 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |-------------------|         284.764
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞═══════════════════╡         284.764
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             5488    3440    3593    1286    5685
-#>  treated 166.992 170.555 196.414 213.193 403.483
+#>  Treated 166.992 170.555 196.414 213.193 403.483
 #>             2594    2932    5226    1875    2533
-#>  control 155.625 168.964  172.42 245.882 284.764
+#>  Control 155.625 168.964  172.42 245.882 284.764
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.914 0.816   0.649       0
-#> control       1.706 0.862   0.67        0
+#> Treated       1.914 0.816   0.649       0
+#> Control       1.706 0.862   0.67        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3306.    4194. 
 #> Weighted    845.79   899.4
 #> 
-#>                         Time 2                        
-#> - Weight ranges:
+#> ─── 2. Treatment: A_2 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |----------------|            245.882
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞════════════════╡            245.882
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             2932    3440    3593    2533    5685
-#>  treated 168.964 170.555 196.414 284.764 403.483
+#>  Treated 168.964 170.555 196.414 284.764 403.483
 #>             2594    5488    5226    1286    1875
-#>  control 155.625 166.992  172.42 213.193 245.882
+#>  Control 155.625 166.992  172.42 213.193 245.882
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.892 0.819   0.652       0
-#> control       1.748 0.869   0.686       0
+#> Treated       1.892 0.819   0.652       0
+#> Control       1.748 0.869   0.686       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3701.   3799.  
 #> Weighted    912.87  829.87
 #> 
-#>                         Time 3                        
-#> - Weight ranges:
+#> ─── 3. Treatment: A_3 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.079 |---------------------------| 403.483
-#> control 1.276 |---------|                   148.155
+#> Treated 1.079 ╞═══════════════════════════╡ 403.483
+#> Control 1.276 ╞═════════╡                   148.155
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                                 
 #>             3593    1286    1875    2533    5685
-#>  treated 196.414 213.193 245.882 284.764 403.483
+#>  Treated 196.414 213.193 245.882 284.764 403.483
 #>             6862     168    3729    6158    3774
-#>  control  88.072  97.827 104.623 121.845 148.155
+#>  Control  88.072  97.827 104.623 121.845 148.155
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.832 0.975   0.785       0
-#> control       1.254 0.683   0.412       0
+#> Treated       1.832 0.975   0.785       0
+#> Control       1.254 0.683   0.412       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 4886.   2614.  
 #> Weighted   1900.26  600.12
-#> 
 cobalt::bal.tab(W1)
 #> Balance summary across all time points
 #>        Times    Type Max.Diff.Adj

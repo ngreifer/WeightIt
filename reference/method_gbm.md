@@ -108,7 +108,7 @@ are allowed:
   When using a `criterion` targeting covariate balance, for each
   variable with missingness, a new missingness indicator variable is
   created which takes the value 1 if the original covariate is `NA` and
-  0 otherwise. The missingness indicators are included as covariate to
+  0 otherwise. The missingness indicators are included as covariates to
   balance. The missing values in the covariates are then replaced with
   the covariate medians. Balance assessment then proceeds with this new
   set of covariates. The covariates output in the resulting `weightit`
@@ -182,7 +182,7 @@ The following additional arguments can be specified:
   [`cobalt::bal.compute()`](https://ngreifer.github.io/cobalt/reference/bal.compute.html)
   for allowable options for each treatment type. In addition, to
   optimize the cross-validation error instead of balance, `criterion`
-  can be set as `"cv{#}`", where `{#}` is replaced by a number
+  can be set as `"cv{#}"`, where `{#}` is replaced by a number
   representing the number of cross-validation folds used (e.g., `"cv5"`
   for 5-fold cross-validation). For binary and multi-category
   treatments, the default is `"smd.mean"`, which minimizes the average
@@ -228,6 +228,21 @@ The following additional arguments can be specified:
   argument in `gbm.fit()`. The default is 10000 for binary and
   multi-category treatments and 20000 for continuous treatments.
 
+- `n.grid`:
+
+  When `criterion` is a balance-based criterion, the number of points in
+  the initial coarse grid of trees searched before the search is refined
+  around the best point. Default is
+  `round(1 + sqrt(2 * (n.trees - start.tree + 1)))`. Must be between 2
+  and `n.trees`. Larger values make the initial search finer but slower.
+
+- `n.cores`:
+
+  When `criterion` is a cross-validation criterion (i.e., `"cv{#}"`),
+  the number of cores used by
+  [`gbm::gbmCrossVal()`](https://gbm-developers.github.io/gbm/reference/gbmCrossVal.html)
+  to fit the folds in parallel. Default is 1 for serial fitting.
+
 - `start.tree`:
 
   The tree at which to start balance checking. If you know the best
@@ -260,8 +275,8 @@ The following additional arguments can be specified:
   The fraction of the units randomly selected to propose the next tree
   in the expansion. This is passed onto the `bag.fraction` argument in
   `gbm.fit()`. The default is 1, but smaller values should be tried. For
-  values less then 1, subsequent runs with the same parameters will
-  yield different results due to random sampling; be sure to seed the
+  values less than 1, subsequent runs with the same parameters will
+  yield different results due to random sampling; be sure to set the
   seed using [`set.seed()`](https://rdrr.io/r/base/Random.html) to
   ensure replicability of results.
 
@@ -271,7 +286,7 @@ The following additional arguments can be specified:
   generalized linear model as an offset to the GBM model. If `TRUE`,
   this fits a logistic regression model (for binary treatments) or a
   linear regression model (for continuous treatments) and supplies the
-  linear predict to the `offset` argument of `gbm.fit()`. This often
+  linear predictor to the `offset` argument of `gbm.fit()`. This often
   improves performance generally but especially when the true propensity
   score model is well approximated by a GLM, and this yields uniformly
   superior performance over `method = "glm"` with respect to
@@ -281,8 +296,8 @@ The following additional arguments can be specified:
 All other arguments take on the defaults of those in
 [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
 , and some are not used at all. For binary and multi-category treatments
-with a with cross-validation used as the criterion, `class.stratify.cv`
-is set to `TRUE` by default.
+with cross-validation used as the criterion, `class.stratify.cv` is set
+to `TRUE` by default.
 
 The `w` argument in `gbm.fit()` is ignored because sampling weights are
 passed using `s.weights`.
@@ -309,7 +324,7 @@ For continuous treatments only, the following arguments may be supplied:
   requested by setting `use.kernel = TRUE`, which is now deprecated.)
 
   If unspecified, a density corresponding to the argument passed to
-  `distribution`. If `"gaussian"` (the default),
+  `distribution` is used. If `"gaussian"` (the default),
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used. If
   `"tdist"`, a t-distribution with 4 degrees of freedom is used. If
   `"laplace"`, a Laplace distribution is used.
@@ -431,26 +446,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 1.133 |---------------------------| 22.939
-#> control 1.007 |------|                       6.886
+#> Treated 1.133 ╞═══════════════════════════╡ 22.939
+#> Control 1.007 ╞══════╡                       6.886
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                            
 #>             181    177    183    184    182
-#>  treated 10.484 11.097 15.942 18.361 22.939
+#>  Treated 10.484 11.097 15.942 18.361 22.939
 #>             409    592    569    374    608
-#>  control  3.913  3.978  4.087  4.151  6.886
+#>  Control  3.913  3.978  4.087  4.151  6.886
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.049 0.558   0.306       0
-#> control       0.381 0.218   0.051       0
+#> Treated       1.049 0.558   0.306       0
+#> Control       0.381 0.218   0.051       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
@@ -495,14 +510,14 @@ plot(W1) #plot of criterion value against number of trees
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                 Max
-#> black  0.067  |------------------------|   1.059
-#> hispan 1.                             ||   1.   
-#> white  0.037 |---------------------------| 1.152
+#> black  0.067  ╞════════════════════════╡   1.059
+#> hispan 1.                               │  1.   
+#> white  0.037 ╞═══════════════════════════╡ 1.152
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>           183   162   191   485   190
 #>   black 0.908 0.954 0.954 1.043 1.059
@@ -511,14 +526,14 @@ summary(W2)
 #>            68   227   380   434   523
 #>   white 0.688 0.721 0.813 0.834 1.152
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.719 0.523   0.211       0
 #> hispan       0.    0.      0.          0
 #> white        0.641 0.483   0.18        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.       72 299.  
@@ -553,22 +568,22 @@ cobalt::bal.tab(W2, stats = c("m", "ks"))
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>       Min                                 Max
-#> all 0.003 |---------------------------| 9.295
+#> All 0.003 ╞═══════════════════════════╡ 9.295
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                   
 #>        375   354   332   310   308
-#>  all 9.295 9.295 9.295 9.295 9.295
+#>  All 9.295 9.295 9.295 9.295 9.295
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.368 0.817   0.553       0
+#> All       1.368 0.817   0.553       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  

@@ -80,7 +80,7 @@ all the information in `obj` with the weights, propensity scores, call,
 and possibly covariates updated from `sbps()`. In addition, the
 `prop.subgroup` component contains the values of the coefficients \\C\\
 for the subgroups (which are either 0 or 1 for the standard SBPS), and
-the `moderator` component contains a data.frame with the moderator.
+the `moderator` component contains a data frame with the moderator.
 
 This object has its own summary method and is compatible with cobalt
 functions. The `cluster` argument should be used with cobalt functions
@@ -188,82 +188,82 @@ summary(S)
 #> Overall               0               0              0
 #> Subgroup              1               1              1
 #> 
-#>                     Subgroup: race = "black"                    
+#> ─────────────────── Subgroup: race = "black" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                Max
-#> treated 1.         ||                       1.  
-#> control 0.466 |---------------------------| 3.59
+#> Treated 1.           │                      1.  
+#> Control 0.466 ╞═══════════════════════════╡ 3.59
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>              6     5     4     3    1
-#>  treated     1     1     1     1    1
+#>  Treated     1     1     1     1    1
 #>            559   381   573   303  411
-#>  control 2.949 2.949 3.006 3.064 3.59
+#>  Control 2.949 2.949 3.006 3.064 3.59
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.425 0.366   0.093       0
+#> Treated       0.    0.      0.          0
+#> Control       0.425 0.366   0.093       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted   87.       156
 #> Weighted     73.82     156
 #> 
-#>                     Subgroup: race = "hispan"                    
+#> ─────────────────── Subgroup: race = "hispan" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>           Min                                   Max
-#> treated 1.                                 || 1.   
-#> control 0.021   |------------|                0.505
+#>           Min                                  Max
+#> Treated 1.                                 │ 1.   
+#> Control 0.021  ╞════════════╡                0.505
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>            100    87    44    28     2
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            425   456   480   424   412
-#>  control 0.412 0.477 0.484 0.497 0.505
+#>  Control 0.412 0.477 0.484 0.497 0.505
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.714 0.579   0.246       0
+#> Treated       0.    0.      0.          0
+#> Control       0.714 0.579   0.246       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted   61.        11
 #> Weighted     40.62      11
 #> 
-#>                     Subgroup: race = "white"                    
+#> ─────────────────── Subgroup: race = "white" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>         Min                                   Max
-#> treated   1                              || 1.   
-#> control   0   |---------|                   0.385
+#>         Min                                  Max
+#> Treated   1                              │ 1.   
+#> Control   0  ╞═════════╡                   0.385
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>             60   42    23    22    10
-#>  treated     1    1     1     1     1
+#>  Treated     1    1     1     1     1
 #>            592  589   595   546   580
-#>  control 0.239 0.27 0.294 0.296 0.385
+#>  Control 0.239 0.27 0.294 0.296 0.385
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       1.154 0.952   0.619       0
+#> Treated       0.    0.      0.          0
+#> Control       1.154 0.952   0.619       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  281.        18
@@ -343,82 +343,82 @@ summary(S_)
 #> Overall            0.17            0.25              0
 #> Subgroup           0.83            0.75              1
 #> 
-#>                     Subgroup: race = "black"                    
+#> ─────────────────── Subgroup: race = "black" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                Max
-#> treated 1.         ||                       1.  
-#> control 0.465 |---------------------------| 3.57
+#> Treated 1.           │                      1.  
+#> Control 0.465 ╞═══════════════════════════╡ 3.57
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                     
 #>              6     5     4    3    1
-#>  treated     1     1     1    1    1
+#>  Treated     1     1     1    1    1
 #>            559   381   573  303  411
-#>  control 2.979 2.979 3.034 3.09 3.57
+#>  Control 2.979 2.979 3.034 3.09 3.57
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.426 0.366   0.094       0
+#> Treated       0.    0.      0.          0
+#> Control       0.426 0.366   0.094       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted   87.       156
 #> Weighted     73.74     156
 #> 
-#>                     Subgroup: race = "hispan"                    
+#> ─────────────────── Subgroup: race = "hispan" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>           Min                                   Max
-#> treated 1.                                 || 1.   
-#> control 0.025   |-----------|                 0.474
+#>           Min                                  Max
+#> Treated 1.                                 │ 1.   
+#> Control 0.025  ╞═══════════╡                 0.474
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                     
 #>            100   87    44   28     2
-#>  treated     1    1     1    1     1
+#>  Treated     1    1     1    1     1
 #>            269  456   480  424   412
-#>  control 0.391 0.45 0.456 0.47 0.474
+#>  Control 0.391 0.45 0.456 0.47 0.474
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.679 0.553   0.225       0
+#> Treated       0.    0.      0.          0
+#> Control       0.679 0.553   0.225       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted   61.        11
 #> Weighted     41.95      11
 #> 
-#>                     Subgroup: race = "white"                    
+#> ─────────────────── Subgroup: race = "white" ───────────────────
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
-#>         Min                                   Max
-#> treated   1                              || 1.   
-#> control   0   |---------|                   0.385
+#>         Min                                  Max
+#> Treated   1                              │ 1.   
+#> Control   0  ╞═════════╡                   0.385
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                      
 #>             60   42    23    22    10
-#>  treated     1    1     1     1     1
+#>  Treated     1    1     1     1     1
 #>            592  589   595   546   580
-#>  control 0.239 0.27 0.294 0.296 0.385
+#>  Control 0.239 0.27 0.294 0.296 0.385
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       1.154 0.952   0.619       0
+#> Treated       0.    0.      0.          0
+#> Control       1.154 0.952   0.619       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  281.        18

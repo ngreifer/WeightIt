@@ -7,7 +7,7 @@ delivered at each time point on an adverse event.
 
 The data were generated using a simple simulation mechanism. For further
 details on how the dataset was built, see the code at
-[data-raw/msmdata.R](https://github.com/ngreifer/Weightit/blob/master/data-raw/msmdata.R).
+[data-raw/msmdata.R](https://github.com/ngreifer/WeightIt/blob/master/data-raw/msmdata.R).
 
 The dataset is provided to illustrate the features of
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
@@ -60,7 +60,7 @@ A data frame with 7500 observations on the following 10 variables.
 
 - `X2_2`:
 
-  a binary covariate measured at the first time point (after the first
+  a binary covariate measured at the second time point (after the second
   treatment)
 
 - `A_3`:

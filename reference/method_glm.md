@@ -132,10 +132,12 @@ are allowed:
 
 - `"saem"`:
 
-  For binary treatments with `link = "logit"` or continuous treatments,
-  a stochastic approximation version of the EM algorithm (SAEM) is used
-  via the [misaem](https://CRAN.R-project.org/package=misaem) package.
-  No additional covariates are created. See Jiang et al. (2019) for
+  For binary treatments with `link = "logit"`, multi-category treatments
+  (where one such model is fit per treatment level), or continuous
+  treatments, a stochastic approximation version of the EM algorithm
+  (SAEM) is used via the
+  [misaem](https://CRAN.R-project.org/package=misaem) package. No
+  additional covariates are created. See Jiang et al. (2019) for
   information on this method. In some cases, this is a suitable
   alternative to multiple imputation.
 
@@ -160,6 +162,21 @@ whenever the underlying methods are.
 
 ## Additional Arguments
 
+The following additional argument can be specified for all treatment
+types:
+
+- `quick`:
+
+  `logical`; whether to fit the model with
+  [`glm.fit()`](https://rdrr.io/r/stats/glm.html) rather than
+  [`glm()`](https://rdrr.io/r/stats/glm.html). This skips construction
+  of the model frame and returns a smaller fit object, which can be
+  worthwhile when fitting many models (e.g., in a simulation) but means
+  the object returned by `include.obj = TRUE` lacks the components that
+  require it. Default is `FALSE`. Ignored when a fitting function other
+  than [`glm()`](https://rdrr.io/r/stats/glm.html) is used (e.g., with
+  random effects terms or `missing = "saem"`).
+
 For binary treatments, the following additional argument can be
 specified:
 
@@ -174,7 +191,11 @@ specified:
   [brglm2](https://CRAN.R-project.org/package=brglm2) package. `link`
   can also be either `"flic"` or `"flac"` to fit the corresponding Firth
   corrected logistic regression models implemented in the
-  [logistf](https://CRAN.R-project.org/package=logistf) package.
+  [logistf](https://CRAN.R-project.org/package=logistf) package; with
+  these, arguments matching those of
+  [`logistf::logistf.control()`](https://rdrr.io/pkg/logistf/man/logistf.control.html)
+  are passed to the fitting function as `control`, and a `modcontrol`
+  list is passed to its `modcontrol` argument.
 
 - `subclass`:
 
@@ -258,9 +279,9 @@ supplied:
 
 - `density`:
 
-  A function corresponding the conditional density of the treatment. The
-  standardized residuals of the treatment model will be fed through this
-  function to produce the denominator of the generalized propensity
+  A function corresponding to the conditional density of the treatment.
+  The standardized residuals of the treatment model will be fed through
+  this function to produce the denominator of the generalized propensity
   score weights. If blank,
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used as
   recommended by Robins et al. (2000). This can also be supplied as a
@@ -290,39 +311,40 @@ supplied:
   score. Can be any allowed by
   [`gaussian()`](https://rdrr.io/r/stats/family.html).
 
-Additional arguments to [`glm()`](https://rdrr.io/r/stats/glm.html) can
-be specified as well when it is used for fitting. The `method` argument
-in [`glm()`](https://rdrr.io/r/stats/glm.html) is renamed to
-`glm.method`. This can be used to supply alternative fitting functions,
-such as those implemented in the
-[glm2](https://CRAN.R-project.org/package=glm2) package. Other arguments
-to
-[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-are passed to `...` in [`glm()`](https://rdrr.io/r/stats/glm.html). In
-the presence of missing data with `link = "logit"` and
-`missing = "saem"`, additional arguments are passed to
-[`misaem::miss.glm()`](https://rdrr.io/pkg/misaem/man/miss.glm.html) and
-[`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html)
-, except the `method` argument in
-[`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html)
-is replaced with `saem.method`.
+For binary treatments, the `method` argument in
+[`glm()`](https://rdrr.io/r/stats/glm.html) is renamed to `glm.method`.
+This can be used to supply alternative fitting functions, such as those
+implemented in the [glm2](https://CRAN.R-project.org/package=glm2)
+package; it is ignored for multi-category and continuous treatments.
+Arguments matching those of
+[`glm.control()`](https://rdrr.io/r/stats/glm.control.html) are
+collected and passed to [`glm()`](https://rdrr.io/r/stats/glm.html) as
+its `control` argument; a `control` list can also be supplied directly.
+Other arguments are not forwarded to
+[`glm()`](https://rdrr.io/r/stats/glm.html).
 
-For continuous treatments in the presence of missing data with
-`missing = "saem"`, additional arguments are passed to
+In the presence of missing data with `link = "logit"` and
+`missing = "saem"`, a `control` argument is passed to
+[`misaem::miss.glm()`](https://rdrr.io/pkg/misaem/man/miss.glm.html) ,
+and the `method` argument of
+[`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html)
+is supplied as `saem.method`. The same applies to
 [`misaem::miss.lm()`](https://rdrr.io/pkg/misaem/man/miss.lm.html) and
 [`misaem::predict.miss.lm()`](https://rdrr.io/pkg/misaem/man/predict.miss.lm.html)
-.
+for continuous treatments.
 
 When the model `formula` includes random effects terms (see *Multilevel
-Treatment Models* above), additional arguments are passed to the
-corresponding fitting function:
+Treatment Models* above), the fit is handled by
 [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for binary
 treatments,
 [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
 for multi-category treatments, and
 [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) or
 [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for
-continuous treatments.
+continuous treatments. For multi-category treatments, `random`,
+`estimator`, `dispersion`, and `groups` are passed on to `mblogit()`;
+for continuous treatments, a `control` argument is passed on. Binary
+treatments accept no additional arguments on this path.
 
 ## Additional Outputs
 
@@ -491,26 +513,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                    ||            1.   
-#> control 0.018 |---------------------------| 1.834
+#> Treated 1.                      │           1.   
+#> Control 0.018 ╞═══════════════════════════╡ 1.834
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            612   595   269   409   296
-#>  control 1.278 1.351 1.412 1.518 1.834
+#>  Control 1.278 1.351 1.412 1.518 1.834
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.804 0.691   0.322       0
+#> Treated       0.    0.      0.          0
+#> Control       0.804 0.691   0.322       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -546,14 +568,14 @@ bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.453 |---------------------------| 30.807
-#> hispan 1.799  |---------------------|      25.953
-#> white  1.112 |-|                            3.977
+#> black  1.453 ╞═══════════════════════════╡ 30.807
+#> hispan 1.799  ╞═════════════════════╡      25.953
+#> white  1.112 ╞═╡                            3.977
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            226    231    485    181    182
 #>   black  7.532  7.624  8.525 12.351 30.807
@@ -562,14 +584,14 @@ summary(W2)
 #>            432    589    437    404    599
 #>   white  3.686  3.686  3.712  3.784  3.977
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.89  0.426   0.192       0
 #> hispan       0.541 0.404   0.132       0
 #> white        0.382 0.317   0.068       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            black hispan  white
 #> Unweighted 243.   72.   299.  
@@ -604,22 +626,22 @@ bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.043 |---------------------------| 44.225
+#> All 0.043 ╞═══════════════════════════╡ 44.225
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                        
 #>         482    481    484    483    485
-#>  all 30.586 30.632 37.608 41.195 44.225
+#>  All 30.586 30.632 37.608 41.195 44.225
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       2.405 0.933    0.92       0
+#> All       2.405 0.933    0.92       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Total
 #> Unweighted 614. 

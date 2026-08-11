@@ -126,7 +126,7 @@ with some cost in precision.
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -151,9 +151,9 @@ The `stabilize` argument is ignored.
 - `obj`:
 
   When `include.obj = TRUE`, the output of the call to
-  [`optim()`](https://rdrr.io/r/stats/optim.html), which contains the
-  coefficient estimates and convergence information. For ATE fits or
-  with multi-category treatments, a list of
+  [`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html)
+  , which contains the coefficient estimates and convergence
+  information. For ATE fits or with multi-category treatments, a list of
   [`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html)
   outputs, one for each weighted group.
 
@@ -203,26 +203,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                 ||               1.   
-#> control 0.017 |---------------------------| 2.263
+#> Treated 1.                   │              1.   
+#> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            589   595   269   409   296
-#>  control 1.464 1.485 1.576 1.743 2.263
+#>  Control 1.464 1.485 1.576 1.743 2.263
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.839 0.707   0.341       0
+#> Treated       0.    0.      0.          0
+#> Control       0.839 0.707   0.341       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -258,14 +258,14 @@ cobalt::bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.57   |------------|               15.787
-#> hispan 1.711  |--------------------------| 29.07 
-#> white  1.102 |--|                           4.693
+#> black  1.57   ╞════════════╡               15.787
+#> hispan 1.711  ╞══════════════════════════╡ 29.07 
+#> white  1.102 ╞══╡                           4.693
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                          
 #>            226    244    485   181    182
 #>   black  6.567   6.77  7.096 9.976 15.787
@@ -274,14 +274,14 @@ summary(W2)
 #>             68    457    599   589    531
 #>   white  3.841  3.912  3.934 4.177  4.693
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.618 0.398   0.133       0
 #> hispan       0.618 0.442   0.164       0
 #> white        0.389 0.316   0.07        0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.     72.  299.  

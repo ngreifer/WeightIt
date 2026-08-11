@@ -49,7 +49,8 @@ optweight.fit fit object.
 Censoring Weights
 
 
-For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit() is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the 1/P(C = 0 | X) scale; the two differ by a constant factor. M-estimation is not supported.
+For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit()
+ is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the \(1/P(C = 0 | X)\) scale; the two differ by a constant factor. M-estimation is not supported.
 
 
 
@@ -59,15 +60,15 @@ Longitudinal Treatments
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield exact
 balance at each time point. NOTE: the use of stable balancing weights with
-longitudinal treatments has not been validated and should not be done!
+longitudinal treatments has not been validated and should not be done! Because of this, weightitMSM() errors when this method is
+requested; set weightit.force = TRUE to bypass that error.
 
 
 
 Sampling Weights
 
 
-Sampling weights are supported through s.weights in all scenarios, but only
-for versions of optweight greater than or equal to 1.0.0.
+Sampling weights are supported through s.weights in all scenarios.
 
 
 
@@ -134,7 +135,8 @@ optweight.fit fit object.
 Censoring Weights
 
 
-For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit() is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the 1/P(C = 0 | X) scale; the two differ by a constant factor. M-estimation is not supported.
+For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit()
+ is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the \(1/P(C = 0 | X)\) scale; the two differ by a constant factor. M-estimation is not supported.
 
 
 
@@ -144,15 +146,15 @@ Longitudinal Treatments
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield exact
 balance at each time point. NOTE: the use of stable balancing weights with
-longitudinal treatments has not been validated and should not be done!
+longitudinal treatments has not been validated and should not be done! Because of this, weightitMSM() errors when this method is
+requested; set weightit.force = TRUE to bypass that error.
 
 
 
 Sampling Weights
 
 
-Sampling weights are supported through s.weights in all scenarios, but only
-for versions of optweight greater than or equal to 1.0.0.
+Sampling weights are supported through s.weights in all scenarios.
 
 
 
@@ -183,7 +185,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -265,7 +267,8 @@ ATT. The weights are taken from the output of the <code>optweight.fit</code> fit
 <h3 id="censoring-weights">Censoring Weights<a class="anchor" aria-label="anchor" href="#censoring-weights"></a></h3>
 
 
-<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, <code><a href="https://ngreifer.github.io/optweight/reference/optweight.svy.html" class="external-link">optweight::optweight.svy.fit()</a></code> is used rather than <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>. It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. <code>tols</code> are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the <code>1/P(C = 0 | X)</code> scale; the two differ by a constant factor. M-estimation is not supported.</p>
+<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, <code><a href="https://ngreifer.github.io/optweight/reference/optweight.svy.html" class="external-link">optweight::optweight.svy.fit()</a></code>
+ is used rather than <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>. It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. <code>tols</code> are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the \(1/P(C = 0 | X)\) scale; the two differ by a constant factor. M-estimation is not supported.</p>
 </div>
 
 <div class="section">
@@ -275,15 +278,15 @@ ATT. The weights are taken from the output of the <code>optweight.fit</code> fit
 <p>For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield exact
 balance at each time point. <strong>NOTE: the use of stable balancing weights with
-longitudinal treatments has not been validated and should not be done!</strong></p>
+longitudinal treatments has not been validated and should not be done!</strong> Because of this, <code><a href="weightitMSM.html">weightitMSM()</a></code> errors when this method is
+requested; set <code>weightit.force = TRUE</code> to bypass that error.</p>
 </div>
 
 <div class="section">
 <h3 id="sampling-weights">Sampling Weights<a class="anchor" aria-label="anchor" href="#sampling-weights"></a></h3>
 
 
-<p>Sampling weights are supported through <code>s.weights</code> in all scenarios, but only
-for versions of <span class="pkg">optweight</span> greater than or equal to 1.0.0.</p>
+<p>Sampling weights are supported through <code>s.weights</code> in all scenarios.</p>
 </div>
 
 <div class="section">
@@ -341,14 +344,18 @@ identical and it's compatible with <span class="pkg">cobalt</span>, too.</p>
 
 
 
-<dl><dt><code>moments</code></dt>
+<dl><dt><code>base.weights</code></dt>
+<dd><p>a vector of base weights, one for each unit. The estimated weights minimize the chosen divergence from the base weights rather than from a vector of 1s, subject to the balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain some of the properties of the original weights. Sampling weights should not be passed to <code>base.weights</code> but can be included in a <code><a href="weightit.html">weightit()</a></code> call that includes <code>s.weights</code>. Can also be supplied as <code>b.weights</code> or <code>base.weight</code>.</p></dd>
+
+
+</dl><dl><dt><code>moments</code></dt>
 <dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
 
 <dt><code>int</code></dt>
 <dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
 
 <dt><code>quantile</code></dt>
-<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.</p></dd>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5, .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.</p></dd>
 
 
 </dl><p>All arguments to <code>optweight.fit()</code> can be passed through <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>, with the following exception:</p><ul><li><p><code>targets</code> cannot be used and is ignored.</p></li>
@@ -405,7 +412,7 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code></p>
 <p><code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>
  for the fitting function.</p>
-<p><code><a href="method_ebal.html">method_entropy</a></code> for entropy balancing, which is a special case of stable balancing weights.</p>
+<p><code><a href="method_ebal.html">method_ebal</a></code> for entropy balancing, which is a special case of stable balancing weights.</p>
 <p><code><a href="method_npcbps.html">method_npcbps</a></code> for npCBPS weighting, which is also a special case of stable balancing weights.</p></div>
     </div>
 
@@ -429,26 +436,26 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1      ||                       1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 6.174</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated   1        │                      1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control   0 ╞═══════════════════════════╡ 6.174</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              5     4     3     2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated     1     1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            573   303   553   593   560</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 5.515 5.539 6.028 6.174 6.174</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 5.515 5.539 6.028 6.174 6.174</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.693 1.318   1.194       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.693 1.318   1.194       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
@@ -489,14 +496,14 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.374    |------------------------| 3.624</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.    |-------------------|         2.659</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.243   |---------|                 1.684</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.374    ╞════════════════════════╡ 3.624</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.    ╞═══════════════════╡         2.659</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.243   ╞═════════╡                 1.684</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           184   190   485   181   182</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.363 2.407 2.611 2.887 3.624</span>
@@ -505,14 +512,14 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
 <span class="r-out co"><span class="r-pr">#&gt;</span>            68   324   589   599   531</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.588 1.593 1.602  1.61 1.684</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.567 0.454   0.139       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.581 0.458   0.187       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        0.365 0.305   0.07        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.   72.   299.  </span>
@@ -549,22 +556,22 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all   0 |---------------------------| 4.674</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All   0 ╞═══════════════════════════╡ 4.674</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       483   482   481   178   200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 3.34 3.381 3.389 4.158 4.674</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  All 3.34 3.381 3.389 4.158 4.674</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       0.634 0.479   0.202       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All       0.634 0.479   0.202       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614. </span>

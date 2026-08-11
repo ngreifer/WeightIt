@@ -15,7 +15,7 @@ of weights that target the provided estimand."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,7 +93,7 @@ treatment effect in the optimal subset). See Details.</p></dd>
 
 <dt id="arg-focal">focal<a class="anchor" aria-label="anchor" href="#arg-focal"></a></dt>
 <dd><p>when <code>estimand</code> is <code>"ATT"</code> or <code>"ATC"</code>, which group should be
-consider the (focal) "treated" or "control" group, respectively. If not
+considered the (focal) "treated" or "control" group, respectively. If not
 <code>NULL</code> and <code>estimand</code> is not <code>"ATT"</code> or <code>"ATC"</code>, <code>estimand</code> will
 automatically be set to <code>"ATT"</code>.</p></dd>
 
@@ -195,7 +195,7 @@ would be .1 and the subclass-propensity score for being control would be .9
 for all units in the subclass.</p>
 <p>For multi-category treatments, the propensity scores for each treatment are
 stratified separately as described in Hong (2012); for binary treatments,
-only one set of propensity scores are stratified and the subclass-propensity
+only one set of propensity scores is stratified and the subclass-propensity
 scores for the other treatment are computed as the complement of the
 propensity scores for the stratified treatment.</p>
 <p>After the subclass-propensity scores have been computed, the standard

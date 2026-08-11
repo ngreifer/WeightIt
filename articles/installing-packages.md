@@ -160,10 +160,10 @@ pak::pak("kosukeimai/MNP")
 *MNP* requires compilation, which means you may need additional software
 installed on your computer to install it from source.
 
-## Propensity Score weighting using GBM (`method = "gbm"`)
+## Propensity score weighting using GBM (`method = "gbm"`)
 
 *WeightIt* uses the R package *gbm* to estimate propensity score weights
-using GBM. It does *not* rely on the `twang` package at all. To install
+using GBM. It does *not* rely on the *twang* package at all. To install
 *gbm* from CRAN, run
 
 ``` r
@@ -227,7 +227,7 @@ CRAN, run
 pak::pak("rootSolve")
 ```
 
-## Stable balancing weighting (`method = "optweight"`)
+## Stable Balancing Weights (`method = "optweight"`)
 
 *WeightIt* uses the R package *optweight* to estimate stable balancing
 weights. To install *optweight* from CRAN, run
@@ -284,7 +284,7 @@ page](https://cran.r-project.org/package=SuperLearner) to see which
 packages might be used with *SuperLearner*.
 
 There are additional functions for use with *SuperLearner* in the
-`SuperLearnerExtra`
+*SuperLearnerExtra*
 [repository](https://github.com/ecpolley/SuperLearnerExtra). To read
 these into your R session to be used with `method = "super"`, use
 [`source()`](https://rdrr.io/r/base/source.html) on the raw text file
@@ -342,7 +342,7 @@ pak::pak("vdorie/stan4bart")
 *stan4bart* requires compilation, which means you may need additional
 software installed on your computer to install it from source.
 
-## Energy Balancing (`method = "energy"`)
+## Energy balancing (`method = "energy"`)
 
 *WeightIt* uses the R package *osqp* to perform the optimization
 required for energy balancing. To install *osqp* from CRAN, run
@@ -356,3 +356,18 @@ If *osqp* is not on CRAN, or if you want to install the development
 version from source, you can do so from the developer’s site using the
 instructions given [here](https://osqp.org/docs/get_started/r.html),
 though it is a bit more involved than other installations from source.
+
+## Characteristic function distance balancing (`method = "cfd"`)
+
+As with energy balancing, *WeightIt* uses the R package *osqp* to
+perform the optimization required for CFD balancing; see the
+instructions above to install it.
+
+For `kernel = "matern"` with a value of `nu` other than 1/2, 3/2, or
+5/2, the *GPBayes* package is additionally required to compute the
+Matern kernel. To install *GPBayes* from CRAN, run
+
+``` r
+
+pak::pak("GPBayes")
+```

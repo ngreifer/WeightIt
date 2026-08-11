@@ -21,7 +21,7 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -120,15 +120,21 @@ method and what literature to read to interpret these estimands.</p></dd>
 <dt id="arg-stabilize">stabilize<a class="anchor" aria-label="anchor" href="#arg-stabilize"></a></dt>
 <dd><p>whether or not and how to stabilize the weights. If <code>TRUE</code>,
 each unit's weight will be multiplied by a stabilization factor, which is
-the the unconditional probability (or density) of each unit's observed
+the unconditional probability (or density) of each unit's observed
 treatment value. If a formula, a generalized linear model will be fit with
 the included predictors, and the inverse of the corresponding weight will
-be used as the standardization factor. Can only be used when <code>estimand = "ATE"</code> or with continuous
-treatments. Default is <code>FALSE</code> for no
-stabilization. See also the <code>num.formula</code> argument at <code><a href="weightitMSM.html">weightitMSM()</a></code>.
-For continuous treatments, weights are already stabilized, so setting
-<code>stabilize = TRUE</code> will be ignored with a warning (supplying a formula
-still works).</p></dd>
+be used as the stabilization factor. The formula can contain
+<a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms (e.g., <code>~ (1 | school)</code>) for
+methods that accept them, in which case a multilevel model is fit for the
+numerator. Can only be used when <code>estimand = "ATE"</code> or with continuous
+treatments. Default is <code>FALSE</code> for no stabilization. Note that a continuous
+treatment's weights already contain the unconditional density as their
+numerator (see <em>Continuous Treatments</em> at <a href="method_glm.html">method_glm</a>), so <code>stabilize = TRUE</code>
+(equivalently, <code>~1</code>) leaves them unchanged; the resulting object is not
+reported as stabilized, and has no <code>stabilization</code> component. A formula with
+terms in it, as in <code>stabilize = ~ x1</code>, does stabilize them. See also the
+<code>stabilize</code> argument at <code><a href="weightitMSM.html">weightitMSM()</a></code>, where a fully saturated model in the
+preceding treatments makes <code>TRUE</code> meaningful for continuous treatments too.</p></dd>
 
 
 <dt id="arg-focal">focal<a class="anchor" aria-label="anchor" href="#arg-focal"></a></dt>
@@ -145,7 +151,7 @@ weighting is to be done within categories or a one-sided formula with the
 stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>,
 a separate propensity score model or
 optimization will occur within each level of the variable <code>"gender"</code>. Only
-one <code>by</code> variable is allowed; to stratify by multiply variables
+one <code>by</code> variable is allowed; to stratify by multiple variables
 simultaneously, create a new variable that is a full cross of those
 variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>.</p></dd>
 
@@ -163,7 +169,8 @@ is a user-supplied function, and the propensity scores will be used to
 create weights. <code>formula</code> must include the treatment variable in <code>data</code>,
 but the listed covariates will play no role in the weight estimation. Using
 <code>ps</code> is similar to calling <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> directly, but produces a full
-<code>weightit</code> object rather than just producing weights.</p></dd>
+<code>weightit</code> object rather than just producing weights. See <code><a href="method_ps.html">method_ps</a></code> for
+the accepted formats and the additional arguments available.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
@@ -225,7 +232,7 @@ Details.</p></dd>
 <dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details for how the treated group is determined.</p></dd>
 
 <dt>s.weights</dt>
-<dd><p>The provided sampling weights, or a vector of 1s of none are provided.</p></dd>
+<dd><p>The provided sampling weights, or a vector of 1s if none are provided.</p></dd>
 
 <dt>focal</dt>
 <dd><p>The focal treatment level if the ATT or ATC was requested.</p></dd>
@@ -258,7 +265,7 @@ that perform the estimation of balancing weights using the requested
 <code>method</code>. Below are the methods allowed and links to pages containing more
 information about them, including additional arguments and outputs (e.g.,
 when <code>include.obj = TRUE</code>), how missing values are treated, which estimands
-are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code>method</code></td><td>Name</td></tr><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Non-parametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Stable balancing weights</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr><tr><td><code><a href="method_cfd.html">"cfd"</a></code></td><td>Characteristic function distance balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see <code><a href="method_user.html">method_user</a></code>
+are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code>method</code></td><td>Name</td></tr><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Nonparametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Stable balancing weights</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr><tr><td><code><a href="method_cfd.html">"cfd"</a></code></td><td>Characteristic function distance balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see <code><a href="method_user.html">method_user</a></code>
 for instructions and examples. Setting <code>method = NULL</code> computes unit weights.</p><div class="section">
 <h3 id="empty-model-formulas">Empty model formulas<a class="anchor" aria-label="anchor" href="#empty-model-formulas"></a></h3>
 
@@ -397,26 +404,26 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                  ||              1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.022 |---------------------------| 2.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.022 ╞═══════════════════════════╡ 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             5     4   3     2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated    1     1   1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated    1     1   1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           411   595 269   409   296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.33 1.437 1.5 1.637 2.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 1.33 1.437 1.5 1.637 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.       0.         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.823 0.701    0.33       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.    0.       0.         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.823 0.701    0.33       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
@@ -450,14 +457,14 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.397 |-----------|                 13.517</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.201 |---------------------------| 28.417</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.817 |-|                            3.949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.397 ╞═══════════╡                 13.517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.201 ╞═══════════════════════════╡ 28.417</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.817 ╞═╡                            3.949</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            226    244    485    181    182</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black  6.371  6.441   7.09  8.983 13.517</span>
@@ -466,14 +473,14 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             68    457    599    589    531</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.513  3.537   3.58  3.643  3.949</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.59  0.413   0.131       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.609 0.44    0.163       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        0.371 0.306   0.068       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
@@ -505,22 +512,22 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.01 |---------------------------| 20.946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All 0.01 ╞═══════════════════════════╡ 20.946</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         485    481    482    484    483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 10.209 13.112 13.974 17.816 20.946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  All 10.209 13.112 13.974 17.816 20.946</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.454 0.535   0.396       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All       1.454 0.535   0.396       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>

@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-08-03</h4>
+            <h4 data-toc-skip class="date">2026-08-11</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/installing-packages.Rmd" class="external-link"><code>vignettes/installing-packages.Rmd</code></a></small>
       <div class="d-none name"><code>installing-packages.Rmd</code></div>
@@ -224,12 +224,12 @@ source.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="propensity-score-weighting-using-gbm-method-gbm">Propensity Score weighting using GBM
+<h2 id="propensity-score-weighting-using-gbm-method-gbm">Propensity score weighting using GBM
 (<code>method = "gbm"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-gbm-method-gbm"></a>
 </h2>
 <p><em>WeightIt</em> uses the R package <em>gbm</em> to estimate
 propensity score weights using GBM. It does <em>not</em> rely on the
-<code>twang</code> package at all. To install <em>gbm</em> from CRAN,
+<em>twang</em> package at all. To install <em>gbm</em> from CRAN,
 run</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"gbm"</span><span class="op">)</span></span></code></pre></div>
@@ -294,7 +294,7 @@ the root finding required for inverse probability tilting. To install
 <!-- `ATE` requires compilation, which means you may need additional software installed on your computer to install it from source. -->
 </div>
 <div class="section level2">
-<h2 id="stable-balancing-weighting-method-optweight">Stable balancing weighting (<code>method = "optweight"</code>)<a class="anchor" aria-label="anchor" href="#stable-balancing-weighting-method-optweight"></a>
+<h2 id="stable-balancing-weights-method-optweight">Stable Balancing Weights (<code>method = "optweight"</code>)<a class="anchor" aria-label="anchor" href="#stable-balancing-weights-method-optweight"></a>
 </h2>
 <p><em>WeightIt</em> uses the R package <em>optweight</em> to estimate
 stable balancing weights. To install <em>optweight</em> from CRAN,
@@ -337,7 +337,7 @@ need to be installed to use them. See the Suggested packages on the
 <em>SuperLearner</em> <a href="https://cran.r-project.org/package=SuperLearner" class="external-link">CRAN page</a> to
 see which packages might be used with <em>SuperLearner</em>.</p>
 <p>There are additional functions for use with <em>SuperLearner</em> in
-the <code>SuperLearnerExtra</code> <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">repository</a>. To
+the <em>SuperLearnerExtra</em> <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">repository</a>. To
 read these into your R session to be used with
 <code>method = "super"</code>, use <code><a href="https://rdrr.io/r/base/source.html" class="external-link">source()</a></code> on the raw text
 file URL. For example, to read in the code for <code>SL.dbarts</code>,
@@ -382,7 +382,7 @@ additional software installed on your computer to install it from
 source.</p>
 </div>
 <div class="section level2">
-<h2 id="energy-balancing-method-energy">Energy Balancing (<code>method = "energy"</code>)<a class="anchor" aria-label="anchor" href="#energy-balancing-method-energy"></a>
+<h2 id="energy-balancing-method-energy">Energy balancing (<code>method = "energy"</code>)<a class="anchor" aria-label="anchor" href="#energy-balancing-method-energy"></a>
 </h2>
 <p><em>WeightIt</em> uses the R package <em>osqp</em> to perform the
 optimization required for energy balancing. To install <em>osqp</em>
@@ -393,6 +393,20 @@ from CRAN, run</p>
 development version from source, you can do so from the developer’s site
 using the instructions given <a href="https://osqp.org/docs/get_started/r.html" class="external-link">here</a>, though it is a
 bit more involved than other installations from source.</p>
+</div>
+<div class="section level2">
+<h2 id="characteristic-function-distance-balancing-method-cfd">Characteristic function distance balancing
+(<code>method = "cfd"</code>)<a class="anchor" aria-label="anchor" href="#characteristic-function-distance-balancing-method-cfd"></a>
+</h2>
+<p>As with energy balancing, <em>WeightIt</em> uses the R package
+<em>osqp</em> to perform the optimization required for CFD balancing;
+see the instructions above to install it.</p>
+<p>For <code>kernel = "matern"</code> with a value of <code>nu</code>
+other than 1/2, 3/2, or 5/2, the <em>GPBayes</em> package is
+additionally required to compute the Matern kernel. To install
+<em>GPBayes</em> from CRAN, run</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"GPBayes"</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

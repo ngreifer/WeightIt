@@ -97,7 +97,7 @@ Missing Data
 
 In the presence of missing data, the following value(s) for missing are allowed:
 &quot;ind&quot; (default)
-Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariate to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
+Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
 
 
 
@@ -202,7 +202,7 @@ Missing Data
 
 In the presence of missing data, the following value(s) for missing are allowed:
 &quot;ind&quot; (default)
-Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariate to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
+Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
 
 
 
@@ -223,7 +223,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -352,7 +352,7 @@ estimated at each time point.</p>
 
 
 <p>In the presence of missing data, the following value(s) for <code>missing</code> are allowed:</p><dl><dt><code>"ind"</code> (default)</dt>
-<dd><p>Missing variables are automatically handled by the boosting model. When using a <code>criterion</code> targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are included as covariate to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
+<dd><p>Missing variables are automatically handled by the boosting model. When using a <code>criterion</code> targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
 
 
 </dl></div>
@@ -414,7 +414,7 @@ backward compatibility.</p>
 
 
 <p>The following additional arguments can be specified:</p><dl><dt><code>criterion</code></dt>
-<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}</code>", where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
+<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}"</code>, where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 <dt><code>trim.at</code></dt>
 <dd><p>A number supplied to <code>at</code> in <code><a href="trim.html">trim()</a></code> which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).</p></dd>
@@ -429,6 +429,13 @@ backward compatibility.</p>
 <dt><code>n.trees</code></dt>
 <dd><p>The maximum number of trees used. This is passed onto the <code>n.trees</code> argument in <code>gbm.fit()</code>. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.</p></dd>
 
+<dt><code>n.grid</code></dt>
+<dd><p>When <code>criterion</code> is a balance-based criterion, the number of points in the initial coarse grid of trees searched before the search is refined around the best point. Default is <code>round(1 + sqrt(2 * (n.trees - start.tree + 1)))</code>. Must be between 2 and <code>n.trees</code>. Larger values make the initial search finer but slower.</p></dd>
+
+<dt><code>n.cores</code></dt>
+<dd><p>When <code>criterion</code> is a cross-validation criterion (i.e., <code>"cv{#}"</code>), the number of cores used by <code><a href="https://gbm-developers.github.io/gbm/reference/gbmCrossVal.html" class="external-link">gbm::gbmCrossVal()</a></code>
+ to fit the folds in parallel. Default is 1 for serial fitting.</p></dd>
+
 <dt><code>start.tree</code></dt>
 <dd><p>The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set <code>start.tree = 101</code> so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.</p></dd>
 
@@ -439,23 +446,23 @@ backward compatibility.</p>
 <dd><p>The shrinkage parameter applied to the trees. This is passed onto the <code>shrinkage</code> argument in <code>gbm.fit()</code>. The default is .01 for binary and multi-category treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.</p></dd>
 
 <dt><code>bag.fraction</code></dt>
-<dd><p>The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the <code>bag.fraction</code> argument in <code>gbm.fit()</code>. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> to ensure replicability of results.</p></dd>
+<dd><p>The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the <code>bag.fraction</code> argument in <code>gbm.fit()</code>. The default is 1, but smaller values should be tried. For values less than 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to set the seed using <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> to ensure replicability of results.</p></dd>
 
 <dt><code>use.offset</code></dt>
-<dd><p><code>logical</code>; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If <code>TRUE</code>, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the <code>offset</code> argument of <code>gbm.fit()</code>. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over <code>method = "glm"</code> with respect to <code>criterion</code>. Default is <code>FALSE</code> to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.</p></dd>
+<dd><p><code>logical</code>; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If <code>TRUE</code>, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predictor to the <code>offset</code> argument of <code>gbm.fit()</code>. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over <code>method = "glm"</code> with respect to <code>criterion</code>. Default is <code>FALSE</code> to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.</p></dd>
 
 
 </dl><p>All other arguments take on the defaults of those in <code><a href="https://gbm-developers.github.io/gbm/reference/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>
 ,
 and some are not used at all. For binary and multi-category treatments with
-a with cross-validation used as the criterion, <code>class.stratify.cv</code> is set
+cross-validation used as the criterion, <code>class.stratify.cv</code> is set
 to <code>TRUE</code> by default.</p>
 <p>The <code>w</code> argument in <code>gbm.fit()</code> is ignored because sampling weights are
 passed using <code>s.weights</code>.</p>
 <p>For continuous treatments only, the following arguments may be supplied:</p><dl><dt><code>density</code></dt>
 <dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
 <p>Can also be <code>"kernel"</code> to use kernel density estimation, which calls <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> to estimate the numerator and denominator densities for the weights. (This used to be requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.)</p>
-<p>If unspecified, a density corresponding to the argument passed to <code>distribution</code>. If <code>"gaussian"</code> (the default), <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used. If <code>"tdist"</code>, a t-distribution with 4 degrees of freedom is used. If <code>"laplace"</code>, a Laplace distribution is used.</p></dd>
+<p>If unspecified, a density corresponding to the argument passed to <code>distribution</code> is used. If <code>"gaussian"</code> (the default), <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used. If <code>"tdist"</code>, a t-distribution with 4 degrees of freedom is used. If <code>"laplace"</code>, a Laplace distribution is used.</p></dd>
 
 <dt><code>bw</code>, <code>adjust</code>, <code>kernel</code>, <code>n</code></dt>
 <dd><p>If <code>density = "kernel"</code>, the arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>. The defaults are the same as those in <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>.</p></dd>
@@ -551,26 +558,26 @@ no random components in the model.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.133 |---------------------------| 22.939</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.007 |------|                       6.886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.133 ╞═══════════════════════════╡ 22.939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 1.007 ╞══════╡                       6.886</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             181    177    183    184    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 10.484 11.097 15.942 18.361 22.939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 10.484 11.097 15.942 18.361 22.939</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             409    592    569    374    608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  3.913  3.978  4.087  4.151  6.886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control  3.913  3.978  4.087  4.151  6.886</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.049 0.558   0.306       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.381 0.218   0.051       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       1.049 0.558   0.306       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.381 0.218   0.051       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
@@ -615,14 +622,14 @@ no random components in the model.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.067  |------------------------|   1.059</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.                             ||   1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.037 |---------------------------| 1.152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.067  ╞════════════════════════╡   1.059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.                               │  1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.037 ╞═══════════════════════════╡ 1.152</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           183   162   191   485   190</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black 0.908 0.954 0.954 1.043 1.059</span>
@@ -631,14 +638,14 @@ no random components in the model.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            68   227   380   434   523</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   white 0.688 0.721 0.813 0.834 1.152</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.719 0.523   0.211       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.    0.      0.          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        0.641 0.483   0.18        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.       72 299.  </span>
@@ -673,22 +680,22 @@ no random components in the model.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.003 |---------------------------| 9.295</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All 0.003 ╞═══════════════════════════╡ 9.295</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        375   354   332   310   308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 9.295 9.295 9.295 9.295 9.295</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  All 9.295 9.295 9.295 9.295 9.295</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.368 0.817   0.553       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All       1.368 0.817   0.553       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>

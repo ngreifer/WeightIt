@@ -226,8 +226,8 @@ and invalid weights, and error and warning messages may not be helpful
 in diagnosing the problem. `weightit.fit()` does check to make sure
 weights were actually estimated, though.
 
-`weightit.fit()` may be most useful in speeding up simulation simulation
-studies that use
+`weightit.fit()` may be most useful in speeding up simulation studies
+that use
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 because the covariates can be supplied as a numeric matrix, which is
 often how they are generated in simulations, without having to go
@@ -264,7 +264,7 @@ covs_mat <- as.matrix(splitfactor(covs))
 WF1 <- weightit.fit(covs_mat, treat = lalonde$treat,
                     method = "glm", estimand = "ATT")
 str(WF1)
-#> List of 10
+#> List of 9
 #>  $ weights  : num [1:614] 1 1 1 1 1 1 1 1 1 1 ...
 #>  $ treat    : 'treat' int [1:614] 1 1 1 1 1 1 1 1 1 1 ...
 #>   ..- attr(*, "treat.type")= chr "binary"
@@ -276,7 +276,6 @@ str(WF1)
 #>  $ focal    : int 1
 #>  $ missing  : chr ""
 #>  $ fit.obj  : NULL
-#>  $ info     : Named list()
 #>  - attr(*, "Mparts")=List of 6
 #>   ..$ psi_treat :function (Btreat, Xtreat, A, SW)  
 #>   ..$ wfun      :function (Btreat, Xtreat, A)  
@@ -304,26 +303,26 @@ W1
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.            ||                    1.   
-#> control 0.009 |---------------------------| 3.743
+#> Treated 1.              │                   1.   
+#> Control 0.009 ╞═══════════════════════════╡ 3.743
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                     
 #>             5     4    3     2     1
-#>  treated    1     1    1     1     1
+#>  Treated    1     1    1     1     1
 #>           597   573  381   411   303
-#>  control 3.03 3.059 3.24 3.523 3.743
+#>  Control 3.03 3.059 3.24 3.523 3.743
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       1.818 1.289   1.098       0
+#> Treated       0.    0.      0.          0
+#> Control       1.818 1.289   1.098       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185

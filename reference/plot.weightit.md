@@ -2,7 +2,7 @@
 
 `plot.weightit()` plots information about the weights depending on how
 they were estimated. Currently, only weighting using `method = "gbm"` or
-`"optweight"` are supported. To plot the distribution of weights, see
+`"optweight"` is supported. To plot the distribution of weights, see
 [`plot.summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md).
 
 ## Usage

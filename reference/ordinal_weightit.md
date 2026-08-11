@@ -83,7 +83,7 @@ ordinal_weightit(
   thereof, or a one-sided formula specifying which variable(s) from the
   fitted model should be used. Note the cluster-robust variance matrix
   uses a correction for small samples, as is done in
-  [`sandwich::vcovCL()`](https://sandwich.R-Forge.R-project.org/reference/vcovCL.html)
+  [`sandwich::vcovCL()`](https://zeileis.codeberg.page/sandwich/reference/vcovCL.html)
   by default. Cluster-robust variance calculations are available only
   when `vcov` is `"asympt"`, `"HC0"`, `"BS"`, or `"FWB"`.
 

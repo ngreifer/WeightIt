@@ -26,8 +26,8 @@ are allowed: ATE, ATT, ATC, and ATO.
 For multi-category treatments, this method estimates the generalized
 propensity scores and weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html) using formulas described
-by Imai and Ratkovic (2014). The following estimands are allowed: ATE
-and ATT.
+by Imai and Ratkovic (2014). The following estimands are allowed: ATE,
+ATT, and ATO.
 
 ### Continuous Treatments
 
@@ -61,7 +61,7 @@ similar to those described by Huffman and van Gameren (2018). This
 involves specifying moment conditions for the models at each time point
 as with single-time point treatments but using the product of the
 time-specific weights as the weights that are used in the balance moment
-conditions. This yields weights that balance the covariate at each time
+conditions. This yields weights that balance the covariates at each time
 point. This is not the same implementation as is implemented in
 [`CBPS::CBMSM()`](https://rdrr.io/pkg/CBPS/man/CBMSM.html), and results
 should not be expected to align between the two methods. Any combination
@@ -232,9 +232,9 @@ The following additional arguments can be specified:
 
   the maximum number of iterations for convergence of the optimization.
   Passed to the `control` argument of
-  [`optim()`](https://rdrr.io/r/stats/optim.html). Default is 1000 for
-  binary and multi-category treatments and 10000 for continuous and
-  longitudinal treatments.
+  [`optim()`](https://rdrr.io/r/stats/optim.html). Default is 5000 for
+  binary treatments and censoring, 1000 for multi-category treatments,
+  and 10000 for continuous and longitudinal treatments.
 
 - `solver`:
 
@@ -270,7 +270,7 @@ The following additional arguments can be specified:
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -350,26 +350,26 @@ data("lalonde", package = "cobalt")
 summary(W1a)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                 ||               1.   
-#> control 0.017 |---------------------------| 2.263
+#> Treated 1.                   │              1.   
+#> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            589   595   269   409   296
-#>  control 1.464 1.485 1.576 1.743 2.263
+#>  Control 1.464 1.485 1.576 1.743 2.263
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.839 0.707   0.341       0
+#> Treated       0.    0.      0.          0
+#> Control       0.839 0.707   0.341       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -407,26 +407,26 @@ cobalt::bal.tab(W1a)
 summary(W1b)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                  ||              1.   
-#> control 0.012 |---------------------------| 2.053
+#> Treated 1.                    │             1.   
+#> Control 0.012 ╞═══════════════════════════╡ 2.053
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            595   589   269   409   296
-#>  control 1.368 1.378 1.472 1.607 2.053
+#>  Control 1.368 1.378 1.472 1.607 2.053
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated        0.   0.      0.          0
-#> control        0.81 0.693   0.326       0
+#> Treated        0.   0.      0.          0
+#> Control        0.81 0.693   0.326       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -462,14 +462,14 @@ cobalt::bal.tab(W1b)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.501  |------------------|         17.966
-#> hispan 1.631  |--------------------------| 24.561
-#> white  1.131 |--|                           4.134
+#> black  1.501  ╞══════════════════╡         17.966
+#> hispan 1.631  ╞══════════════════════════╡ 24.561
+#> white  1.131 ╞══╡                           4.134
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            226    231    485    181    182
 #>   black  6.799  6.838  7.267  9.897 17.966
@@ -478,14 +478,14 @@ summary(W2)
 #>            398    432    437    404    599
 #>   white  3.688  3.781  3.848  3.895  4.134
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.635 0.387   0.133       0
 #> hispan       0.582 0.447   0.155       0
 #> white        0.389 0.327   0.071       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
@@ -519,22 +519,22 @@ cobalt::bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>      Min                                  Max
-#> all 0.01 |---------------------------| 20.946
+#> All 0.01 ╞═══════════════════════════╡ 20.946
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                        
 #>         485    481    482    484    483
-#>  all 10.209 13.112 13.974 17.816 20.946
+#>  All 10.209 13.112 13.974 17.816 20.946
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.454 0.535   0.396       0
+#> All       1.454 0.535   0.396       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
@@ -567,65 +567,69 @@ data("msmdata")
 #>  - sampling weights: none
 #>  - number of time points: 2 (A_1, A_2)
 #>  - treatment:
-#>     + time 1: 2-category
-#>     + time 2: 2-category
+#>     + time 1 (A_1): 2-category
+#>     + time 2 (A_2): 2-category
 #>  - covariates:
-#>     + baseline: X1_0, X2_0
-#>     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0
+#>     + time 1 (A_1): X1_0, X2_0
+#>     + time 2 (A_2): X1_1, X2_1, A_1, X1_0, X2_0
 
 summary(W4)
-#>                         Time 1                        
-#> - Weight ranges:
+#>                   Summary of weights
+#> 
+#> 
+#> ─── 1. Treatment: A_1 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                   Max
-#> treated 1.05  |---------------------------| 110.88 
-#> control 1.239 |---------------------|        86.951
+#> Treated 1.05  ╞═══════════════════════════╡ 110.88 
+#> Control 1.239 ╞═════════════════════╡        86.951
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                            
 #>            3880    168   2859   3774   3653
-#>  treated 50.114 50.114 56.079  96.45 110.88
+#>  Treated 50.114 50.114 56.079  96.45 110.88
 #>            5695   6284   3500   1875   1362
-#>  control 52.431 55.212 55.212 58.593 86.951
+#>  Control 52.431 55.212 55.212 58.593 86.951
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.107 0.552   0.291       0
-#> control       1.033 0.6     0.315       0
+#> Treated       1.107 0.552   0.291       0
+#> Control       1.033 0.6     0.315       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3306.   4194.  
 #> Weighted   1598.88 1884.92
 #> 
-#>                         Time 2                        
-#> - Weight ranges:
+#> ─── 2. Treatment: A_2 ─────────────────────────────
+#> 
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 1.05  |-----------------------|      96.45
-#> control 1.239 |---------------------------| 110.88
+#> Treated 1.05  ╞═══════════════════════╡      96.45
+#> Control 1.239 ╞═══════════════════════════╡ 110.88
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                            
 #>            3729    871   3880    168   3774
-#>  treated 42.387 42.822 50.114 50.114  96.45
+#>  Treated 42.387 42.822 50.114 50.114  96.45
 #>            3500   2859   1875   1362   3653
-#>  control 55.212 56.079 58.593 86.951 110.88
+#>  Control 55.212 56.079 58.593 86.951 110.88
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.986 0.588   0.292       0
-#> control       1.165 0.583   0.329       0
+#> Treated       0.986 0.588   0.292       0
+#> Control       1.165 0.583   0.329       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted 3701.      3799
 #> Weighted   1570.46    1926
-#> 
 
 cobalt::bal.tab(W4)
 #> Balance summary across all time points

@@ -88,8 +88,10 @@ supplied in a `bart_args` list, and Stan and prior options in a
 `stan4bart()` equivalents when supplied (e.g., `n.chains` to `chains`,
 `n.threads` to `cores`, and BART hyperparameters like `n.trees` to
 `bart_args`), so the same argument names can be used with or without
-random effects. As with the single-level case, M-estimation is not
-supported.
+random effects. Only the arguments described here are passed on;
+anything else, including the `bart2()` arguments listed as exceptions in
+*Additional Arguments* below, is ignored. As with the single-level case,
+M-estimation is not supported.
 
 ### Censoring Weights
 
@@ -180,11 +182,37 @@ or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
 with the following exceptions:
 
-- `test`, `weights`,`subset`, `offset.test` are ignored
+- `test`, `weights`, `subset`, `offset.test`, and `samplerOnly` are
+  ignored
 
-- `combine.chains` is always set to `TRUE`
+- `combineChains` is always set to `TRUE`
 
-- `sampleronly` is always set to `FALSE`
+- `keepCall` is always set to `FALSE`
+
+- `verbose` is always set to `FALSE` (use
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)'s
+  own `verbose` argument instead)
+
+When the model `formula` contains random effects terms,
+[`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html)
+is used instead of `bart2()`, and the arguments it accepts differ; see
+*Multilevel Treatment Models* below.
+
+See also the *Reproducibility* section below for information on using
+the `seed` argument.
+
+The following additional argument may be supplied:
+
+- `use.offset`:
+
+  `logical`; whether to use the linear predictor resulting from a
+  generalized linear model as an offset to the BART model. If `TRUE`,
+  this fits a probit regression model (for binary treatments) or a
+  linear regression model (for continuous treatments) and supplies the
+  linear predictor to the `offset` argument of `bart2()` or
+  `stan4bart()`, overriding any supplied argument to `offset`. Default
+  is `FALSE` to omit this offset. Only allowed for binary and continuous
+  treatments.
 
 For binary and multi-category treatments, the following arguments may be
 supplied:
@@ -292,45 +320,45 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 1.       ||                          1.   
-#> control 0.002 |---------------------------| 10.058
+#> Treated 1.         │                         1.   
+#> Control 0.003 ╞═══════════════════════════╡ 10.237
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4    3     2      1
-#>  treated     1     1    1     1      1
-#>            409   592  569   374    608
-#>  control 2.272 2.809 2.99 3.452 10.058
+#>  Treated     1     1    1     1      1
+#>            585   592  569   374    608
+#>  Control 2.224 2.785 2.83 3.524 10.237
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.       0.         0
-#> control       1.864 0.943    0.75       0
+#> Treated       0.    0.      0.          0
+#> Control       1.882 0.932   0.744       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted     96.06     185
+#> Weighted     94.66     185
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>                Type Diff.Adj
-#> prop.score Distance   0.4807
-#> age         Contin.   0.0695
-#> educ        Contin.  -0.0177
-#> married      Binary  -0.0321
-#> nodegree     Binary   0.0313
-#> re74        Contin.  -0.0510
+#> prop.score Distance   0.4822
+#> age         Contin.   0.0654
+#> educ        Contin.  -0.0247
+#> married      Binary  -0.0316
+#> nodegree     Binary   0.0333
+#> re74        Contin.  -0.0545
 #> 
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.       185
-#> Adjusted     96.06     185
+#> Adjusted     94.66     185
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -347,48 +375,48 @@ cobalt::bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.222 |-----------------|            9.066
-#> hispan 2.795     |-----------------------| 13.026
-#> white  1.068 |---------------|              8.071
+#> black  1.235 ╞═════════════════╡            8.778
+#> hispan 3.03       ╞══════════════════════╡ 12.562
+#> white  1.055 ╞═══════════════╡              8.115
 #> 
-#> - Units with the 5 most extreme weights by group:
-#>                                           
-#>            226    181    244    423    231
-#>   black  7.125  7.248  7.834  8.301  9.066
-#>            512    346    426    570    564
-#>  hispan 12.269 12.402 12.489 12.687 13.026
-#>             68     23     60     76    140
-#>   white   4.41   5.09  5.212  7.748  8.071
+#> ─ Units with the 5 most extreme weights by group:
+#>                                          
+#>           226    181    244    423    231
+#>   black 7.095  7.325   7.95  8.455  8.778
+#>           426    392    570    564    346
+#>  hispan 12.09 12.336 12.396 12.509 12.562
+#>            68     23     60     76    140
+#>   white 4.528  5.049  5.643  7.848  8.115
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.581 0.378   0.128       0
-#> hispan       0.367 0.302   0.067       0
-#> white        0.452 0.316   0.081       0
+#> black        0.58  0.377   0.127       0
+#> hispan       0.349 0.289   0.06        0
+#> white        0.461 0.321   0.084       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
-#> Weighted   181.85  63.57 248.35
+#> Weighted   181.98  64.27 246.68
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.1898
-#> educ     Contin.       0.1698
-#> married   Binary       0.0543
-#> nodegree  Binary       0.0270
-#> re74     Contin.       0.1125
+#> age      Contin.       0.1786
+#> educ     Contin.       0.1866
+#> married   Binary       0.0501
+#> nodegree  Binary       0.0333
+#> re74     Contin.       0.1120
 #> 
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  
-#> Adjusted   181.85  63.57 248.35
+#> Adjusted   181.98  64.27 246.68
 
 #Balancing covariates with respect to re75 (continuous)
 #with kernel density estimation for GPS
@@ -405,38 +433,38 @@ cobalt::bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.003 |---------------------------| 61.643
+#> All 0.003 ╞═══════════════════════════╡ 43.754
 #> 
-#> - Units with the 5 most extreme weights:
-#>                                      
-#>        431   486    487    484    469
-#>  all 23.59 38.49 48.128 48.256 61.643
+#> ─ Units with the 5 most extreme weights:
+#>                                        
+#>         490    486    484    487    469
+#>  All 24.266 26.006 43.072 43.095 43.754
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       2.866 0.933   1.014       0
+#> All        2.52 0.912   0.914       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted    66.75
+#> Weighted    83.63
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.  -0.0294
-#> educ     Contin.   0.0213
-#> married   Binary  -0.0631
-#> nodegree  Binary  -0.0272
-#> re74     Contin.  -0.0599
+#> age      Contin.  -0.0280
+#> educ     Contin.   0.0298
+#> married   Binary  -0.0648
+#> nodegree  Binary  -0.0374
+#> re74     Contin.  -0.0546
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted    66.75
+#> Adjusted    83.63
 ```

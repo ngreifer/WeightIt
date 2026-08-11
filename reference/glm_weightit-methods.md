@@ -197,7 +197,7 @@ weights will be created.
 `estfun()` extracts the empirical estimating functions for the fitted
 model, optionally accounting for the estimation of the weights (if
 available). This, along with `bread()`, is used by
-[`sandwich::sandwich()`](https://sandwich.R-Forge.R-project.org/reference/sandwich.html)
+[`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html)
 to compute the robust covariance matrix of the estimated coefficients.
 See
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
@@ -223,9 +223,9 @@ for computing predictions from the models.
 [`anova.glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/anova.glm_weightit.md)
 for comparing models using a Wald test.
 
-[`sandwich::estfun()`](https://sandwich.R-Forge.R-project.org/reference/estfun.html)
+[`sandwich::estfun()`](https://zeileis.codeberg.page/sandwich/reference/estfun.html)
 and
-[`sandwich::bread()`](https://sandwich.R-Forge.R-project.org/reference/bread.html)
+[`sandwich::bread()`](https://zeileis.codeberg.page/sandwich/reference/bread.html)
 for the `estfun()` and `bread()` generics.
 
 ## Examples

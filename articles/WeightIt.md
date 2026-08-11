@@ -28,7 +28,7 @@ demonstration of *WeightIt*’s capabilities.
 
 ## Balancing Weights for a Point Treatment
 
-First we will use the Lalonde dataset to estimate the effect of a point
+First we will use the Lalonde data set to estimate the effect of a point
 treatment. We’ll use the version of the data set that comes with the
 *cobalt* package, which we will use later on as well. Here, we are
 interested in the average treatment effect on the treated (ATT).
@@ -133,7 +133,8 @@ estimator. This variability is presented in several ways, but the most
 important is the effective sample size (ESS) computed from the weights,
 which we hope is as close to the original sample size as possible. What
 constitutes a “large enough” ESS is mostly relative, though, and must be
-considered with respect other constraints, including covariate balance.
+considered with respect to other constraints, including covariate
+balance.
 
 ``` r
 
@@ -142,26 +143,26 @@ summary(W.out)
 
     ##                   Summary of weights
     ## 
-    ## - Weight ranges:
+    ## ─ Weight ranges:
     ## 
     ##           Min                                 Max
-    ## treated 1.            ||                    1.   
-    ## control 0.009 |---------------------------| 3.743
+    ## Treated 1.              │                   1.   
+    ## Control 0.009 ╞═══════════════════════════╡ 3.743
     ## 
-    ## - Units with the 5 most extreme weights by group:
+    ## ─ Units with the 5 most extreme weights by group:
     ##                                     
     ##             5     4    3     2     1
-    ##  treated    1     1    1     1     1
+    ##  Treated    1     1    1     1     1
     ##           597   573  381   411   303
-    ##  control 3.03 3.059 3.24 3.523 3.743
+    ##  Control 3.03 3.059 3.24 3.523 3.743
     ## 
-    ## - Weight statistics:
+    ## ─ Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       0.    0.      0.          0
-    ## control       1.818 1.289   1.098       0
+    ## Treated       0.    0.      0.          0
+    ## Control       1.818 1.289   1.098       0
     ## 
-    ## - Effective Sample Sizes:
+    ## ─ Effective Sample Sizes:
     ## 
     ##            Control Treated
     ## Unweighted  429.       185
@@ -225,26 +226,26 @@ summary(W.out)
 
     ##                   Summary of weights
     ## 
-    ## - Weight ranges:
+    ## ─ Weight ranges:
     ## 
     ##           Min                                 Max
-    ## treated 1.           ||                     1.   
-    ## control 0.008 |---------------------------| 4.062
+    ## Treated 1.             │                    1.   
+    ## Control 0.008 ╞═══════════════════════════╡ 4.062
     ## 
-    ## - Units with the 5 most extreme weights by group:
+    ## ─ Units with the 5 most extreme weights by group:
     ##                                      
     ##              5     4    3     2     1
-    ##  treated     1     1    1     1     1
+    ##  Treated     1     1    1     1     1
     ##            608   381  597   303   411
-    ##  control 3.073 3.235 3.45 3.897 4.062
+    ##  Control 3.073 3.235 3.45 3.897 4.062
     ## 
-    ## - Weight statistics:
+    ## ─ Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       0.    0.      0.          0
-    ## control       1.834 1.287   1.101       0
+    ## Treated       0.    0.      0.          0
+    ## Control       1.834 1.287   1.101       0
     ## 
-    ## - Effective Sample Sizes:
+    ## ─ Effective Sample Sizes:
     ## 
     ##            Control Treated
     ## Unweighted  429.       185
@@ -267,7 +268,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary       -0 Balanced, <0.05           .
+    ## nodegree     Binary        0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -297,8 +298,8 @@ treatment effect in the weighted sample. The functions
 [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 and friends make it easy to fit (generalized) linear models that account
-for estimation of of the weights in their standard errors. We can then
-use functions in *marginaleffects* to perform g-computation to extract a
+for estimation of the weights in their standard errors. We can then use
+functions in *marginaleffects* to perform g-computation to extract a
 treatment effect estimation from the outcome model.
 
 ``` r
@@ -336,10 +337,10 @@ These are described in detail at
 
 ## Balancing Weights for a Longitudinal Treatment
 
-*WeightIt* can estimate weights marginal structural models with
-longitudinal treatment as well. This time, we’ll use the sample data set
-`msmdata` to estimate our weights. Data must be in “wide” format, with
-one row per unit.
+*WeightIt* can estimate weights for marginal structural models with
+longitudinal treatments as well. This time, we’ll use the sample data
+set `msmdata` to estimate our weights. Data must be in “wide” format,
+with one row per unit.
 
 ``` r
 
@@ -459,17 +460,17 @@ Wmsm.out
     ##  - sampling weights: none
     ##  - number of time points: 3 (A_1, A_2, A_3)
     ##  - treatment:
-    ##     + time 1: 2-category
-    ##     + time 2: 2-category
-    ##     + time 3: 2-category
+    ##     + time 1 (A_1): 2-category
+    ##     + time 2 (A_2): 2-category
+    ##     + time 3 (A_3): 2-category
     ##  - covariates:
-    ##     + baseline: X1_0, X2_0
-    ##     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0
-    ##     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
+    ##     + time 1 (A_1): X1_0, X2_0
+    ##     + time 2 (A_2): X1_1, X2_1, A_1, X1_0, X2_0
+    ##     + time 3 (A_3): X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
     ##  - stabilized; stabilization factors:
-    ##     + baseline: (none)
-    ##     + after time 1: A_1
-    ##     + after time 2: A_1, A_2, A_1:A_2
+    ##     + time 1 (A_1): (none)
+    ##     + time 2 (A_2): A_1
+    ##     + time 3 (A_3): A_1, A_2, A_1:A_2
 
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 estimates separate weights for each time period and then takes the
@@ -486,91 +487,103 @@ point treatments.
 summary(Wmsm.out)
 ```
 
-    ##                         Time 1                        
-    ## - Weight ranges:
+    ##                   Summary of weights
+    ## 
+    ## 
+    ## ─── 1. Treatment: A_1 ───────────────────────────
+    ## 
+    ## ─ Weight ranges:
     ## 
     ##           Min                                 Max
-    ## treated 0.153 |---------------------------| 57.08
-    ## control 0.109 |--------|                    20.46
+    ## Treated 0.153 ╞═══════════════════════════╡ 57.08
+    ## Control 0.109 ╞════════╡                    20.46
     ## 
-    ## - Units with the 5 most extreme weights by group:
+    ## ─ Units with the 5 most extreme weights by group:
     ##                                            
     ##            4390   3440   3774   3593   5685
-    ##  treated 22.101 24.128   25.7 27.786 57.079
+    ##  Treated 22.101 24.128   25.7 27.786 57.079
     ##            6659   6284   1875   6163   2533
-    ##  control 12.894  13.09 14.523 14.705 20.465
+    ##  Control 12.894  13.09 14.523 14.705 20.465
     ## 
-    ## - Weight statistics:
+    ## ─ Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       1.779 0.775   0.573       0
-    ## control       1.331 0.752   0.486       0
+    ## Treated       1.779 0.775   0.573       0
+    ## Control       1.331 0.752   0.486       0
     ## 
-    ## - Mean of Weights = 0.98
+    ## ─ Mean of Weights:
     ## 
-    ## - Mean of Weights = 1
+    ##              
+    ## Treated 0.984
+    ## Control 1.002
     ## 
-    ## - Effective Sample Sizes:
+    ## ─ Effective Sample Sizes:
     ## 
     ##            Control Treated
     ## Unweighted    3306    4194
     ## Weighted      1193    1007
     ## 
-    ##                         Time 2                        
-    ## - Weight ranges:
+    ## ─── 2. Treatment: A_2 ───────────────────────────
+    ## 
+    ## ─ Weight ranges:
     ## 
     ##           Min                                 Max
-    ## treated 0.109 |---------------------------| 57.08
-    ## control 0.15  |--------|                    20.49
+    ## Treated 0.109 ╞═══════════════════════════╡ 57.08
+    ## Control 0.15  ╞════════╡                    20.49
     ## 
-    ## - Units with the 5 most extreme weights by group:
+    ## ─ Units with the 5 most extreme weights by group:
     ##                                            
     ##            4390   3440   3774   3593   5685
-    ##  treated 22.101 24.128   25.7 27.786 57.079
+    ##  Treated 22.101 24.128   25.7 27.786 57.079
     ##            1875   6163   6862   1286   6158
-    ##  control 14.523 14.705 14.808 16.231 20.486
+    ##  Control 14.523 14.705 14.808 16.231 20.486
     ## 
-    ## - Weight statistics:
+    ## ─ Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       1.797 0.779   0.58        0
-    ## control       1.359 0.75    0.488       0
+    ## Treated       1.797 0.779   0.58        0
+    ## Control       1.359 0.75    0.488       0
     ## 
-    ## - Mean of Weights = 0.99
+    ## ─ Mean of Weights:
     ## 
-    ## - Mean of Weights = 1
+    ##              
+    ## Treated 0.985
+    ## Control 0.998
     ## 
-    ## - Effective Sample Sizes:
+    ## ─ Effective Sample Sizes:
     ## 
     ##            Control Treated
     ## Unweighted    3701  3799. 
     ## Weighted      1300   898.2
     ## 
-    ##                         Time 3                        
-    ## - Weight ranges:
+    ## ─── 3. Treatment: A_3 ───────────────────────────
+    ## 
+    ## ─ Weight ranges:
     ## 
     ##           Min                                 Max
-    ## treated 0.109 |---------------------------| 57.08
-    ## control 0.208 |-----------|                 25.7 
+    ## Treated 0.109 ╞═══════════════════════════╡ 57.08
+    ## Control 0.208 ╞═══════════╡                 25.7 
     ## 
-    ## - Units with the 5 most extreme weights by group:
+    ## ─ Units with the 5 most extreme weights by group:
     ##                                            
     ##            3576   4390   3440   3593   5685
-    ##  treated 20.583 22.101 24.128 27.786 57.079
+    ##  Treated 20.583 22.101 24.128 27.786 57.079
     ##            6163   6862    168   6158   3774
-    ##  control 14.705 14.808  16.97 20.486   25.7
+    ##  Control 14.705 14.808  16.97 20.486   25.7
     ## 
-    ## - Weight statistics:
+    ## ─ Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       2.008 0.931   0.753       0
-    ## control       1.269 0.672   0.407       0
+    ## Treated       2.008 0.931   0.753       0
+    ## Control       1.269 0.672   0.407       0
     ## 
-    ## - Mean of Weights = 1.04
+    ## ─ Mean of Weights:
     ## 
-    ## - Mean of Weights = 0.97
+    ##              
+    ## Treated 1.038
+    ## Control 0.967
     ## 
-    ## - Effective Sample Sizes:
+    ## ─ Effective Sample Sizes:
     ## 
     ##            Control Treated
     ## Unweighted    4886  2614. 
@@ -615,9 +628,9 @@ By setting `which.time = .none` in
 [`bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html),
 we can focus on the overall balance assessment, which displays the
 greatest imbalance for each covariate across time points. We can see
-that our estimated weights balance all covariates all time points with
-respect to means and KS statistics. Now we can estimate our treatment
-effects.
+that our estimated weights balance all covariates at all time points
+with respect to means and KS statistics. Now we can estimate our
+treatment effects.
 
 First, we fit a marginal structural model for the outcome using
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
@@ -734,19 +747,17 @@ alongside the treatment models:
     ##  - method: "glm" (propensity score weighting with GLM)
     ##  - number of obs.: 7500
     ##  - sampling weights: none
-    ##  - number of time points: 3 (A_1, A_2, A_3)
+    ##  - number of time points: 4 (A_1, A_2, C_2, A_3)
     ##  - treatment:
-    ##     + time 1: 2-category
-    ##     + time 2: 2-category
-    ##     + time 3: 2-category
-    ##  - censoring (IPCW):
-    ##     + C_2: 3864 of 7500 units censored
-    ##  - censoring covariates:
-    ##     + C_2: X1_1, X2_1, A_1, A_2
+    ##     + time 1 (A_1): 2-category
+    ##     + time 2 (A_2): 2-category
+    ##     + time 3 (C_2): censoring (IPCW); 3864 of 7500 units censored
+    ##     + time 4 (A_3): 2-category
     ##  - covariates:
-    ##     + baseline: X1_0, X2_0
-    ##     + after time 1: X1_1, X2_1, A_1
-    ##     + after time 2: X1_2, X2_2, A_2
+    ##     + time 1 (A_1): X1_0, X2_0
+    ##     + time 2 (A_2): X1_1, X2_1, A_1
+    ##     + time 3 (C_2): X1_1, X2_1, A_1, A_2
+    ##     + time 4 (A_3): X1_2, X2_2, A_2
 
 Each model is fit only among the units still under observation when it
 is reached, so the missing values for censored units are not a problem.

@@ -57,8 +57,8 @@ object with the propensity scores replaced with the calibrated
 propensity scores and the weights replaced by weights computed from the
 calibrated propensity scores.
 
-If the input is a numeric vector of weights, the output will be a
-numeric vector of the calibrated propensity scores.
+If the input is a numeric vector of propensity scores, the output will
+be a numeric vector of the calibrated propensity scores.
 
 ## References
 
@@ -97,26 +97,26 @@ data("lalonde", package = "cobalt")
 summary(W)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.       ||                          1.  
-#> control 0.004 |---------------------------| 10.61
+#> Treated 1.         │                         1.  
+#> Control 0.004 ╞═══════════════════════════╡ 10.61
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            585   569   592   374   608
-#>  control 4.352 5.009 5.858 5.858 10.61
+#>  Control 4.352 5.009 5.858 5.858 10.61
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var  MAD Entropy # Zeros
-#> treated       0.    0.     0.          0
-#> control       2.422 1.06   1.016       0
+#> Treated       0.    0.     0.          0
+#> Control       2.422 1.06   1.016       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted   429.      185

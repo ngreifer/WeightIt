@@ -241,7 +241,7 @@ be set with the `criterion` argument, described below.
 
 Note that this implementation differs from that of Pirracchio and Carone
 (2018) in that here, balance is measured only on the terms included in
-the model formula (i.e., and not their interactions unless specifically
+the model formula (i.e., not their interactions unless specifically
 included), and balance results from a sample weighted using the
 estimated predicted values as propensity scores, not a sample matched
 using propensity score matching on the predicted values. Binary and
@@ -323,7 +323,7 @@ for additional references.
 ``` r
 data("lalonde", package = "cobalt")
 
-#Note: for time, all exmaples use a small set of
+#Note: for time, all examples use a small set of
 #      learners. Many more should be added if
 #      possible, including a variety of model
 #      types (e.g., parametric, flexible, tree-
@@ -335,7 +335,6 @@ data("lalonde", package = "cobalt")
                 method = "super", estimand = "ATT",
                 SL.library = c("SL.glm", "SL.stepAIC",
                                "SL.glm.interaction")))
-#> Loading required package: nnls
 #> A weightit object
 #>  - method: "super" (propensity score weighting with SuperLearner)
 #>  - number of obs.: 614
@@ -347,26 +346,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.          ||                      1.   
-#> control 0.008 |---------------------------| 4.561
+#> Treated 1.            │                     1.   
+#> Control 0.008 ╞═══════════════════════════╡ 4.561
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            411   589   269   409   296
-#>  control 2.193 2.279 2.454 2.939 4.561
+#>  Control 2.193 2.279 2.454 2.939 4.561
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       1.017 0.726   0.407       0
+#> Treated       0.    0.      0.          0
+#> Control       1.017 0.726   0.407       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -404,14 +403,14 @@ cobalt::bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.428 |----------------|            12.53 
-#> hispan 1.775  |--------------------------| 18.972
-#> white  1.079 |---|                          4.587
+#> black  1.428 ╞════════════════╡            12.53 
+#> hispan 1.775  ╞══════════════════════════╡ 18.972
+#> white  1.079 ╞═══╡                          4.587
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            190    184    485    182    181
 #>   black  7.216  7.725  9.668 12.442  12.53
@@ -420,14 +419,14 @@ summary(W2)
 #>            531     23    457    296    589
 #>   white      4   4.06  4.152  4.333  4.587
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.619 0.386   0.131       0
 #> hispan       0.472 0.371   0.108       0
 #> white        0.387 0.319   0.069       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
@@ -464,22 +463,22 @@ cobalt::bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.036 |---------------------------| 20.635
+#> All 0.036 ╞═══════════════════════════╡ 20.635
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                      
 #>        431    483    484   485    354
-#>  all 8.713 14.213 17.078 19.96 20.635
+#>  All 8.713 14.213 17.078 19.96 20.635
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.484 0.518   0.384       0
+#> All       1.484 0.518   0.384       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
@@ -520,26 +519,26 @@ cobalt::bal.tab(W3)
 summary(W4)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                  ||              1.   
-#> control 0.022 |---------------------------| 2.044
+#> Treated 1.                    │             1.   
+#> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                    
 #>             5     4   3     2     1
-#>  treated    1     1   1     1     1
+#>  Treated    1     1   1     1     1
 #>           411   595 269   409   296
-#>  control 1.33 1.437 1.5 1.637 2.044
+#>  Control 1.33 1.437 1.5 1.637 2.044
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.       0.         0
-#> control       0.823 0.701    0.33       0
+#> Treated       0.    0.       0.         0
+#> Control       0.823 0.701    0.33       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185

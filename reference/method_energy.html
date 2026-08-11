@@ -58,7 +58,8 @@ Longitudinal Treatments
 
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield optimal
-balance at each time point. NOTE: the use of energy balancing with longitudinal treatments has not been validated!
+balance at each time point. NOTE: the use of energy balancing with longitudinal treatments has not been validated! Because of this, weightitMSM() errors when this method is
+requested; set weightit.force = TRUE to bypass that error.
 
 
 
@@ -143,7 +144,8 @@ Longitudinal Treatments
 
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield optimal
-balance at each time point. NOTE: the use of energy balancing with longitudinal treatments has not been validated!
+balance at each time point. NOTE: the use of energy balancing with longitudinal treatments has not been validated! Because of this, weightitMSM() errors when this method is
+requested; set weightit.force = TRUE to bypass that error.
 
 
 
@@ -183,7 +185,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -274,7 +276,8 @@ using formulas described by Huling, Greifer, and Chen (2023).</p>
 
 <p>For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield optimal
-balance at each time point. <strong>NOTE: the use of energy balancing with longitudinal treatments has not been validated!</strong></p>
+balance at each time point. <strong>NOTE: the use of energy balancing with longitudinal treatments has not been validated!</strong> Because of this, <code><a href="weightitMSM.html">weightitMSM()</a></code> errors when this method is
+requested; set <code>weightit.force = TRUE</code> to bypass that error.</p>
 </div>
 
 <div class="section">
@@ -337,12 +340,13 @@ size at the expense of balance.</p><div class="section">
 <h3 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a></h3>
 
 
-<p>Although there are no stochastic components to the optimization, a feature
-turned off by default is to update the optimization based on how long the
-optimization has been running, which will vary across runs even when a seed
-is set and no parameters have been changed. See the discussion
+<p>Although there are no stochastic components to the optimization, <span class="pkg">osqp</span>
+by default updates the optimization based on how long the optimization has
+been running, which will vary across runs even when a seed is set and no
+parameters have been changed. See the discussion
 <a href="https://github.com/osqp/osqp-r/issues/19" class="external-link">here</a> for more details. To ensure
-reproducibility by default, <code>adaptive_rho_interval</code> is set to 10. See
+reproducibility by default, <code>adaptive_rho_interval</code> is set to 50, which fixes
+the update schedule at a set number of iterations. See
 <code><a href="https://rdrr.io/pkg/osqp/man/osqpSettings.html" class="external-link">osqp::osqpSettings()</a></code>
  for details.</p>
 </div>
@@ -351,15 +355,15 @@ reproducibility by default, <code>adaptive_rho_interval</code> is set to 10. See
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>Sometimes the optimization can fail to converge because the problem is
-not convex. A warning will be displayed if so. In these cases, try simply
-re-fitting the weights without changing anything (but see the
-<em>Reproducibility</em> section above). If the method repeatedly fails, you should
-try another method or change the supplied parameters (though this is
-uncommon). Increasing <code>max_iter</code> or changing <code>adaptive_rho_interval</code> might
-help.</p>
+not convex. A warning will be displayed if so. Because the optimization is
+deterministic (see the <em>Reproducibility</em> section above), re-fitting without
+changing anything will reproduce the failure; increasing <code>max_iter</code> or changing
+<code>adaptive_rho_interval</code> may help instead. If the method repeatedly fails, you
+should try another method or change the supplied parameters (though this is
+uncommon).</p>
 <p>If it seems like the weights are balancing the covariates but you still get a
-failure to converge, this usually indicates that more iterations are needs to
-find the optimal solutions. This can occur when <code>moments</code> or <code>int</code> are
+failure to converge, this usually indicates that more iterations are needed to
+find the optimal solution. This can occur when <code>moments</code> or <code>int</code> are
 specified. <code>max_iter</code> should be increased, and setting <code>verbose = TRUE</code>
 allows you to monitor the process and examine if the optimization is
 approaching convergence.</p>
@@ -371,7 +375,7 @@ approaching convergence.</p>
 
 
 
-<p>The following following additional arguments can be specified:</p>
+<p>The following additional arguments can be specified:</p>
 <dl><dt><code>dist.mat</code></dt>
 <dd><p>the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include <code>"scaled_euclidean"</code> for the Euclidean (L2) distance on the scaled covariates (the default), <code>"mahalanobis"</code> for the Mahalanobis distance, and <code>"euclidean"</code> for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to <code><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist()</a></code>.</p></dd>
 
@@ -395,7 +399,7 @@ approaching convergence.</p>
 <dd><p><code>logical</code>; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when <code>estimand = "ATE"</code>. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is <code>TRUE</code>; set to <code>FALSE</code> to use the standard energy balancing weights instead (not recommended).</p></dd>
 
 <dt><code>quantile</code></dt>
-<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates.</p></dd>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5, .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates.</p></dd>
 
 
 </dl><p>For continuous treatments, the following additional arguments can be specified:</p>
@@ -404,6 +408,9 @@ approaching convergence.</p>
 
 <dt><code>dimension.adj</code></dt>
 <dd><p><code>logical</code>; whether to include the dimensionality adjustment described by Huling et al. (2023). If <code>TRUE</code>, the default, the energy distance for the covariates is weighted \(\sqrt{p}\) times as much as the energy distance for the treatment, where \(p\) is the number of covariates. If <code>FALSE</code>, the two energy distances are given equal weights. Default is <code>TRUE</code>.</p></dd>
+
+<dt><code>treat.dist.mat</code></dt>
+<dd><p>the numeric distance matrix of the treatment, playing the same role for the treatment that <code>dist.mat</code> plays for the covariates. If unspecified, the Euclidean distance on the treatment scaled by its weighted standard deviation is used. Must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit; can also be supplied as the output of a call to <code><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist()</a></code>. As with <code>dist.mat</code>, some user-supplied matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution.</p></dd>
 
 
 </dl><p>The <code>moments</code> argument functions differently for <code>method = "energy"</code> from
@@ -477,26 +484,26 @@ on the treatment-covariate correlations of the entered covariates. The constrain
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   0 |---------------|              7.527</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 12.926</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated   0 ╞═══════════════╡              7.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control   0 ╞═══════════════════════════╡ 12.926</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            124   183   172   184    181</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 3.797 3.946 4.725 5.738  7.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 3.797 3.946 4.725 5.738  7.527</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            567   374   192   303    608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 5.096  5.16 5.163 6.539 12.926</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 5.096  5.16 5.163 6.539 12.926</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.148 0.852   0.551       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.162 0.765   0.467       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       1.148 0.852   0.551       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.162 0.765   0.467       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
@@ -532,14 +539,14 @@ on the treatment-covariate correlations of the entered covariates. The constrain
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black    1   ||                           1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 |---------|                    4.685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 |---------------------------| 12.674</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black    1     │                          1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 ╞═════════╡                    4.685</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 ╞═══════════════════════════╡ 12.674</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             6     5    4      3      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black     1     1    1      1      1</span>
@@ -548,14 +555,14 @@ on the treatment-covariate correlations of the entered covariates. The constrain
 <span class="r-out co"><span class="r-pr">#&gt;</span>            76   422   96     42    140</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   white 7.643 7.659 9.39 11.165 12.674</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.    0.      0.          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.165 0.879   0.618       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        1.733 1.073   0.967       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   243   72.  299.  </span>
@@ -590,22 +597,22 @@ on the treatment-covariate correlations of the entered covariates. The constrain
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all   0 |---------------------------| 5.364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All   0 ╞═══════════════════════════╡ 5.364</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       202   166  171   178   180</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 4.27 4.306 4.36 4.399 5.364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  All 4.27 4.306 4.36 4.399 5.364</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       0.695 0.488   0.217       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All       0.695 0.488   0.217       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>

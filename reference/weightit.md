@@ -61,16 +61,26 @@ weightit(
 
   whether or not and how to stabilize the weights. If `TRUE`, each
   unit's weight will be multiplied by a stabilization factor, which is
-  the the unconditional probability (or density) of each unit's observed
+  the unconditional probability (or density) of each unit's observed
   treatment value. If a formula, a generalized linear model will be fit
   with the included predictors, and the inverse of the corresponding
-  weight will be used as the standardization factor. Can only be used
-  when `estimand = "ATE"` or with continuous treatments. Default is
-  `FALSE` for no stabilization. See also the `num.formula` argument at
-  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  For continuous treatments, weights are already stabilized, so setting
-  `stabilize = TRUE` will be ignored with a warning (supplying a formula
-  still works).
+  weight will be used as the stabilization factor. The formula can
+  contain [lme4](https://CRAN.R-project.org/package=lme4)-style random
+  effects terms (e.g., `~ (1 | school)`) for methods that accept them,
+  in which case a multilevel model is fit for the numerator. Can only be
+  used when `estimand = "ATE"` or with continuous treatments. Default is
+  `FALSE` for no stabilization. Note that a continuous treatment's
+  weights already contain the unconditional density as their numerator
+  (see *Continuous Treatments* at
+  [method_glm](https://ngreifer.github.io/WeightIt/reference/method_glm.md)),
+  so `stabilize = TRUE` (equivalently, `~1`) leaves them unchanged; the
+  resulting object is not reported as stabilized, and has no
+  `stabilization` component. A formula with terms in it, as in
+  `stabilize = ~ x1`, does stabilize them. See also the `stabilize`
+  argument at
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  where a fully saturated model in the preceding treatments makes `TRUE`
+  meaningful for continuous treatments too.
 
 - focal:
 
@@ -88,7 +98,7 @@ weightit(
   the stratifying variable on the right-hand side. For example, if
   `by = "gender"` or `by = ~gender`, a separate propensity score model
   or optimization will occur within each level of the variable
-  `"gender"`. Only one `by` variable is allowed; to stratify by multiply
+  `"gender"`. Only one `by` variable is allowed; to stratify by multiple
   variables simultaneously, create a new variable that is a full cross
   of those variables using
   [`interaction()`](https://rdrr.io/r/base/interaction.html).
@@ -110,7 +120,9 @@ weightit(
   weight estimation. Using `ps` is similar to calling
   [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
   directly, but produces a full `weightit` object rather than just
-  producing weights.
+  producing weights. See
+  [`method_ps`](https://ngreifer.github.io/WeightIt/reference/method_ps.md)
+  for the accepted formats and the additional arguments available.
 
 - missing:
 
@@ -188,7 +200,7 @@ A `weightit` object with the following elements:
 
 - s.weights:
 
-  The provided sampling weights, or a vector of 1s of none are provided.
+  The provided sampling weights, or a vector of 1s if none are provided.
 
 - focal:
 
@@ -237,7 +249,7 @@ estimands are allowed, and whether sampling weights are allowed.
 | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.md) | Propensity score weighting using generalized linear models |
 | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.md) | Propensity score weighting using generalized boosted modeling |
 | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md) | Covariate Balancing Propensity Score weighting |
-| [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.md) | Non-parametric Covariate Balancing Propensity Score weighting |
+| [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.md) | Nonparametric Covariate Balancing Propensity Score weighting |
 | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md) | Entropy balancing |
 | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.md) | Inverse probability tilting |
 | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md) | Stable balancing weights |
@@ -427,26 +439,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                  ||              1.   
-#> control 0.022 |---------------------------| 2.044
+#> Treated 1.                    │             1.   
+#> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                    
 #>             5     4   3     2     1
-#>  treated    1     1   1     1     1
+#>  Treated    1     1   1     1     1
 #>           411   595 269   409   296
-#>  control 1.33 1.437 1.5 1.637 2.044
+#>  Control 1.33 1.437 1.5 1.637 2.044
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.       0.         0
-#> control       0.823 0.701    0.33       0
+#> Treated       0.    0.       0.         0
+#> Control       0.823 0.701    0.33       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -480,14 +492,14 @@ bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.397 |-----------|                 13.517
-#> hispan 1.201 |---------------------------| 28.417
-#> white  0.817 |-|                            3.949
+#> black  1.397 ╞═══════════╡                 13.517
+#> hispan 1.201 ╞═══════════════════════════╡ 28.417
+#> white  0.817 ╞═╡                            3.949
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            226    244    485    181    182
 #>   black  6.371  6.441   7.09  8.983 13.517
@@ -496,14 +508,14 @@ summary(W2)
 #>             68    457    599    589    531
 #>   white  3.513  3.537   3.58  3.643  3.949
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.59  0.413   0.131       0
 #> hispan       0.609 0.44    0.163       0
 #> white        0.371 0.306   0.068       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
@@ -535,22 +547,22 @@ bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>      Min                                  Max
-#> all 0.01 |---------------------------| 20.946
+#> All 0.01 ╞═══════════════════════════╡ 20.946
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                        
 #>         485    481    482    484    483
-#>  all 10.209 13.112 13.974 17.816 20.946
+#>  All 10.209 13.112 13.974 17.816 20.946
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.454 0.535   0.396       0
+#> All       1.454 0.535   0.396       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  

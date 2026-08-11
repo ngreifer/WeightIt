@@ -100,7 +100,7 @@ predict(
 A numeric vector containing the desired predictions, except for the
 following circumstances when an ordinal or multinomial model was fit:
 
-- when `type = "response"` and `levels = NULL`, a numeric matrix with a
+- when `type = "response"` and `level = NULL`, a numeric matrix with a
   row for each unit and a column for each level of the outcome with the
   predicted probability of the corresponding outcome in the cells
 

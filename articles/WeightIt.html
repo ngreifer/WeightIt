@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-08-03</h4>
+            <h4 data-toc-skip class="date">2026-08-11</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -115,7 +115,7 @@ demonstration of <em>WeightIt</em>’s capabilities.</p>
 <div class="section level2">
 <h2 id="balancing-weights-for-a-point-treatment">Balancing Weights for a Point Treatment<a class="anchor" aria-label="anchor" href="#balancing-weights-for-a-point-treatment"></a>
 </h2>
-<p>First we will use the Lalonde dataset to estimate the effect of a
+<p>First we will use the Lalonde data set to estimate the effect of a
 point treatment. We’ll use the version of the data set that comes with
 the <em>cobalt</em> package, which we will use later on as well. Here,
 we are interested in the average treatment effect on the treated
@@ -204,31 +204,31 @@ presented in several ways, but the most important is the effective
 sample size (ESS) computed from the weights, which we hope is as close
 to the original sample size as possible. What constitutes a “large
 enough” ESS is mostly relative, though, and must be considered with
-respect other constraints, including covariate balance.</p>
+respect to other constraints, including covariate balance.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W.out</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##           Min                                 Max</span></span>
-<span><span class="co">## treated 1.            ||                    1.   </span></span>
-<span><span class="co">## control 0.009 |---------------------------| 3.743</span></span>
+<span><span class="co">## Treated 1.              │                   1.   </span></span>
+<span><span class="co">## Control 0.009 ╞═══════════════════════════╡ 3.743</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
 <span><span class="co">##                                     </span></span>
 <span><span class="co">##             5     4    3     2     1</span></span>
-<span><span class="co">##  treated    1     1    1     1     1</span></span>
+<span><span class="co">##  Treated    1     1    1     1     1</span></span>
 <span><span class="co">##           597   573  381   411   303</span></span>
-<span><span class="co">##  control 3.03 3.059 3.24 3.523 3.743</span></span>
+<span><span class="co">##  Control 3.03 3.059 3.24 3.523 3.743</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       0.    0.      0.          0</span></span>
-<span><span class="co">## control       1.818 1.289   1.098       0</span></span>
+<span><span class="co">## Treated       0.    0.      0.          0</span></span>
+<span><span class="co">## Control       1.818 1.289   1.098       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted  429.       185</span></span>
@@ -282,26 +282,26 @@ dispersion) of the weights.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W.out</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##           Min                                 Max</span></span>
-<span><span class="co">## treated 1.           ||                     1.   </span></span>
-<span><span class="co">## control 0.008 |---------------------------| 4.062</span></span>
+<span><span class="co">## Treated 1.             │                    1.   </span></span>
+<span><span class="co">## Control 0.008 ╞═══════════════════════════╡ 4.062</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
 <span><span class="co">##                                      </span></span>
 <span><span class="co">##              5     4    3     2     1</span></span>
-<span><span class="co">##  treated     1     1    1     1     1</span></span>
+<span><span class="co">##  Treated     1     1    1     1     1</span></span>
 <span><span class="co">##            608   381  597   303   411</span></span>
-<span><span class="co">##  control 3.073 3.235 3.45 3.897 4.062</span></span>
+<span><span class="co">##  Control 3.073 3.235 3.45 3.897 4.062</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       0.    0.      0.          0</span></span>
-<span><span class="co">## control       1.834 1.287   1.101       0</span></span>
+<span><span class="co">## Treated       0.    0.      0.          0</span></span>
+<span><span class="co">## Control       1.834 1.287   1.101       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted  429.       185</span></span>
@@ -319,7 +319,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
@@ -346,7 +346,7 @@ to the formula and see what changes this causes.)</p>
 estimate our treatment effect in the weighted sample. The functions
 <code><a href="../reference/glm_weightit.html">lm_weightit()</a></code>, <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, and friends
 make it easy to fit (generalized) linear models that account for
-estimation of of the weights in their standard errors. We can then use
+estimation of the weights in their standard errors. We can then use
 functions in <em>marginaleffects</em> to perform g-computation to
 extract a treatment effect estimation from the outcome model.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -378,8 +378,8 @@ in detail at <code><a href="../articles/estimating-effects.html">vignette("estim
 <div class="section level2">
 <h2 id="balancing-weights-for-a-longitudinal-treatment">Balancing Weights for a Longitudinal Treatment<a class="anchor" aria-label="anchor" href="#balancing-weights-for-a-longitudinal-treatment"></a>
 </h2>
-<p><em>WeightIt</em> can estimate weights marginal structural models
-with longitudinal treatment as well. This time, we’ll use the sample
+<p><em>WeightIt</em> can estimate weights for marginal structural models
+with longitudinal treatments as well. This time, we’ll use the sample
 data set <code>msmdata</code> to estimate our weights. Data must be in
 “wide” format, with one row per unit.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
@@ -484,17 +484,17 @@ estimated using logistic regression.</p>
 <span><span class="co">##  - sampling weights: none</span></span>
 <span><span class="co">##  - number of time points: 3 (A_1, A_2, A_3)</span></span>
 <span><span class="co">##  - treatment:</span></span>
-<span><span class="co">##     + time 1: 2-category</span></span>
-<span><span class="co">##     + time 2: 2-category</span></span>
-<span><span class="co">##     + time 3: 2-category</span></span>
+<span><span class="co">##     + time 1 (A_1): 2-category</span></span>
+<span><span class="co">##     + time 2 (A_2): 2-category</span></span>
+<span><span class="co">##     + time 3 (A_3): 2-category</span></span>
 <span><span class="co">##  - covariates:</span></span>
-<span><span class="co">##     + baseline: X1_0, X2_0</span></span>
-<span><span class="co">##     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0</span></span>
-<span><span class="co">##     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0</span></span>
+<span><span class="co">##     + time 1 (A_1): X1_0, X2_0</span></span>
+<span><span class="co">##     + time 2 (A_2): X1_1, X2_1, A_1, X1_0, X2_0</span></span>
+<span><span class="co">##     + time 3 (A_3): X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0</span></span>
 <span><span class="co">##  - stabilized; stabilization factors:</span></span>
-<span><span class="co">##     + baseline: (none)</span></span>
-<span><span class="co">##     + after time 1: A_1</span></span>
-<span><span class="co">##     + after time 2: A_1, A_2, A_1:A_2</span></span></code></pre>
+<span><span class="co">##     + time 1 (A_1): (none)</span></span>
+<span><span class="co">##     + time 2 (A_2): A_1</span></span>
+<span><span class="co">##     + time 3 (A_3): A_1, A_2, A_1:A_2</span></span></code></pre>
 <p><code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> estimates separate weights for each time
 period and then takes the product of the weights for each individual to
 arrive at the final estimated weights. Printing the output of
@@ -503,91 +503,103 @@ and the output. We can take a look at the quality of the weights with
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, just as we could for point treatments.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Wmsm.out</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="text-decoration: line-through;">                       </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                       </span></span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
+<pre><code><span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ─── <span style="font-weight: bold; font-style: italic;">1. Treatment: A_1</span> ───────────────────────────</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##           Min                                 Max</span></span>
-<span><span class="co">## treated 0.153 |---------------------------| 57.08</span></span>
-<span><span class="co">## control 0.109 |--------|                    20.46</span></span>
+<span><span class="co">## Treated 0.153 ╞═══════════════════════════╡ 57.08</span></span>
+<span><span class="co">## Control 0.109 ╞════════╡                    20.46</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
 <span><span class="co">##                                            </span></span>
 <span><span class="co">##            4390   3440   3774   3593   5685</span></span>
-<span><span class="co">##  treated 22.101 24.128   25.7 27.786 57.079</span></span>
+<span><span class="co">##  Treated 22.101 24.128   25.7 27.786 57.079</span></span>
 <span><span class="co">##            6659   6284   1875   6163   2533</span></span>
-<span><span class="co">##  control 12.894  13.09 14.523 14.705 20.465</span></span>
+<span><span class="co">##  Control 12.894  13.09 14.523 14.705 20.465</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       1.779 0.775   0.573       0</span></span>
-<span><span class="co">## control       1.331 0.752   0.486       0</span></span>
+<span><span class="co">## Treated       1.779 0.775   0.573       0</span></span>
+<span><span class="co">## Control       1.331 0.752   0.486       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.98</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1</span></span>
+<span><span class="co">##              </span></span>
+<span><span class="co">## Treated 0.984</span></span>
+<span><span class="co">## Control 1.002</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted    3306    4194</span></span>
 <span><span class="co">## Weighted      1193    1007</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## <span style="text-decoration: line-through;">                       </span><span style="font-style: italic;"> Time 2 </span><span style="text-decoration: line-through;">                       </span></span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
+<span><span class="co">## ─── <span style="font-weight: bold; font-style: italic;">2. Treatment: A_2</span> ───────────────────────────</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##           Min                                 Max</span></span>
-<span><span class="co">## treated 0.109 |---------------------------| 57.08</span></span>
-<span><span class="co">## control 0.15  |--------|                    20.49</span></span>
+<span><span class="co">## Treated 0.109 ╞═══════════════════════════╡ 57.08</span></span>
+<span><span class="co">## Control 0.15  ╞════════╡                    20.49</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
 <span><span class="co">##                                            </span></span>
 <span><span class="co">##            4390   3440   3774   3593   5685</span></span>
-<span><span class="co">##  treated 22.101 24.128   25.7 27.786 57.079</span></span>
+<span><span class="co">##  Treated 22.101 24.128   25.7 27.786 57.079</span></span>
 <span><span class="co">##            1875   6163   6862   1286   6158</span></span>
-<span><span class="co">##  control 14.523 14.705 14.808 16.231 20.486</span></span>
+<span><span class="co">##  Control 14.523 14.705 14.808 16.231 20.486</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       1.797 0.779   0.58        0</span></span>
-<span><span class="co">## control       1.359 0.75    0.488       0</span></span>
+<span><span class="co">## Treated       1.797 0.779   0.58        0</span></span>
+<span><span class="co">## Control       1.359 0.75    0.488       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.99</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1</span></span>
+<span><span class="co">##              </span></span>
+<span><span class="co">## Treated 0.985</span></span>
+<span><span class="co">## Control 0.998</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted    3701  3799. </span></span>
 <span><span class="co">## Weighted      1300   898.2</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## <span style="text-decoration: line-through;">                       </span><span style="font-style: italic;"> Time 3 </span><span style="text-decoration: line-through;">                       </span></span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
+<span><span class="co">## ─── <span style="font-weight: bold; font-style: italic;">3. Treatment: A_3</span> ───────────────────────────</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##           Min                                 Max</span></span>
-<span><span class="co">## treated 0.109 |---------------------------| 57.08</span></span>
-<span><span class="co">## control 0.208 |-----------|                 25.7 </span></span>
+<span><span class="co">## Treated 0.109 ╞═══════════════════════════╡ 57.08</span></span>
+<span><span class="co">## Control 0.208 ╞═══════════╡                 25.7 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
 <span><span class="co">##                                            </span></span>
 <span><span class="co">##            3576   4390   3440   3593   5685</span></span>
-<span><span class="co">##  treated 20.583 22.101 24.128 27.786 57.079</span></span>
+<span><span class="co">##  Treated 20.583 22.101 24.128 27.786 57.079</span></span>
 <span><span class="co">##            6163   6862    168   6158   3774</span></span>
-<span><span class="co">##  control 14.705 14.808  16.97 20.486   25.7</span></span>
+<span><span class="co">##  Control 14.705 14.808  16.97 20.486   25.7</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       2.008 0.931   0.753       0</span></span>
-<span><span class="co">## control       1.269 0.672   0.407       0</span></span>
+<span><span class="co">## Treated       2.008 0.931   0.753       0</span></span>
+<span><span class="co">## Control       1.269 0.672   0.407       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1.04</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.97</span></span>
+<span><span class="co">##              </span></span>
+<span><span class="co">## Treated 1.038</span></span>
+<span><span class="co">## Control 0.967</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
+<span><span class="co">## ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted    4886  2614. </span></span>
@@ -625,9 +637,9 @@ with respect to covariate balance.</p>
 <p>By setting <code>which.time = .none</code> in <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code>,
 we can focus on the overall balance assessment, which displays the
 greatest imbalance for each covariate across time points. We can see
-that our estimated weights balance all covariates all time points with
-respect to means and KS statistics. Now we can estimate our treatment
-effects.</p>
+that our estimated weights balance all covariates at all time points
+with respect to means and KS statistics. Now we can estimate our
+treatment effects.</p>
 <p>First, we fit a marginal structural model for the outcome using
 <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with the <code>weightit</code> object
 supplied:</p>
@@ -714,19 +726,17 @@ order, alongside the treatment models:</p>
 <span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span><span class="co">##  - number of obs.: 7500</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
-<span><span class="co">##  - number of time points: 3 (A_1, A_2, A_3)</span></span>
+<span><span class="co">##  - number of time points: 4 (A_1, A_2, C_2, A_3)</span></span>
 <span><span class="co">##  - treatment:</span></span>
-<span><span class="co">##     + time 1: 2-category</span></span>
-<span><span class="co">##     + time 2: 2-category</span></span>
-<span><span class="co">##     + time 3: 2-category</span></span>
-<span><span class="co">##  - censoring (IPCW):</span></span>
-<span><span class="co">##     + C_2: 3864 of 7500 units censored</span></span>
-<span><span class="co">##  - censoring covariates:</span></span>
-<span><span class="co">##     + C_2: X1_1, X2_1, A_1, A_2</span></span>
+<span><span class="co">##     + time 1 (A_1): 2-category</span></span>
+<span><span class="co">##     + time 2 (A_2): 2-category</span></span>
+<span><span class="co">##     + time 3 (C_2): censoring (IPCW); 3864 of 7500 units censored</span></span>
+<span><span class="co">##     + time 4 (A_3): 2-category</span></span>
 <span><span class="co">##  - covariates:</span></span>
-<span><span class="co">##     + baseline: X1_0, X2_0</span></span>
-<span><span class="co">##     + after time 1: X1_1, X2_1, A_1</span></span>
-<span><span class="co">##     + after time 2: X1_2, X2_2, A_2</span></span></code></pre>
+<span><span class="co">##     + time 1 (A_1): X1_0, X2_0</span></span>
+<span><span class="co">##     + time 2 (A_2): X1_1, X2_1, A_1</span></span>
+<span><span class="co">##     + time 3 (C_2): X1_1, X2_1, A_1, A_2</span></span>
+<span><span class="co">##     + time 4 (A_3): X1_2, X2_2, A_2</span></span></code></pre>
 <p>Each model is fit only among the units still under observation when
 it is reached, so the missing values for censored units are not a
 problem. Censored units receive a weight of exactly 0:</p>

@@ -53,7 +53,10 @@ For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield
 exact balance at each time point. **NOTE: the use of entropy balancing
 with longitudinal treatments has not been validated and should not be
-done!**
+done!** Because of this,
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+errors when this method is requested; set `weightit.force = TRUE` to
+bypass that error.
 
 ### Sampling Weights
 
@@ -111,7 +114,7 @@ included terms unless an imbalance tolerance is requested with `tols`.
 
 When `tols` is greater than 0, inexact balance is allowed on the
 covariates. This can improve precision while allowing a small amount of
-bias in. The optimization problem is an L1 regularization problem and is
+bias. The optimization problem is an L1 regularization problem and is
 solved using the Fast Iterative Shrinkage-Thresholding Algorithm
 (FISTA).
 
@@ -120,16 +123,17 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
 - `base.weights`:
 
   a vector of base weights, one for each unit. These correspond to the
-  base weights \$q\$ in Hainmueller (2012). The estimated weights
+  base weights \\q\\ in Hainmueller (2012). The estimated weights
   minimize the Kullback entropy divergence from the base weights,
   defined as \\\sum w \log(w/q)\\, subject to exact balance constraints.
   These can be used to supply previously estimated weights so that the
-  newly estimated weights retain the some of the properties of the
-  original weights while ensuring the balance constraints are met.
-  Sampling weights should not be passed to `base.weights` but can be
-  included in a
+  newly estimated weights retain some of the properties of the original
+  weights while ensuring the balance constraints are met. Sampling
+  weights should not be passed to `base.weights` but can be included in
+  a
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-  call that includes `s.weights`.
+  call that includes `s.weights`. Can also be supplied as `b.weights` or
+  `base.weight`.
 
 - `reltol`:
 
@@ -141,9 +145,7 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
 
   the maximum number of iterations for convergence of the optimization.
   Passed to the `control` argument of
-  [`optim()`](https://rdrr.io/r/stats/optim.html). Default is 1000 for
-  binary and multi-category treatments and 10000 for continuous and
-  longitudinal treatments.
+  [`optim()`](https://rdrr.io/r/stats/optim.html). Default is 10000.
 
 - `solver`:
 
@@ -154,9 +156,8 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
   [`stats::optim()`](https://rdrr.io/r/stats/optim.html). `"multiroot"`
   is the default when rootSolve is installed, as it tends to be much
   faster and more accurate; otherwise, `"optim"` is the default and
-  requires no dependencies. Regardless of `solver`, the output of
-  [`optim()`](https://rdrr.io/r/stats/optim.html) is returned when
-  `include.obj = TRUE` (see below).
+  requires no dependencies. The output of whichever solver was used is
+  returned when `include.obj = TRUE` (see below).
 
 - `moments`:
 
@@ -177,7 +178,7 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -198,13 +199,17 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
   same in the weighted sample as in the original sample. For example,
   setting `d.moments = 3` ensures that the mean, variance, and skew of
   the treatment and covariates are the same in the weighted sample as in
-  the unweighted sample. `d.moments` should be greater than or equal to
-  `moments` and will be automatically set accordingly if not (or if not
-  specified). Vegetabile et al. (2021) recommend setting
-  `d.moments = 3`, even if `moments` is less than 3. This argument
-  corresponds to the tuning parameters \\r\\ and \\s\\ in Vegetabile et
-  al. (2021) (which here are set to be equal). Ignored for binary and
-  multi-category treatments.
+  the unweighted sample. `d.moments` acts as a floor: the number of
+  moments held for each covariate is the larger of `d.moments` and that
+  covariate's entry in `moments`, so a value less than or equal to
+  `moments` has no effect on the covariates and a larger one raises them
+  all, including any not named when `moments` is supplied as a
+  per-covariate vector. `d.moments` alone controls how many moments of
+  the treatment are held; the default of 1 holds only its mean.
+  Vegetabile et al. (2021) recommend setting `d.moments = 3`, even if
+  `moments` is less than 3. This argument corresponds to the tuning
+  parameters \\r\\ and \\s\\ in Vegetabile et al. (2021) (which here are
+  set to be equal). Ignored for binary and multi-category treatments.
 
 The `stabilize` argument is ignored; in the past it would reduce the
 variability of the weights through an iterative process. If you want to
@@ -215,12 +220,10 @@ minimize the variance of the weights subject to balance constraints, use
 
 - `obj`:
 
-  When `include.obj = TRUE`, the output of the call to
-  [`optim()`](https://rdrr.io/r/stats/optim.html), which contains the
-  dual variables and convergence information. For ATE fits or with
-  multi-category treatments, a list of
-  [`optim()`](https://rdrr.io/r/stats/optim.html) outputs, one for each
-  weighted group.
+  When `include.obj = TRUE`, the output of the call to the solver (see
+  `solver` above), which contains the dual variables and convergence
+  information. For ATE fits or with multi-category treatments, a list of
+  such outputs, one for each weighted group.
 
 ## References
 
@@ -268,7 +271,7 @@ and
 for inverse probability tilting and CBPS, which work similarly.
 [method_optweight](https://ngreifer.github.io/WeightIt/reference/method_optweight.md)
 for another implementation of entropy balancing (by setting
-`"norm = entropy"`).
+`norm = "entropy"`).
 
 ## Examples
 
@@ -290,26 +293,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                 ||               1.   
-#> control 0.017 |---------------------------| 2.263
+#> Treated 1.                   │              1.   
+#> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            589   595   269   409   296
-#>  control 1.464 1.485 1.576 1.743 2.263
+#>  Control 1.464 1.485 1.576 1.743 2.263
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.839 0.707   0.341       0
+#> Treated       0.    0.      0.          0
+#> Control       0.839 0.707   0.341       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -320,7 +323,7 @@ cobalt::bal.tab(W1)
 #>             Type Diff.Adj
 #> age      Contin.        0
 #> educ     Contin.        0
-#> married   Binary        0
+#> married   Binary       -0
 #> nodegree  Binary        0
 #> re74     Contin.        0
 #> 
@@ -344,14 +347,14 @@ cobalt::bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.397 |-----------|                 13.517
-#> hispan 1.201 |---------------------------| 28.417
-#> white  0.817 |-|                            3.949
+#> black  1.397 ╞═══════════╡                 13.517
+#> hispan 1.201 ╞═══════════════════════════╡ 28.417
+#> white  0.817 ╞═╡                            3.949
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            226    244    485    181    182
 #>   black  6.371  6.441   7.09  8.983 13.517
@@ -360,14 +363,14 @@ summary(W2)
 #>             68    457    599    589    531
 #>   white  3.513  3.537   3.58  3.643  3.949
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.59  0.413   0.131       0
 #> hispan       0.609 0.44    0.163       0
 #> white        0.371 0.306   0.068       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
@@ -404,22 +407,22 @@ cobalt::bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>     Min                                  Max
-#> all   0 |---------------------------| 17.664
+#> All   0 ╞═══════════════════════════╡ 17.664
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                     
 #>        484   200   166    171    180
-#>  all 6.755 7.602 8.518 10.251 17.664
+#>  All 6.755 7.602 8.518 10.251 17.664
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.253 0.615   0.423       0
+#> All       1.253 0.615   0.423       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
@@ -460,26 +463,26 @@ cobalt::bal.tab(W3, poly = 2,
 summary(W1b)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 1.                     ||           1.   
-#> control 0.023 |---------------------------| 1.739
+#> Treated 1.                       │          1.   
+#> Control 0.023 ╞═══════════════════════════╡ 1.739
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
-#>  treated     1     1     1     1     1
+#>  Treated     1     1     1     1     1
 #>            595   589   269   409   296
-#>  control 1.277 1.284 1.302 1.423 1.739
+#>  Control 1.277 1.284 1.302 1.423 1.739
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.    0.      0.          0
-#> control       0.752 0.658   0.287       0
+#> Treated       0.    0.      0.          0
+#> Control       0.752 0.658   0.287       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
@@ -490,7 +493,7 @@ cobalt::bal.tab(W1, weights = list(inexact = W1b))
 #>             Type Diff.weightit Diff.inexact
 #> age      Contin.             0         0.02
 #> educ     Contin.             0         0.02
-#> married   Binary             0        -0.02
+#> married   Binary            -0        -0.02
 #> nodegree  Binary             0         0.02
 #> re74     Contin.             0        -0.02
 #> 

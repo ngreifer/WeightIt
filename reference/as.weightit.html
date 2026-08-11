@@ -19,7 +19,7 @@ cobalt for assessing balance."><meta property="og:image" content="https://ngreif
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,7 +110,7 @@ in the output object.</p></dd>
 
 
 <dt id="arg-covs">covs<a class="anchor" aria-label="anchor" href="#arg-covs"></a></dt>
-<dd><p>an optional <code>data.frame</code> of covariates. For using <span class="pkg">WeightIt</span>
+<dd><p>an optional data frame of covariates. For using <span class="pkg">WeightIt</span>
 functions, this is not necessary, but for use with <span class="pkg">cobalt</span> it is. Note
 that when using with a <code>weightit.fit</code> object, this should not be the matrix
 supplied to the <code>covs</code> argument of <code><a href="weightit.fit.html">weightit.fit()</a></code> unless there are no
@@ -143,8 +143,7 @@ unit.</p></dd>
 
 
 <dt id="arg-covs-list">covs.list<a class="anchor" aria-label="anchor" href="#arg-covs-list"></a></dt>
-<dd><p>an optional list of <code>data.frame</code>s of covariates of
-covariates at each time point. For using <span class="pkg">WeightIt</span> functions, this is
+<dd><p>an optional list of data frames of covariates at each time point. For using <span class="pkg">WeightIt</span> functions, this is
 not necessary, but for use with <span class="pkg">cobalt</span> it is.</p></dd>
 
 
@@ -167,26 +166,26 @@ each time point.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.019 |-------------------|          8.843</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.004 |---------------------------| 12.028</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 0.019 ╞═══════════════════╡          8.843</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.004 ╞═══════════════════════════╡ 12.028</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             88   271    60    403     99</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  6.23 7.314 7.614   7.65  8.843</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated  6.23 7.314 7.614   7.65  8.843</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            169   187   430     50    415</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 8.826  8.83 9.904 11.167 12.028</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 8.826  8.83 9.904 11.167 12.028</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.947 0.766   0.411       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.002 0.734   0.43        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.947 0.766   0.411       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.002 0.734   0.43        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  346.    154.  </span>

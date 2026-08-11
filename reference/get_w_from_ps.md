@@ -44,9 +44,9 @@ get_w_from_ps(
 
 - focal:
 
-  when `estimand` is `"ATT"` or `"ATC"`, which group should be consider
-  the (focal) "treated" or "control" group, respectively. If not `NULL`
-  and `estimand` is not `"ATT"` or `"ATC"`, `estimand` will
+  when `estimand` is `"ATT"` or `"ATC"`, which group should be
+  considered the (focal) "treated" or "control" group, respectively. If
+  not `NULL` and `estimand` is not `"ATT"` or `"ATC"`, `estimand` will
   automatically be set to `"ATT"`.
 
 - treated:
@@ -159,7 +159,7 @@ for being control would be .9 for all units in the subclass.
 
 For multi-category treatments, the propensity scores for each treatment
 are stratified separately as described in Hong (2012); for binary
-treatments, only one set of propensity scores are stratified and the
+treatments, only one set of propensity scores is stratified and the
 subclass-propensity scores for the other treatment are computed as the
 complement of the propensity scores for the stratified treatment.
 

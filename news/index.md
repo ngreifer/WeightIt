@@ -1,6 +1,168 @@
 # Changelog
 
+## `WeightIt` (development version)
+
+- With `method = "bart"`, `use.offset` can now be set to `TRUE` to use
+  the linear predictor of a GLM as an offset in the BART model.
+
+- Model formulas supplied to
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  can now have random effects included. Note this is intended to be used
+  in the case of clustering, not for modeling longitudinal treatments in
+  a single model.
+
+- Fixed a bug in
+  [`summary.weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  where mean weights would be printed twice, one for each group.
+
+- In
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  `stabilize` can now be supplied the same arguments as `num.formula`,
+  making `num.formula` essentially redundant.
+
+- Stabilization formulas can now include random effects in both
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
+
+- The `stabilize` component of `weightit` objects has been renamed to
+  `stabilization` to match `weightitMSM` objects; this contains the
+  stabilization formula, if any. This also means the mean weights will
+  be displayed in the
+  [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  output.
+
+- In
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
+  setting `stabilize = TRUE` with a continuous treatment is accepted
+  rather than being ignored with a warning. It requests a marginal
+  density model in the numerator, which for a point treatment is the
+  density the weights already divide by, so the weights are unchanged;
+  such an object is not reported as stabilized and has no
+  `stabilization` component. Supplying a formula with terms in it, as in
+  `stabilize = ~ x1`, does change the weights. The same applies to any
+  numerator that comes to exactly 1, in
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  alike.
+
+- Fixed a bug in which the name of a multi-category (i.e., `factor` or
+  `character`) treatment was lost when the treatment was processed. In
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  this meant a multi-category time point would either be left unnamed or
+  fail with an error about a replacement having length zero.
+
+- Fixed a bug in `print.weightitMSM()` in which the stabilization
+  factors would be run together with the line that follows them.
+
+- Added a documentation page at
+  [`?method_ps`](https://ngreifer.github.io/WeightIt/reference/method_ps.md)
+  describing how weights are computed from propensity scores supplied to
+  the `ps` argument of
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
+  including the `subclass` and density arguments that page accepts.
+
+- Fixed a bug in
+  [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
+  (and
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md))
+  with `estimand = "ATOS"` in which only part of the candidate values of
+  `alpha` were searched, so the resulting subset depended on which
+  treatment level was coded as treated.
+
+- Fixed a bug in
+  [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  in which the maximum of the weight range ignored the sampling weights
+  while the minimum did not.
+
+- Fixed a bug in
+  [`summary.weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  in which `weight.range = FALSE` was ignored.
+
+- [`summary()`](https://rdrr.io/r/base/summary.html) on a `weightitMSM`
+  object that models censoring now includes an entry for each censoring
+  model, placed among the treatment entries in the order the models were
+  fit and named for its censoring indicator. Each covers the units still
+  under observation when that model was fit, since the censored units
+  have a weight of exactly 0 and are not part of the weighted sample.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can select
+  one by name as well as by position,
+  e.g. `plot(summary(W), time = "C_2")`.
+
+- [`summary()`](https://rdrr.io/r/base/summary.html) on a `weightitMSM`
+  object gains a `which.time` argument, which restricts the summary to
+  the given models, given as a vector of positions in `formula.list` or
+  of treatment or censoring variable names; omit it for all of them.
+  Selecting a subset does not renumber anything, so a model keeps the
+  position it has in the whole sequence.
+
+- The headings in the printed summary of a `weightitMSM` object now name
+  the model, as in `1. Treatment: A_1` and `2. Censoring: C_2`, where
+  the number is the model’s position in `formula.list`. Previously they
+  were numbered by treatment time point and did not say which variable
+  they were about.
+
+- In [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
+  `summary.weightitMSM` object, the `time` argument has been renamed
+  `which.time` for consistency with
+  [`summary()`](https://rdrr.io/r/base/summary.html). `time` continues
+  to work.
+
+- For a censoring model, the effective sample size reported by
+  [`summary()`](https://rdrr.io/r/base/summary.html) is now measured
+  against the units that model was fit on – those still under
+  observation entering it – rather than against all units. With
+  censoring at more than one time point, the latter counted units that
+  had already dropped out and were never eligible.
+
+- Fixed a bug in
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
+  `summary.weightit` object in which the weights of units with no
+  treatment value – those censored at an earlier time point – were
+  displayed in a facet of their own, and in which a censoring model’s
+  weights were displayed as though the censoring indicator were a
+  treatment.
+
+- Fixed a bug in
+  [`plot.summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  in which the `bins` argument was ignored.
+
+- Fixed a bug in `method = "ebal"` with a vector-valued `tols`, which
+  errored for binary and multi-category treatments.
+
+- Fixed a bug in `method = "ebal"` with continuous treatments in which
+  supplying `d.moments` greater than any entry of a per-covariate
+  `moments` vector (e.g., `moments = c(x1 = 2, x2 = 3)` with
+  `d.moments = 3`) would hold only the *means* of the covariates to
+  their unweighted values, rather than the requested number of moments –
+  i.e., raising `d.moments` reduced the number of moments held instead
+  of increasing it.
+
+- With `method = "bart"`, `samplerOnly` is now ignored as documented
+  rather than passed on to
+  [`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html), where
+  it would cause an error.
+
+- `method = "gbm"` no longer accepts `estimand = "ATOS"`, which was
+  listed as available but too slow to be practical.
+
+- After
+  [`trim()`](https://ngreifer.github.io/WeightIt/reference/trim.md) or
+  [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md),
+  the components used for M-estimation are now removed, so
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  no longer computes standard errors from the untrimmed or uncalibrated
+  weights. Such objects now use `vcov = "HC0"` by default; use
+  `vcov = "BS"` or `"FWB"` to account for trimming.
+
 ## `WeightIt` 2.0.0
+
+CRAN release: 2026-08-03
+
+Several new features have been added, described in more detail below. In
+particular, these are censoring weights estimation and random effects in
+propensity score models.
 
 #### Censoring weights (IPCW)
 
@@ -50,14 +212,17 @@
   Each model is fit only among the units still under observation at that
   time point, missing values are permitted in later treatments for units
   already censored, and the censoring weights are folded into the
-  product of weights across time points. The new `cens.list`,
-  `cens.covs.list`, `cens.formula.list`, `cens.time`, and `at.risk`
-  components of the output describe the censoring models and are
-  documented in the “Value” section of
+  product of weights across time points. Censoring is treated as a
+  treatment type rather than as a separate kind of model: the censoring
+  indicators sit among the treatments in `treat.list`, and their
+  covariates in `covs.list`, in the order the models were fit, and the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods list them
+  there too, identifying each entry by its position in `formula.list`
+  and the variable modeled. The new `at.risk` component of the output
+  records which units were under observation when each model was fit and
+  is documented in the “Value” section of
   [`?weightitMSM`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  The [`print()`](https://rdrr.io/r/base/print.html) method reports how
-  many units were censored at each censoring time point and the
-  covariates used to model it.
 
 - In
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
@@ -676,7 +841,7 @@ CRAN release: 2025-09-18
 
 - Fixed a bug in which the output of `bread()` was off by a factor of
   -1. This doesn’t affect its use in
-  [`sandwich::sandwich()`](https://sandwich.R-Forge.R-project.org/reference/sandwich.html).
+  [`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html).
 
 - Fixed a bug in which `bag.fraction` for `method = "gbm"` with binary
   and multi-category treatments had a default of .5 instead of the
@@ -764,7 +929,7 @@ CRAN release: 2025-02-24
   friends now correctly extract the estimating function and bread
   matrices to be used when computing the sandwich covariance matrix
   using
-  [`sandwich::sandwich()`](https://sandwich.R-Forge.R-project.org/reference/sandwich.html).
+  [`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html).
   `estfun()` (and thereby `sandwich()`) have an optional `asympt`
   argument, which, controls whether the asymptotic covariance matrix
   accounting for estimation of the weights is used.

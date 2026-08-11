@@ -55,7 +55,10 @@ weighted.
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield
 optimal balance at each time point. **NOTE: the use of energy balancing
-with longitudinal treatments has not been validated!**
+with longitudinal treatments has not been validated!** Because of this,
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+errors when this method is requested; set `weightit.force = TRUE` to
+bypass that error.
 
 ### Sampling Weights
 
@@ -119,29 +122,29 @@ increase the effective sample size at the expense of balance.
 
 ### Reproducibility
 
-Although there are no stochastic components to the optimization, a
-feature turned off by default is to update the optimization based on how
-long the optimization has been running, which will vary across runs even
-when a seed is set and no parameters have been changed. See the
-discussion [here](https://github.com/osqp/osqp-r/issues/19) for more
-details. To ensure reproducibility by default, `adaptive_rho_interval`
-is set to 10. See
+Although there are no stochastic components to the optimization, osqp by
+default updates the optimization based on how long the optimization has
+been running, which will vary across runs even when a seed is set and no
+parameters have been changed. See the discussion
+[here](https://github.com/osqp/osqp-r/issues/19) for more details. To
+ensure reproducibility by default, `adaptive_rho_interval` is set to 50,
+which fixes the update schedule at a set number of iterations. See
 [`osqp::osqpSettings()`](https://rdrr.io/pkg/osqp/man/osqpSettings.html)
 for details.
 
 ## Note
 
 Sometimes the optimization can fail to converge because the problem is
-not convex. A warning will be displayed if so. In these cases, try
-simply re-fitting the weights without changing anything (but see the
-*Reproducibility* section above). If the method repeatedly fails, you
-should try another method or change the supplied parameters (though this
-is uncommon). Increasing `max_iter` or changing `adaptive_rho_interval`
-might help.
+not convex. A warning will be displayed if so. Because the optimization
+is deterministic (see the *Reproducibility* section above), re-fitting
+without changing anything will reproduce the failure; increasing
+`max_iter` or changing `adaptive_rho_interval` may help instead. If the
+method repeatedly fails, you should try another method or change the
+supplied parameters (though this is uncommon).
 
 If it seems like the weights are balancing the covariates but you still
 get a failure to converge, this usually indicates that more iterations
-are needs to find the optimal solutions. This can occur when `moments`
+are needed to find the optimal solution. This can occur when `moments`
 or `int` are specified. `max_iter` should be increased, and setting
 `verbose = TRUE` allows you to monitor the process and examine if the
 optimization is approaching convergence.
@@ -155,7 +158,7 @@ should yield slightly improved solutions but may be a little slower.
 
 ## Additional Arguments
 
-The following following additional arguments can be specified:
+The following additional arguments can be specified:
 
 - `dist.mat`:
 
@@ -227,7 +230,7 @@ arguments can be specified:
   a named list of quantiles (values between 0 and 1) for each continuous
   covariate, which are used to create additional variables that when
   balanced ensure balance on the corresponding quantile of the variable.
-  For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures
+  For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures
   the 25th, 50th, and 75th percentiles of `x1` in each treatment group
   will be balanced in the weighted sample. Can also be a single number
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
@@ -254,6 +257,18 @@ specified:
   energy distance for the treatment, where \\p\\ is the number of
   covariates. If `FALSE`, the two energy distances are given equal
   weights. Default is `TRUE`.
+
+- `treat.dist.mat`:
+
+  the numeric distance matrix of the treatment, playing the same role
+  for the treatment that `dist.mat` plays for the covariates. If
+  unspecified, the Euclidean distance on the treatment scaled by its
+  weighted standard deviation is used. Must be a square, symmetric,
+  numeric matrix with zeros along the diagonal and a row and column for
+  each unit; can also be supplied as the output of a call to
+  [`dist()`](https://rdrr.io/r/stats/dist.html). As with `dist.mat`,
+  some user-supplied matrices can cause the R session to abort due to a
+  bug within osqp, so this argument should be used with caution.
 
 The `moments` argument functions differently for `method = "energy"`
 from how it does with other methods. When unspecified or set to zero,
@@ -328,26 +343,26 @@ data("lalonde", package = "cobalt")
 summary(W1)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>         Min                                  Max
-#> treated   0 |---------------|              7.527
-#> control   0 |---------------------------| 12.926
+#> Treated   0 ╞═══════════════╡              7.527
+#> Control   0 ╞═══════════════════════════╡ 12.926
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                        
 #>            124   183   172   184    181
-#>  treated 3.797 3.946 4.725 5.738  7.527
+#>  Treated 3.797 3.946 4.725 5.738  7.527
 #>            567   374   192   303    608
-#>  control 5.096  5.16 5.163 6.539 12.926
+#>  Control 5.096  5.16 5.163 6.539 12.926
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       1.148 0.852   0.551       0
-#> control       1.162 0.765   0.467       0
+#> Treated       1.148 0.852   0.551       0
+#> Control       1.162 0.765   0.467       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
@@ -383,14 +398,14 @@ cobalt::bal.tab(W1)
 summary(W2)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>        Min                                  Max
-#> black    1   ||                           1.   
-#> hispan   0 |---------|                    4.685
-#> white    0 |---------------------------| 12.674
+#> black    1     │                          1.   
+#> hispan   0 ╞═════════╡                    4.685
+#> white    0 ╞═══════════════════════════╡ 12.674
 #> 
-#> - Units with the 5 most extreme weights by group:
+#> ─ Units with the 5 most extreme weights by group:
 #>                                       
 #>             6     5    4      3      1
 #>   black     1     1    1      1      1
@@ -399,14 +414,14 @@ summary(W2)
 #>            76   422   96     42    140
 #>   white 7.643 7.659 9.39 11.165 12.674
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.    0.      0.          0
 #> hispan       1.165 0.879   0.618       0
 #> white        1.733 1.073   0.967       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>            black hispan  white
 #> Unweighted   243   72.  299.  
@@ -441,22 +456,22 @@ cobalt::bal.tab(W2)
 summary(W3)
 #>                   Summary of weights
 #> 
-#> - Weight ranges:
+#> ─ Weight ranges:
 #> 
 #>     Min                                 Max
-#> all   0 |---------------------------| 5.364
+#> All   0 ╞═══════════════════════════╡ 5.364
 #> 
-#> - Units with the 5 most extreme weights:
+#> ─ Units with the 5 most extreme weights:
 #>                                 
 #>       202   166  171   178   180
-#>  all 4.27 4.306 4.36 4.399 5.364
+#>  All 4.27 4.306 4.36 4.399 5.364
 #> 
-#> - Weight statistics:
+#> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       0.695 0.488   0.217       0
+#> All       0.695 0.488   0.217       0
 #> 
-#> - Effective Sample Sizes:
+#> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
