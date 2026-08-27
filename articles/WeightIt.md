@@ -268,7 +268,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary        0 Balanced, <0.05           .
+    ## nodegree     Binary       -0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -386,7 +386,8 @@ bal.tab(list(A_1 ~ X1_0 + X2_0,
 
     ## Balance by Time Point
     ## 
-    ##  - - - Time: 1 - - - 
+    ## ─── 1. Treatment: A_1 ────
+    ## 
     ## Balance Measures
     ##         Type Diff.Un KS.Un
     ## X1_0 Contin.   0.690 0.276
@@ -396,7 +397,8 @@ bal.tab(list(A_1 ~ X1_0 + X2_0,
     ##     Control Treated
     ## All    3306    4194
     ## 
-    ##  - - - Time: 2 - - - 
+    ## ─── 2. Treatment: A_2 ────
+    ## 
     ## Balance Measures
     ##         Type Diff.Un KS.Un
     ## X1_1 Contin.   0.874 0.340
@@ -409,7 +411,8 @@ bal.tab(list(A_1 ~ X1_0 + X2_0,
     ##     Control Treated
     ## All    3701    3799
     ## 
-    ##  - - - Time: 3 - - - 
+    ## ─── 3. Treatment: A_3 ────
+    ## 
     ## Balance Measures
     ##         Type Diff.Un KS.Un
     ## X1_2 Contin.   0.475 0.212
@@ -424,7 +427,6 @@ bal.tab(list(A_1 ~ X1_0 + X2_0,
     ## Sample sizes
     ##     Control Treated
     ## All    4886    2614
-    ##  - - - - - - - - - - -
 
 [`bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
 indicates significant imbalance on most covariates at most time points,
@@ -599,6 +601,7 @@ bal.tab(Wmsm.out, stats = c("m", "ks"),
         which.time = .none)
 ```
 
+    ## 
     ## Balance summary across all time points
     ##        Times    Type Max.Diff.Adj Max.KS.Adj
     ## X1_0 1, 2, 3 Contin.        0.033      0.018
@@ -609,17 +612,16 @@ bal.tab(Wmsm.out, stats = c("m", "ks"),
     ## X1_2       3 Contin.        0.104      0.054
     ## X2_2       3  Binary        0.007      0.007
     ## A_2        3  Binary        0.154      0.154
-    ## 
     ## Effective sample sizes
-    ##  - Time 1
+    ##  - 1. Treatment: A_1
     ##            Control Treated
     ## Unadjusted    3306    4194
     ## Adjusted      1193    1007
-    ##  - Time 2
+    ##  - 2. Treatment: A_2
     ##            Control Treated
     ## Unadjusted    3701  3799. 
     ## Adjusted      1300   898.2
-    ##  - Time 3
+    ##  - 3. Treatment: A_3
     ##            Control Treated
     ## Unadjusted    4886  2614. 
     ## Adjusted      1871   519.8
@@ -800,11 +802,12 @@ summary(fitc)
     ## Standard error: HC0 robust (adjusted for estimation of weights)
     ## 
 
-See
+Balance for a censoring model is assessed against the full at-risk
+sample rather than against another treatment group, and
+[`bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
+does this directly for an object like `Wc`. See
 [`?.cens`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
-for more, including how to assess balance, which requires a little care
-because the target of a censoring model is the full at-risk sample
-rather than another treatment group.
+for more.
 
 ## References
 

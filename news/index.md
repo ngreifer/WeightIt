@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 2.1.0
 
 - With `method = "bart"`, `use.offset` can now be set to `TRUE` to use
   the linear predictor of a GLM as an offset in the BART model.
@@ -155,6 +155,44 @@
   no longer computes standard errors from the untrimmed or uncalibrated
   weights. Such objects now use `vcov = "HC0"` by default; use
   `vcov = "BS"` or `"FWB"` to account for trimming.
+
+- [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  is now *cobalt*’s
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+  re-exported. *cobalt* 5.0.0 gained its own copy so that
+  [`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
+  could recognize a censoring model, and two identically named exports
+  meant one masked the other on
+  [`library(WeightIt)`](https://ngreifer.github.io/WeightIt/). There is
+  now one function:
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  behaves exactly as before, and an indicator tagged with either package
+  attached is the same object and accepted by both. *cobalt* 5.0.0 or
+  later is required.
+
+- Relatedly, the `[` method for `treat` objects is now *cobalt*’s as
+  well. *WeightIt* tags its processed treatments with *cobalt*’s `treat`
+  class (see `cobalt::treat-class`) and no longer registers a competing
+  method for it. This is internal; no user-facing behavior changes.
+
+- Fixed a bug in which only a bare
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  marker was recognized as one, so a censoring model written as
+  `WeightIt::.cens(C) ~ x1 + x2` was named after the whole call rather
+  than after the indicator: the model was named `WeightIt::.cens(C)`
+  rather than `C`, which in
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  is also how the time point is identified in
+  [`summary()`](https://rdrr.io/r/base/summary.html) and in
+  [`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html).
+  The weights were correct either way. What marks a censoring model is
+  now the indicator
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  returns rather than the syntax that produced it, so any way of naming
+  the same function works, including
+  [`cobalt::.cens()`](https://ngreifer.github.io/cobalt/reference/cens.html)
+  and a local alias, as does supplying a variable that was tagged ahead
+  of time.
 
 ## `WeightIt` 2.0.0
 

@@ -521,6 +521,7 @@ summary(W2)
 #> Unweighted 243.    72.   299.  
 #> Weighted   180.47  52.71 262.93
 bal.tab(W2)
+#> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
 #> age      Contin.            0
@@ -528,7 +529,6 @@ bal.tab(W2)
 #> married   Binary            0
 #> nodegree  Binary            0
 #> re74     Contin.            0
-#> 
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  

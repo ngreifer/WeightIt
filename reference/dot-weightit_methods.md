@@ -18,6 +18,12 @@ weighting methods.
 .weightit_methods
 ```
 
+## Format
+
+A named list with one component per weighting method, named for the
+method's canonical name (the value accepted by `method`). Each component
+is itself a named list of the components described in Details.
+
 ## Details
 
 Each component is itself a list containing the following components:

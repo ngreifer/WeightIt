@@ -26,9 +26,9 @@ Useful links:
 ## Author
 
 **Maintainer**: Noah Greifer <noah.greifer@gmail.com>
-([ORCID](https://orcid.org/0000-0003-3067-7154))
+([ORCID](https://orcid.org/0000-0003-3067-7154)) \[copyright holder\]
 
 Authors:
 
 - Noah Greifer <noah.greifer@gmail.com>
-  ([ORCID](https://orcid.org/0000-0003-3067-7154))
+  ([ORCID](https://orcid.org/0000-0003-3067-7154)) \[copyright holder\]

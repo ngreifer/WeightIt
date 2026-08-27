@@ -17,7 +17,7 @@ amount of precision as the weighted sample under consideration."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,10 @@ amount of precision as the weighted sample under consideration.</p>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>A single number, the effective sample size. For non-negative weights it lies between 1 and <code>length(w)</code>, and equals <code>length(w)</code> only when all the weights are equal. It is <code>NA</code> if any weight is missing.</p>
+    </div>
+    <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The ESS is calculated as \((\sum w)^2/\sum w^2\). It is invariant to multiplicative scaling of the weights (i.e., multiplying all weights by a nonzero scalar).</p>
     </div>
@@ -95,7 +99,7 @@ observational studies of point exposure effects. <em>Biometrics</em>, biom.13405
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  cobalt (Version 4.6.3, Build Date: 2026-05-29)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  cobalt (Version 5.0.0, Build Date: 2026-08-25)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates between treatment groups (binary)</span></span></span>

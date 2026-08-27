@@ -356,7 +356,7 @@ summary(W1b)
 #>            185    44   181    82    184
 #>  Treated 6.959 7.514 7.831 8.376 11.198
 #>            303   222   511   600    608
-#>  Control 5.626  5.73  5.74 5.919  8.343
+#>  Control 5.627  5.73  5.74 5.919  8.343
 #> 
 #> ─ Weight statistics:
 #> 
@@ -430,6 +430,7 @@ summary(W2)
 #> Weighted     243  15.01  46.24
 
 cobalt::bal.tab(W2)
+#> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
 #> age      Contin.       0.0843
@@ -437,7 +438,6 @@ cobalt::bal.tab(W2)
 #> married   Binary       0.0042
 #> nodegree  Binary       0.0098
 #> re74     Contin.       0.0081
-#> 
 #> Effective sample sizes
 #>            hispan  white black
 #> Unadjusted  72.   299.     243

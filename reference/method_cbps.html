@@ -197,7 +197,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -654,6 +654,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   173.37  53.95 259.76</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.            0</span>
@@ -661,7 +662,6 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary            0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary            0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299.  </span>
@@ -794,6 +794,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   1570.46    1926</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W4</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all time points</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Times    Type Max.Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> X1_0  1, 2 Contin.            0</span>
@@ -801,13 +802,12 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> X1_1     2 Contin.            0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> X2_1     2  Binary            0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A_1      2  Binary            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">1. Treatment: A_1</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 3306.   4194.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   1598.88 1884.92</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">2. Treatment: A_2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 3701.      3799</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   1570.46    1926</span>

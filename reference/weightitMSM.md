@@ -453,6 +453,7 @@ summary(W1)
 #> Unweighted 4886.   2614.  
 #> Weighted   1900.26  600.12
 cobalt::bal.tab(W1)
+#> 
 #> Balance summary across all time points
 #>        Times    Type Max.Diff.Adj
 #> X1_0 1, 2, 3 Contin.       0.0342
@@ -463,17 +464,16 @@ cobalt::bal.tab(W1)
 #> X1_2       3 Contin.       0.0643
 #> X2_2       3  Binary       0.0096
 #> A_2        3  Binary       0.0054
-#> 
 #> Effective sample sizes
-#>  - Time 1
+#>  - 1. Treatment: A_1
 #>            Control Treated
 #> Unadjusted 3306.    4194. 
 #> Adjusted    845.79   899.4
-#>  - Time 2
+#>  - 2. Treatment: A_2
 #>            Control Treated
 #> Unadjusted 3701.   3799.  
 #> Adjusted    912.87  829.87
-#>  - Time 3
+#>  - 3. Treatment: A_3
 #>            Control Treated
 #> Unadjusted 4886.   2614.  
 #> Adjusted   1900.26  600.12

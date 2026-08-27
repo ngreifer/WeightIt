@@ -16,6 +16,12 @@ ESS(w)
 
   a vector of weights.
 
+## Value
+
+A single number, the effective sample size. For non-negative weights it
+lies between 1 and `length(w)`, and equals `length(w)` only when all the
+weights are equal. It is `NA` if any weight is missing.
+
 ## Details
 
 The ESS is calculated as \\(\sum w)^2/\sum w^2\\. It is invariant to
@@ -41,7 +47,7 @@ biom.13405. [doi:10.1111/biom.13405](https://doi.org/10.1111/biom.13405)
 
 ``` r
 library("cobalt")
-#>  cobalt (Version 4.6.3, Build Date: 2026-05-29)
+#>  cobalt (Version 5.0.0, Build Date: 2026-08-25)
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)

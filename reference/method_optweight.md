@@ -370,6 +370,7 @@ summary(W2)
 #> Weighted   184.1  54.04 263.87
 
 cobalt::bal.tab(W2)
+#> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
 #> age      Contin.            0
@@ -377,7 +378,6 @@ cobalt::bal.tab(W2)
 #> married   Binary            0
 #> nodegree  Binary            0
 #> re74     Contin.            0
-#> 
 #> Effective sample sizes
 #>            black hispan  white
 #> Unadjusted 243.   72.   299.  

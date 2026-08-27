@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-08-11</h4>
+            <h4 data-toc-skip class="date">2026-08-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -319,7 +319,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
@@ -419,7 +419,8 @@ time point and overall:</p>
 <span>        which.time <span class="op">=</span> <span class="va">.all</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance by Time Point</span></span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  - - - <span style="font-style: italic;">Time: 1</span> - - - </span></span>
+<span><span class="co">## ─── <span style="font-style: italic;">1. Treatment: A_1</span> ────</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
 <span><span class="co">##         Type Diff.Un KS.Un</span></span>
 <span><span class="co">## X1_0 Contin.   0.690 0.276</span></span>
@@ -429,7 +430,8 @@ time point and overall:</p>
 <span><span class="co">##     Control Treated</span></span>
 <span><span class="co">## All    3306    4194</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  - - - <span style="font-style: italic;">Time: 2</span> - - - </span></span>
+<span><span class="co">## ─── <span style="font-style: italic;">2. Treatment: A_2</span> ────</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
 <span><span class="co">##         Type Diff.Un KS.Un</span></span>
 <span><span class="co">## X1_1 Contin.   0.874 0.340</span></span>
@@ -442,7 +444,8 @@ time point and overall:</p>
 <span><span class="co">##     Control Treated</span></span>
 <span><span class="co">## All    3701    3799</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  - - - <span style="font-style: italic;">Time: 3</span> - - - </span></span>
+<span><span class="co">## ─── <span style="font-style: italic;">3. Treatment: A_3</span> ────</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
 <span><span class="co">##         Type Diff.Un KS.Un</span></span>
 <span><span class="co">## X1_2 Contin.   0.475 0.212</span></span>
@@ -456,8 +459,7 @@ time point and overall:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Sample sizes</span></span></span>
 <span><span class="co">##     Control Treated</span></span>
-<span><span class="co">## All    4886    2614</span></span>
-<span><span class="co">##  - - - - - - - - - - -</span></span></code></pre>
+<span><span class="co">## All    4886    2614</span></span></code></pre>
 <p><code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> indicates significant imbalance on most
 covariates at most time points, so we need to do some work to eliminate
 that imbalance in our weighted data set. We’ll use the
@@ -610,7 +612,8 @@ with respect to covariate balance.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">Wmsm.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span>,</span>
 <span>        which.time <span class="op">=</span> <span class="va">.none</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance summary across all time points</span></span></span>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## <span style="text-decoration: underline;">Balance summary across all time points</span></span></span>
 <span><span class="co">##        Times    Type Max.Diff.Adj Max.KS.Adj</span></span>
 <span><span class="co">## X1_0 1, 2, 3 Contin.        0.033      0.018</span></span>
 <span><span class="co">## X2_0 1, 2, 3  Binary        0.018      0.018</span></span>
@@ -620,17 +623,16 @@ with respect to covariate balance.</p>
 <span><span class="co">## X1_2       3 Contin.        0.104      0.054</span></span>
 <span><span class="co">## X2_2       3  Binary        0.007      0.007</span></span>
 <span><span class="co">## A_2        3  Binary        0.154      0.154</span></span>
-<span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Effective sample sizes</span></span></span>
-<span><span class="co">##  - <span style="font-style: italic;">Time 1</span></span></span>
+<span><span class="co">##  - <span style="font-style: italic;">1. Treatment: A_1</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unadjusted    3306    4194</span></span>
 <span><span class="co">## Adjusted      1193    1007</span></span>
-<span><span class="co">##  - <span style="font-style: italic;">Time 2</span></span></span>
+<span><span class="co">##  - <span style="font-style: italic;">2. Treatment: A_2</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unadjusted    3701  3799. </span></span>
 <span><span class="co">## Adjusted      1300   898.2</span></span>
-<span><span class="co">##  - <span style="font-style: italic;">Time 3</span></span></span>
+<span><span class="co">##  - <span style="font-style: italic;">3. Treatment: A_3</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unadjusted    4886  2614. </span></span>
 <span><span class="co">## Adjusted      1871   519.8</span></span></code></pre>
@@ -766,9 +768,10 @@ both the treatment and censoring weights are still available:</p>
 <span><span class="co">## A_3           -0.202      0.145   -1.39  0.16377    </span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
-<p>See <code><a href="../reference/dot-cens.html">?.cens</a></code> for more, including how to assess balance,
-which requires a little care because the target of a censoring model is
-the full at-risk sample rather than another treatment group.</p>
+<p>Balance for a censoring model is assessed against the full at-risk
+sample rather than against another treatment group, and
+<code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> does this directly for an object like
+<code>Wc</code>. See <code><a href="../reference/dot-cens.html">?.cens</a></code> for more.</p>
 </div>
 </div>
 <div class="section level2 unnumbered">

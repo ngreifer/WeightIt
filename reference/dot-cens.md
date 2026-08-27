@@ -12,6 +12,14 @@ variable for use with the lower-level interfaces
 and
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md).
 
+This is cobalt's
+[`cobalt::.cens()`](https://ngreifer.github.io/cobalt/reference/cens.html),
+re-exported. cobalt defines it because
+[`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
+needs the same marker to assess a censoring model's balance; there is
+one function, so an indicator tagged with either package attached is the
+same object and is accepted by both.
+
 ## Usage
 
 ``` r
@@ -28,9 +36,10 @@ and
 
 ## Value
 
-`x` coerced to a 0/1 numeric vector of class `treat` with a
-`"treat.type"` attribute of `"censoring"`. Missing values are preserved;
-any value other than 0 or 1 throws an error.
+`x` coerced to a 0/1 numeric vector of class `treat` (see
+[cobalt::treat](https://ngreifer.github.io/cobalt/reference/treat-class.html))
+with a `"treat.type"` attribute of `"censoring"`. Missing values are
+preserved; any value other than 0 or 1 throws an error.
 
 Inside a formula the marker is stripped before the formula is processed,
 so `.cens()` is not actually evaluated there and the treatment name
@@ -114,20 +123,14 @@ Because the target of a censoring model is the full at-risk sample
 rather than another treatment group, balance is assessed by comparing
 the weighted uncensored units against that sample.
 
-Recent versions of [cobalt](https://CRAN.R-project.org/package=cobalt)
-do this directly:
 [`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
-accepts a `weightit` object fit with a censoring model, as well as a
-`weightitMSM` object with censoring among its time points, and produces
-the comparison described above for each. See
+does this directly: it accepts a `weightit` object fit with a censoring
+model, as well as a `weightitMSM` object with censoring among its time
+points, and produces the comparison described above for each. See
 `cobalt::class-bal.tab.cens`.
 
-With an older cobalt, the comparison has to be built by hand, since
-[`bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
-would reject a point-treatment censoring object (every censored unit has
-a weight of 0, leaving one "treatment group" with no weight) and a
-`weightitMSM` object with censoring (which leaves missing values in the
-later treatments). Stacking the two samples produces the same quantity:
+The same quantity can also be built by hand, by stacking the two samples
+into a binary pseudo-treatment:
 
     u <- which(W$treat == 0)
     bal.tab(rbind(covs[u, ], covs),
@@ -137,10 +140,9 @@ later treatments). Stacking the two samples produces the same quantity:
 
 The "Control" group is then the weighted uncensored sample and the
 "Treated" group the full at-risk sample, so `Diff.Adj` is the quantity
-the weights are designed to zero out. For a `weightitMSM` object, use
-the `at.risk` component, which has one column per time point, to
-restrict each model to the units that were under observation when it was
-fit:
+the weights are designed to zero out. For a `weightitMSM` object, the
+`at.risk` component, which has one column per time point, restricts each
+model to the units that were under observation when it was fit:
 
     ar <- W$at.risk[, "A_3"]
     bal.tab(A_3 ~ X1_2 + X2_2 + A_2, data = data[ar, ],
@@ -153,7 +155,10 @@ and
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 for estimating censoring weights;
 [`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
-for which methods support them.
+for which methods support them;
+[`cobalt::.cens()`](https://ngreifer.github.io/cobalt/reference/cens.html)
+for the function itself and `cobalt::class-bal.tab.cens` for the balance
+output.
 
 ## Examples
 

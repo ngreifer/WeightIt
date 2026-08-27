@@ -492,6 +492,7 @@ summary(W2)
 #> Weighted   173.37  53.95 259.76
 
 cobalt::bal.tab(W2)
+#> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
 #> age      Contin.            0
@@ -499,7 +500,6 @@ cobalt::bal.tab(W2)
 #> married   Binary            0
 #> nodegree  Binary            0
 #> re74     Contin.            0
-#> 
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  
@@ -632,6 +632,7 @@ summary(W4)
 #> Weighted   1570.46    1926
 
 cobalt::bal.tab(W4)
+#> 
 #> Balance summary across all time points
 #>      Times    Type Max.Diff.Adj
 #> X1_0  1, 2 Contin.            0
@@ -639,13 +640,12 @@ cobalt::bal.tab(W4)
 #> X1_1     2 Contin.            0
 #> X2_1     2  Binary            0
 #> A_1      2  Binary            0
-#> 
 #> Effective sample sizes
-#>  - Time 1
+#>  - 1. Treatment: A_1
 #>            Control Treated
 #> Unadjusted 3306.   4194.  
 #> Adjusted   1598.88 1884.92
-#>  - Time 2
+#>  - 2. Treatment: A_2
 #>            Control Treated
 #> Unadjusted 3701.      3799
 #> Adjusted   1570.46    1926

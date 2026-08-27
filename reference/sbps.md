@@ -272,7 +272,8 @@ summary(S)
 bal.tab(S, cluster = "race")
 #> Balance by cluster
 #> 
-#>  - - - Cluster: black - - - 
+#> ─── Cluster: black ─────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance   0.0016
@@ -287,7 +288,8 @@ bal.tab(S, cluster = "race")
 #> Unadjusted 87.   156
 #> Adjusted   73.82 156
 #> 
-#>  - - - Cluster: hispan - - - 
+#> ─── Cluster: hispan ────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance  -0.2678
@@ -302,7 +304,8 @@ bal.tab(S, cluster = "race")
 #> Unadjusted 61.   11
 #> Adjusted   40.62 11
 #> 
-#>  - - - Cluster: white - - - 
+#> ─── Cluster: white ─────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance   0.0652
@@ -316,7 +319,6 @@ bal.tab(S, cluster = "race")
 #>                 0  1
 #> Unadjusted 281.   18
 #> Adjusted   120.78 18
-#>  - - - - - - - - - - - - - - 
 #> 
 
 #Could also have run
@@ -427,7 +429,8 @@ summary(S_)
 bal.tab(S_, cluster = "race")
 #> Balance by cluster
 #> 
-#>  - - - Cluster: black - - - 
+#> ─── Cluster: black ─────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance   0.0019
@@ -442,7 +445,8 @@ bal.tab(S_, cluster = "race")
 #> Unadjusted 87.   156
 #> Adjusted   73.74 156
 #> 
-#>  - - - Cluster: hispan - - - 
+#> ─── Cluster: hispan ────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance  -0.1909
@@ -457,7 +461,8 @@ bal.tab(S_, cluster = "race")
 #> Unadjusted 61.   11
 #> Adjusted   41.95 11
 #> 
-#>  - - - Cluster: white - - - 
+#> ─── Cluster: white ─────────
+#> 
 #> Balance Measures
 #>                Type Diff.Adj
 #> prop.score Distance   0.0652
@@ -471,6 +476,5 @@ bal.tab(S_, cluster = "race")
 #>                 0  1
 #> Unadjusted 281.   18
 #> Adjusted   120.78 18
-#>  - - - - - - - - - - - - - - 
 #> 
 ```

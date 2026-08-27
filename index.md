@@ -28,7 +28,7 @@ To install and load *WeightIt*, use the code below:
 ``` r
 
 #CRAN version
-pak::pak("WeightIt")
+install.packages("WeightIt")
 
 #Development version
 pak::pak("ngreifer/WeightIt")
@@ -110,26 +110,26 @@ summary(W)
 ``` R
 ##                   Summary of weights
 ## 
-## - Weight ranges:
+## ─ Weight ranges:
 ## 
 ##           Min                                 Max
-## treated 1.            ||                    1.   
-## control 0.009 |---------------------------| 3.743
+## Treated 1.              │                   1.   
+## Control 0.009 ╞═══════════════════════════╡ 3.743
 ## 
-## - Units with the 5 most extreme weights by group:
+## ─ Units with the 5 most extreme weights by group:
 ##                                     
 ##             5     4    3     2     1
-##  treated    1     1    1     1     1
+##  Treated    1     1    1     1     1
 ##           597   573  381   411   303
-##  control 3.03 3.059 3.24 3.523 3.743
+##  Control 3.03 3.059 3.24 3.523 3.743
 ## 
-## - Weight statistics:
+## ─ Weight statistics:
 ## 
 ##         Coef of Var   MAD Entropy # Zeros
-## treated       0.    0.      0.          0
-## control       1.818 1.289   1.098       0
+## Treated       0.    0.      0.          0
+## Control       1.818 1.289   1.098       0
 ## 
-## - Effective Sample Sizes:
+## ─ Effective Sample Sizes:
 ## 
 ##            Control Treated
 ## Unweighted  429.       185

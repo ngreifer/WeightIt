@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,8 +50,8 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
-<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="2.1.0" id="weightit-210">
+<code>WeightIt</code> 2.1.0<a class="anchor" aria-label="anchor" href="#weightit-210"></a></h2>
 <ul><li><p>With <code>method = "bart"</code>, <code>use.offset</code> can now be set to <code>TRUE</code> to use the linear predictor of a GLM as an offset in the BART model.</p></li>
 <li><p>Model formulas supplied to <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> can now have random effects included. Note this is intended to be used in the case of clustering, not for modeling longitudinal treatments in a single model.</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/summary.weightit.html">summary.weightitMSM()</a></code> where mean weights would be printed twice, one for each group.</p></li>
@@ -77,6 +77,9 @@
 <li><p>With <code>method = "bart"</code>, <code>samplerOnly</code> is now ignored as documented rather than passed on to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>, where it would cause an error.</p></li>
 <li><p><code>method = "gbm"</code> no longer accepts <code>estimand = "ATOS"</code>, which was listed as available but too slow to be practical.</p></li>
 <li><p>After <code><a href="../reference/trim.html">trim()</a></code> or <code><a href="../reference/calibrate.html">calibrate()</a></code>, the components used for M-estimation are now removed, so <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> no longer computes standard errors from the untrimmed or uncalibrated weights. Such objects now use <code>vcov = "HC0"</code> by default; use <code>vcov = "BS"</code> or <code>"FWB"</code> to account for trimming.</p></li>
+<li><p><code><a href="../reference/dot-cens.html">.cens()</a></code> is now <em>cobalt</em>’s <code><a href="../reference/dot-cens.html">.cens()</a></code>, re-exported. <em>cobalt</em> 5.0.0 gained its own copy so that <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> could recognize a censoring model, and two identically named exports meant one masked the other on <code><a href="https://ngreifer.github.io/WeightIt/">library(WeightIt)</a></code>. There is now one function: <code><a href="../reference/dot-cens.html">.cens()</a></code> behaves exactly as before, and an indicator tagged with either package attached is the same object and accepted by both. <em>cobalt</em> 5.0.0 or later is required.</p></li>
+<li><p>Relatedly, the <code>[</code> method for <code>treat</code> objects is now <em>cobalt</em>’s as well. <em>WeightIt</em> tags its processed treatments with <em>cobalt</em>’s <code>treat</code> class (see <code>cobalt::treat-class</code>) and no longer registers a competing method for it. This is internal; no user-facing behavior changes.</p></li>
+<li><p>Fixed a bug in which only a bare <code><a href="../reference/dot-cens.html">.cens()</a></code> marker was recognized as one, so a censoring model written as <code>WeightIt::.cens(C) ~ x1 + x2</code> was named after the whole call rather than after the indicator: the model was named <code>WeightIt::.cens(C)</code> rather than <code>C</code>, which in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> is also how the time point is identified in <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and in <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code>. The weights were correct either way. What marks a censoring model is now the indicator <code><a href="../reference/dot-cens.html">.cens()</a></code> returns rather than the syntax that produced it, so any way of naming the same function works, including <code><a href="https://ngreifer.github.io/cobalt/reference/cens.html" class="external-link">cobalt::.cens()</a></code> and a local alias, as does supplying a variable that was tagged ahead of time.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.0.0" id="weightit-200">
