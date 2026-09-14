@@ -233,7 +233,7 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
   cat("\n")
 
   if (is_not_null(x$weight.mean)) {
-    cli::cat_bullet(.it("Mean of Weights"), ":\n", bullet = bullet)
+    cli::cat_bullet(.it("Mean of Weights"), ":", bullet = bullet)
     x$weight.mean |>
       as.data.frame() |>
       setNames("") |>
