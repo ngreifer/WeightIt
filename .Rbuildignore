@@ -20,3 +20,4 @@
 ^\.claude$
 ^CLAUDE\.md$
 ^Rplots\.pdf$
+^\.progress-runs$
