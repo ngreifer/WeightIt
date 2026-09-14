@@ -15,10 +15,11 @@ Status: OK
 
 0 errors | 0 warnings | 0 notes
 
-The full test suite (286 `test_that()` blocks) was run separately with
-`NOT_CRAN=true`; all pass. Most tests are behind `skip_on_cran()` because they fit
-many models across the optional weighting-method packages, so the suite CRAN runs
-is deliberately a small subset.
+The full test suite was run separately with `NOT_CRAN=true`: 36 test files, 0
+failures and 0 errors. Most tests are behind `skip_on_cran()` because they fit many
+models across the optional weighting-method packages, so the suite CRAN runs is
+deliberately a small subset, reporting
+`[ FAIL 0 | WARN 0 | SKIP 145 | PASS 46 ]` in about 6 seconds.
 
 ## Reverse dependencies
 

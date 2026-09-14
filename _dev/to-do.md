@@ -24,7 +24,7 @@
 ### Diagnostics and testing
 
 * ~~**Target-based balance assessment.**~~ Done in *cobalt* 5.0.0, which compares the weighted uncensored units against the at-risk sample and handles a censoring model sitting among longitudinal treatments. `DESCRIPTION` and `test-censoring.R` now name that version rather than a placeholder.
-* **A fast test tier that runs on CRAN.** 277 of 286 `test_that()` blocks are behind `skip_on_cran()`, so CRAN effectively runs 9 of them. A small fast subset that always runs would catch platform-specific breakage that currently only surfaces locally.
+* **A fast test tier that runs on CRAN.** Under CRAN's own conditions the suite reports `[ FAIL 0 | WARN 0 | SKIP 145 | PASS 46 ]` and finishes in about 6 seconds: 145 blocks skip, and the 46 expectations that survive come from a handful of blocks. A small fast subset that always runs would catch platform-specific breakage that currently only surfaces locally. (Count the skips from the check's `tests/testthat.Rout` rather than by grepping for `skip_on_cran()` -- many `test_that()` calls sit inside `for` loops over methods, so the static count and the runtime count are different numbers.)
 * **Coverage in CI**, with the `NOT_CRAN=true` and non-parallel caveats baked in (see below) so the number is meaningful.
 
 ## Running the checks on this machine
