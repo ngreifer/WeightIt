@@ -37,15 +37,15 @@ WeightIt News and Updates
 
 * In `plot()` on a `summary.weightitMSM` object, the `time` argument has been renamed `which.time` for consistency with `summary()`. `time` continues to work.
 
-* For a censoring model, the effective sample size reported by `summary()` is now measured against the units that model was fit on -- those still under observation entering it -- rather than against all units. With censoring at more than one time point, the latter counted units that had already dropped out and were never eligible.
+* For a censoring model, the effective sample size reported by `summary()` is now measured against the units that model was fit on, i.e., those still under observation entering it, rather than against all units. With censoring at more than one time point, the latter counted units that had already dropped out and were never eligible.
 
-* Fixed a bug in `plot()` on a `summary.weightit` object in which the weights of units with no treatment value -- those censored at an earlier time point -- were displayed in a facet of their own, and in which a censoring model's weights were displayed as though the censoring indicator were a treatment.
+* Fixed a bug in `plot()` on a `summary.weightit` object in which the weights of units with no treatment value, i.e., those censored at an earlier time point, were displayed in a facet of their own, and in which a censoring model's weights were displayed as though the censoring indicator were a treatment.
 
 * Fixed a bug in `plot.summary.weightit()` in which the `bins` argument was ignored.
 
 * Fixed a bug in `method = "ebal"` with a vector-valued `tols`, which errored for binary and multi-category treatments.
 
-* Fixed a bug in `method = "ebal"` with continuous treatments in which supplying `d.moments` greater than any entry of a per-covariate `moments` vector (e.g., `moments = c(x1 = 2, x2 = 3)` with `d.moments = 3`) would hold only the *means* of the covariates to their unweighted values, rather than the requested number of moments -- i.e., raising `d.moments` reduced the number of moments held instead of increasing it.
+* Fixed a bug in `method = "ebal"` with continuous treatments in which supplying `d.moments` greater than any entry of a per-covariate `moments` vector (e.g., `moments = c(x1 = 2, x2 = 3)` with `d.moments = 3`) would hold only the *means* of the covariates to their unweighted values, rather than the requested number of moments; i.e., raising `d.moments` reduced the number of moments held instead of increasing it.
 
 * With `method = "bart"`, `samplerOnly` is now ignored as documented rather than passed on to `dbarts::bart2()`, where it would cause an error.
 
@@ -54,8 +54,6 @@ WeightIt News and Updates
 * After `trim()` or `calibrate()`, the components used for M-estimation are now removed, so `glm_weightit()` no longer computes standard errors from the untrimmed or uncalibrated weights. Such objects now use `vcov = "HC0"` by default; use `vcov = "BS"` or `"FWB"` to account for trimming.
 
 * `.cens()` is now *cobalt*'s `.cens()`, re-exported. *cobalt* 5.0.0 gained its own copy so that `cobalt::bal.tab()` could recognize a censoring model, and two identically named exports meant one masked the other on `library(WeightIt)`. There is now one function: `.cens()` behaves exactly as before, and an indicator tagged with either package attached is the same object and accepted by both. *cobalt* 5.0.0 or later is required.
-
-* Relatedly, the `[` method for `treat` objects is now *cobalt*'s as well. *WeightIt* tags its processed treatments with *cobalt*'s `treat` class (see `cobalt::treat-class`) and no longer registers a competing method for it. This is internal; no user-facing behavior changes.
 
 * Fixed a bug in which only a bare `.cens()` marker was recognized as one, so a censoring model written as `WeightIt::.cens(C) ~ x1 + x2` was named after the whole call rather than after the indicator: the model was named `WeightIt::.cens(C)` rather than `C`, which in `weightitMSM()` is also how the time point is identified in `summary()` and in `cobalt::bal.tab()`. The weights were correct either way. What marks a censoring model is now the indicator `.cens()` returns rather than the syntax that produced it, so any way of naming the same function works, including `cobalt::.cens()` and a local alias, as does supplying a variable that was tagged ahead of time.
 

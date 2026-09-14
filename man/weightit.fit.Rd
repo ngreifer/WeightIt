@@ -48,7 +48,7 @@ levels. Corresponds to the \code{by} argument in \code{\link[=weightit]{weightit
 \item{estimand}{the desired estimand. For binary and multi-category
 treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some methods,
 \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both is \code{"ATE"}. This
-argument is ignored for continuous treatments. See the individual pages for
+argument is ignored for continuous treatments and censoring weights. See the individual pages for
 each method for more information on which estimands are allowed with each
 method and what literature to read to interpret these estimands.}
 

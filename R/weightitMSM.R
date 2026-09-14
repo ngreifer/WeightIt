@@ -35,7 +35,7 @@
 #'   treatments up to each time point), essentially using the observed treatment
 #'   probabilities in the numerator (for binary and multi-category treatments).
 #'   This may yield an error if some combinations are not observed, and with many time points, saturated
-#'   models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case `stabilize` replaces `num.formula` (described below); as with `formula.list`, these formulas may contain \CRANpkg{lme4}-style random effects terms. Default is `FALSE` for unstabilized weights.
+#'   models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case `stabilize` replaces `num.formula` (described below); as with `formula.list`, these formulas may contain \pkg{lme4}-style random effects terms. Default is `FALSE` for unstabilized weights.
 #' @param num.formula an optional one-sided formula with the stabilization
 #'   factors (other than the previous treatments) on the right hand side, which
 #'   adds, for each time point, the stabilization factors to a model saturated
@@ -95,8 +95,6 @@
 #' single-model MSM version of CBPS.)
 #'
 #' @details
-#'
-#'
 #' In general, `weightitMSM()` works by separating the estimation of weights
 #' into separate procedures for each time period based on the formulas provided.
 #' For each formula, `weightitMSM()` simply applies `weightit()` to that formula,
@@ -128,8 +126,7 @@
 #'
 #' models censoring occurring after the second treatment. Each censoring indicator
 #' must be 0 for units still under observation and 1 for units censored at that time
-#' point. See [.cens()] for details of what the resulting weights
-#' estimate.
+#' point. See [.cens()] for details of what the resulting weights estimate.
 #'
 #' Every model, treatment or censoring, is fit only among the units still under
 #' observation when it is reached, and the resulting weights are multiplied together

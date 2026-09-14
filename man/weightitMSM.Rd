@@ -52,7 +52,7 @@ fully saturated model will be fit (i.e., all interactions between all
 treatments up to each time point), essentially using the observed treatment
 probabilities in the numerator (for binary and multi-category treatments).
 This may yield an error if some combinations are not observed, and with many time points, saturated
-models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case \code{stabilize} replaces \code{num.formula} (described below); as with \code{formula.list}, these formulas may contain \CRANpkg{lme4}-style random effects terms. Default is \code{FALSE} for unstabilized weights.}
+models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case \code{stabilize} replaces \code{num.formula} (described below); as with \code{formula.list}, these formulas may contain \pkg{lme4}-style random effects terms. Default is \code{FALSE} for unstabilized weights.}
 
 \item{by}{a string containing the name of the variable in \code{data} for which
 weighting is to be done within categories or a one-sided formula with the
@@ -183,8 +183,7 @@ models. For example,
 
 models censoring occurring after the second treatment. Each censoring indicator
 must be 0 for units still under observation and 1 for units censored at that time
-point. See \code{\link[=.cens]{.cens()}} for details of what the resulting weights
-estimate.
+point. See \code{\link[=.cens]{.cens()}} for details of what the resulting weights estimate.
 
 Every model, treatment or censoring, is fit only among the units still under
 observation when it is reached, and the resulting weights are multiplied together

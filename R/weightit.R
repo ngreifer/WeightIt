@@ -3,13 +3,18 @@
 #' @description
 #' `weightit()` allows for the easy generation of balancing weights
 #' using a variety of available methods for binary, continuous, and
-#' multi-category treatments. Some of these methods require functions in other packages,
+#' multi-category treatments and for censoring. Some of these methods require functions in other packages,
 #' which `weightit()` calls; these packages must be installed to use the desired
 #' method.
 #'
 #' @param formula a formula with a treatment variable on the left hand side and
 #'   the covariates to be balanced on the right hand side. See [glm()] for more
-#'   details. Interactions and functions of covariates are allowed.
+#'   details. Interactions and functions of covariates are allowed. A formula may have an empty
+#'   right hand side (e.g., `A ~ 1`), which requests a marginal model at that
+#'   time point; see *Empty model formulas* in Details. The
+#'   formulas may also contain \CRANpkg{lme4}-style random effects terms (e.g.,
+#'   `A ~ X1 + (1 | school)`) for methods that accept them, in which case a
+#'   multilevel model is fit. To estimate censoring weights, use [.cens()] on the left hand side variable.
 #' @param data an optional data set in the form of a data frame that contains
 #'   the variables in `formula`.
 #' @param method a string of length 1 containing the name of the method that
@@ -19,7 +24,7 @@
 #' @param estimand the desired estimand. For binary and multi-category
 #'   treatments, can be `"ATE"`, `"ATT"`, `"ATC"`, and, for some methods,
 #'   `"ATO"`, `"ATM"`, or `"ATOS"`. The default for both is `"ATE"`. This
-#'   argument is ignored for continuous treatments. See the individual pages for
+#'   argument is ignored for continuous treatments and censoring weights. See the individual pages for
 #'   each method for more information on which estimands are allowed with each
 #'   method and what literature to read to interpret these estimands.
 #' @param stabilize whether or not and how to stabilize the weights. If `TRUE`,
@@ -28,17 +33,13 @@
 #'   treatment value. If a formula, a generalized linear model will be fit with
 #'   the included predictors, and the inverse of the corresponding weight will
 #'   be used as the stabilization factor. The formula can contain
-#'   \CRANpkg{lme4}-style random effects terms (e.g., `~ (1 | school)`) for
+#'   \pkg{lme4}-style random effects terms (e.g., `~ (1 | school)`) for
 #'   methods that accept them, in which case a multilevel model is fit for the
 #'   numerator. Can only be used when `estimand = "ATE"` or with continuous
 #'   treatments. Default is `FALSE` for no stabilization. Note that a continuous
 #'   treatment's weights already contain the unconditional density as their
 #'   numerator (see *Continuous Treatments* at [method_glm]), so `stabilize = TRUE`
-#'   (equivalently, `~1`) leaves them unchanged; the resulting object is not
-#'   reported as stabilized, and has no `stabilization` component. A formula with
-#'   terms in it, as in `stabilize = ~ x1`, does stabilize them. See also the
-#'   `stabilize` argument at [weightitMSM()], where a fully saturated model in the
-#'   preceding treatments makes `TRUE` meaningful for continuous treatments too.
+#'   (equivalently, `~1`) leaves them unchanged.
 #' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to
 #'   consider the "treated" or "control" group, respectively. This group will not be weighted,
 #'   and the other groups will be weighted to resemble the focal group. If
@@ -56,8 +57,8 @@
 #'   `data` that contains sampling weights. See the individual pages for
 #'   each method for information on whether sampling weights can be supplied.
 #' @param ps an optional vector of propensity scores or the name of a variable in `data`
-#'   containing propensity scores. If supplied, `method` is ignored unless it
-#'   is a user-supplied function, and the propensity scores will be used to
+#'   containing propensity scores. If supplied, `method` is ignored (unless it
+#'   is a user-supplied function), and the propensity scores will be used to
 #'   create weights. `formula` must include the treatment variable in `data`,
 #'   but the listed covariates will play no role in the weight estimation. Using
 #'   `ps` is similar to calling [get_w_from_ps()] directly, but produces a full
@@ -145,23 +146,14 @@
 #' balance, and every method's target is met by the same weights: the inverse of the
 #' marginal treatment probability, or \eqn{1/P(C = 0)} for a censoring model. Those
 #' weights are computed by fitting an intercept-only generalized linear model
-#' whatever `method` is supplied, which is simply the easiest way to get them; any
-#' method-specific arguments are ignored, since none of them can apply to covariates
-#' that do not exist. This is invisible: `method` is reported as supplied, the
-#' package for the requested method need not be installed, and the weights are what
-#' that method would have produced. Every method therefore accepts an empty formula.
+#' whatever `method` is supplied, which is simply the easiest way to get them.
 #'
 #' For a continuous treatment the conditional density of the treatment is its
 #' marginal density, so all the weights are exactly 1 and nothing is estimated; no
 #' M-estimation components are produced. For the other treatment types the marginal
 #' probability is estimated, so M-estimation is available as usual.
 #'
-#' `estimand`, `focal`, `by`, `s.weights`, and `stabilize` are unaffected, and the
-#' arguments are still checked against the requested `method`, so a method that
-#' cannot handle the treatment type at all (e.g., `"npcbps"` with a censoring model)
-#' still produces an error.
-#'
-#' A formula whose only terms are *lme4*-style random effects, such as
+#' A formula whose only terms are \pkg{lme4}-style random effects, such as
 #' `A ~ (1 | school)`, is *not* empty in this sense and is fit as the multilevel
 #' model it describes.
 #'
@@ -177,10 +169,7 @@
 #' Weights are estimated only for the units still under observation, and are those
 #' that make their covariate distribution resemble that of the full at-risk sample.
 #' Writing \eqn{e(X) = P(C = 1 | X)}, the weights are \eqn{1 / (1 - e(X))} for units with
-#' \eqn{C = 0} and exactly 0 for units with \eqn{C = 1}. Because only one group is weighted,
-#' the estimation problem is smaller and better conditioned than the corresponding
-#' binary-treatment problem, which would additionally solve for weights among the
-#' censored units; this matters most when few units are censored.
+#' \eqn{C = 0} and exactly 0 for units with \eqn{C = 1}.
 #'
 #' `estimand`, `focal`, and `subclass` do not apply and are rejected or ignored.
 #' `by` and `stabilize` can be used; stabilization multiplies the weights by
@@ -188,8 +177,8 @@
 #' `TRUE`, otherwise fit with the predictors in the supplied formula), giving
 #' \eqn{P(C = 0 | V) / P(C = 0 | X)} for the units still under observation and
 #' leaving the censored units at exactly 0. `ps` is the
-#' predicted probability of *being censored*. Not all methods support estimating censoring
-#' weights; see the `treat_type` component of [`.weightit_methods`].
+#' predicted probability of *being censored* (i.e., of having missing outcomes). Not all methods support estimating censoring
+#' weights; see the `treat_type` component of [`.weightit_methods`] and each method's help page.
 #'
 #' As with a treatment model, the right side of the formula may be empty, as in
 #' `.cens(C) ~ 1`, which requests a marginal censoring model that assumes censoring
@@ -204,19 +193,17 @@
 #' weighted outcome model, and [glm_weightit()] and friends tolerate missing values
 #' in the model variables for those units, including a missing event time in the
 #' `Surv()` response of a [coxph_weightit()] model. Missing values in units with a
-#' nonzero weight still produce an error. See [.cens()] for how to
-#' assess balance, which requires a little care.
+#' nonzero weight still produce an error.
 #'
 #' ## `estimand` and `focal`
 #'
 #' For binary and multi-category treatments, the
 #' argument to `estimand` determines what distribution the weighted sample
 #' should resemble. When set to `"ATE"`, this requests that each group resemble
-#' the full sample. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods
+#' the full sample. When set to `"ATT"` or `"ATC"`, this requests that each group resemble the
+#' treated or control group, respectively (termed the "focal" group); weights
+#' are set to 1 for the focal group. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods
 #' that allow them), this requests that each group resemble an "overlap" sample.
-#' When set to `"ATT"` or `"ATC"`, this requests that each group resemble the
-#' treated or control group, respectively (termed the "focal" group). Weights
-#' are set to 1 for the focal group.
 #'
 #' How does `weightit()` decide which group is the treated and which group is
 #' the control? For binary treatments, several heuristics are used. The first is
@@ -317,7 +304,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   if (anyNA(treat)) {
     if (identical(get_treat_type(treat), "censoring")) {
-      arg::err(c("missing values are not allowed in the censoring indicator.",
+      arg::err(c("Missing values are not allowed in the censoring indicator.",
                  "i" = "To model censoring that can only occur among units not already censored, supply the censoring models to {.fun weightitMSM} in temporal order."))
     }
 

@@ -207,19 +207,18 @@ Here we simulate loss to follow-up after the second time point, which makes ever
 
 ```{r}
 set.seed(2000)
-msmdata2 <- msmdata
 
 # Generate censoring probability, to occur between A_2 and X1_2
-cens <- rbinom(nrow(msmdata2), 1,
-               prob = plogis(-2 + .2 * msmdata2$X1_1 + .3 * msmdata2$X1_0))
+cens <- rbinom(nrow(msmdata), 1,
+               prob = with(msmdata, plogis(-2 + .2 * X1_1 + .3 * X1_0)))
 
 # Apply censoring to all variables measured after censoring
-is.na(msmdata2[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
+is.na(msmdata[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
 
 # Post-censoring variables are unobserved for censored units
-msmdata2$C_2 <- with(msmdata2,
-                     is.na(X1_2) | is.na(X2_2) |
-                       is.na(A_3) | is.na(Y_B))
+msmdata$C_2 <- with(msmdata,
+                    is.na(X1_2) | is.na(X2_2) |
+                      is.na(A_3) | is.na(Y_B))
 ```
 
 The censoring model goes into `formula.list` in temporal order, alongside the treatment models:
@@ -229,20 +228,20 @@ The censoring model goes into `formula.list` in temporal order, alongside the tr
                         A_2 ~ X1_1 + X2_1 + A_1,
                         .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
                         A_3 ~ X1_2 + X2_2 + A_2),
-                   data = msmdata2, method = "glm"))
+                   data = msmdata, method = "glm"))
 ```
 
 Each model is fit only among the units still under observation when it is reached, so the missing values for censored units are not a problem. Censored units receive a weight of exactly 0:
 
 ```{r}
-all(Wc$weights[msmdata2$C_2] == 0)
+all(Wc$weights[msmdata$C_2] == 0)
 ```
 
 Because they have a weight of 0, censored units contribute nothing to a weighted outcome model, and `glm_weightit()` tolerates their missing outcomes. Standard errors that account for estimation of both the treatment and censoring weights are still available:
 
 ```{r}
 fitc <- glm_weightit(Y_B ~ A_1 + A_2 + A_3,
-                     data = msmdata2, weightit = Wc,
+                     data = msmdata, weightit = Wc,
                      family = binomial)
 
 summary(fitc)

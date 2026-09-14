@@ -24,7 +24,12 @@ weightit(
 \arguments{
 \item{formula}{a formula with a treatment variable on the left hand side and
 the covariates to be balanced on the right hand side. See \code{\link[=glm]{glm()}} for more
-details. Interactions and functions of covariates are allowed.}
+details. Interactions and functions of covariates are allowed. A formula may have an empty
+right hand side (e.g., \code{A ~ 1}), which requests a marginal model at that
+time point; see \emph{Empty model formulas} in Details. The
+formulas may also contain \CRANpkg{lme4}-style random effects terms (e.g.,
+\code{A ~ X1 + (1 | school)}) for methods that accept them, in which case a
+multilevel model is fit. To estimate censoring weights, use \code{\link[=.cens]{.cens()}} on the left hand side variable.}
 
 \item{data}{an optional data set in the form of a data frame that contains
 the variables in \code{formula}.}
@@ -37,7 +42,7 @@ linear model to estimate the propensity score.}
 \item{estimand}{the desired estimand. For binary and multi-category
 treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some methods,
 \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both is \code{"ATE"}. This
-argument is ignored for continuous treatments. See the individual pages for
+argument is ignored for continuous treatments and censoring weights. See the individual pages for
 each method for more information on which estimands are allowed with each
 method and what literature to read to interpret these estimands.}
 
@@ -47,17 +52,13 @@ the unconditional probability (or density) of each unit's observed
 treatment value. If a formula, a generalized linear model will be fit with
 the included predictors, and the inverse of the corresponding weight will
 be used as the stabilization factor. The formula can contain
-\CRANpkg{lme4}-style random effects terms (e.g., \code{~ (1 | school)}) for
+\pkg{lme4}-style random effects terms (e.g., \code{~ (1 | school)}) for
 methods that accept them, in which case a multilevel model is fit for the
 numerator. Can only be used when \code{estimand = "ATE"} or with continuous
 treatments. Default is \code{FALSE} for no stabilization. Note that a continuous
 treatment's weights already contain the unconditional density as their
 numerator (see \emph{Continuous Treatments} at \link{method_glm}), so \code{stabilize = TRUE}
-(equivalently, \code{~1}) leaves them unchanged; the resulting object is not
-reported as stabilized, and has no \code{stabilization} component. A formula with
-terms in it, as in \code{stabilize = ~ x1}, does stabilize them. See also the
-\code{stabilize} argument at \code{\link[=weightitMSM]{weightitMSM()}}, where a fully saturated model in the
-preceding treatments makes \code{TRUE} meaningful for continuous treatments too.}
+(equivalently, \code{~1}) leaves them unchanged.}
 
 \item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to
 consider the "treated" or "control" group, respectively. This group will not be weighted,
@@ -79,8 +80,8 @@ variables using \code{\link[=interaction]{interaction()}}.}
 each method for information on whether sampling weights can be supplied.}
 
 \item{ps}{an optional vector of propensity scores or the name of a variable in \code{data}
-containing propensity scores. If supplied, \code{method} is ignored unless it
-is a user-supplied function, and the propensity scores will be used to
+containing propensity scores. If supplied, \code{method} is ignored (unless it
+is a user-supplied function), and the propensity scores will be used to
 create weights. \code{formula} must include the treatment variable in \code{data},
 but the listed covariates will play no role in the weight estimation. Using
 \code{ps} is similar to calling \code{\link[=get_w_from_ps]{get_w_from_ps()}} directly, but produces a full
@@ -143,7 +144,7 @@ at every time point.
 \description{
 \code{weightit()} allows for the easy generation of balancing weights
 using a variety of available methods for binary, continuous, and
-multi-category treatments. Some of these methods require functions in other packages,
+multi-category treatments and for censoring. Some of these methods require functions in other packages,
 which \code{weightit()} calls; these packages must be installed to use the desired
 method.
 }
@@ -179,23 +180,14 @@ of the covariates. With no covariates there is nothing for any method to model o
 balance, and every method's target is met by the same weights: the inverse of the
 marginal treatment probability, or \eqn{1/P(C = 0)} for a censoring model. Those
 weights are computed by fitting an intercept-only generalized linear model
-whatever \code{method} is supplied, which is simply the easiest way to get them; any
-method-specific arguments are ignored, since none of them can apply to covariates
-that do not exist. This is invisible: \code{method} is reported as supplied, the
-package for the requested method need not be installed, and the weights are what
-that method would have produced. Every method therefore accepts an empty formula.
+whatever \code{method} is supplied, which is simply the easiest way to get them.
 
 For a continuous treatment the conditional density of the treatment is its
 marginal density, so all the weights are exactly 1 and nothing is estimated; no
 M-estimation components are produced. For the other treatment types the marginal
 probability is estimated, so M-estimation is available as usual.
 
-\code{estimand}, \code{focal}, \code{by}, \code{s.weights}, and \code{stabilize} are unaffected, and the
-arguments are still checked against the requested \code{method}, so a method that
-cannot handle the treatment type at all (e.g., \code{"npcbps"} with a censoring model)
-still produces an error.
-
-A formula whose only terms are \emph{lme4}-style random effects, such as
+A formula whose only terms are \pkg{lme4}-style random effects, such as
 \code{A ~ (1 | school)}, is \emph{not} empty in this sense and is fit as the multilevel
 model it describes.
 }
@@ -212,10 +204,7 @@ units that are censored.
 Weights are estimated only for the units still under observation, and are those
 that make their covariate distribution resemble that of the full at-risk sample.
 Writing \eqn{e(X) = P(C = 1 | X)}, the weights are \eqn{1 / (1 - e(X))} for units with
-\eqn{C = 0} and exactly 0 for units with \eqn{C = 1}. Because only one group is weighted,
-the estimation problem is smaller and better conditioned than the corresponding
-binary-treatment problem, which would additionally solve for weights among the
-censored units; this matters most when few units are censored.
+\eqn{C = 0} and exactly 0 for units with \eqn{C = 1}.
 
 \code{estimand}, \code{focal}, and \code{subclass} do not apply and are rejected or ignored.
 \code{by} and \code{stabilize} can be used; stabilization multiplies the weights by
@@ -223,8 +212,8 @@ censored units; this matters most when few units are censored.
 \code{TRUE}, otherwise fit with the predictors in the supplied formula), giving
 \eqn{P(C = 0 | V) / P(C = 0 | X)} for the units still under observation and
 leaving the censored units at exactly 0. \code{ps} is the
-predicted probability of \emph{being censored}. Not all methods support estimating censoring
-weights; see the \code{treat_type} component of \code{\link{.weightit_methods}}.
+predicted probability of \emph{being censored} (i.e., of having missing outcomes). Not all methods support estimating censoring
+weights; see the \code{treat_type} component of \code{\link{.weightit_methods}} and each method's help page.
 
 As with a treatment model, the right side of the formula may be empty, as in
 \code{.cens(C) ~ 1}, which requests a marginal censoring model that assumes censoring
@@ -239,8 +228,7 @@ Because censored units receive a weight of exactly 0, they contribute nothing to
 weighted outcome model, and \code{\link[=glm_weightit]{glm_weightit()}} and friends tolerate missing values
 in the model variables for those units, including a missing event time in the
 \code{Surv()} response of a \code{\link[=coxph_weightit]{coxph_weightit()}} model. Missing values in units with a
-nonzero weight still produce an error. See \code{\link[=.cens]{.cens()}} for how to
-assess balance, which requires a little care.
+nonzero weight still produce an error.
 }
 
 \subsection{\code{estimand} and \code{focal}}{
@@ -248,11 +236,10 @@ assess balance, which requires a little care.
 For binary and multi-category treatments, the
 argument to \code{estimand} determines what distribution the weighted sample
 should resemble. When set to \code{"ATE"}, this requests that each group resemble
-the full sample. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods
+the full sample. When set to \code{"ATT"} or \code{"ATC"}, this requests that each group resemble the
+treated or control group, respectively (termed the "focal" group); weights
+are set to 1 for the focal group. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods
 that allow them), this requests that each group resemble an "overlap" sample.
-When set to \code{"ATT"} or \code{"ATC"}, this requests that each group resemble the
-treated or control group, respectively (termed the "focal" group). Weights
-are set to 1 for the focal group.
 
 How does \code{weightit()} decide which group is the treated and which group is
 the control? For binary treatments, several heuristics are used. The first is

@@ -89,9 +89,15 @@ export(weightitMSM)
 import(ggplot2)
 import(stats)
 importFrom(cobalt,.cens)
-importFrom(generics,glance)
-importFrom(generics,tidy)
-importFrom(graphics,hist)
-importFrom(graphics,plot)
-importFrom(sandwich,bread)
-importFrom(sandwich,estfun)
+importFrom(generics,
+  glance,
+  tidy
+)
+importFrom(graphics,
+  hist,
+  plot
+)
+importFrom(sandwich,
+  bread,
+  estfun
+)
