@@ -90,6 +90,11 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 
 M-estimation is not supported.
 }
+
+\subsection{Parallelization}{
+
+Parallelization is supported; when a \code{future} plan is specified with more than one worker, balance is assessed on multiple trees in parallel.
+}
 }
 \details{
 Generalized boosted modeling (GBM, also known as gradient boosting

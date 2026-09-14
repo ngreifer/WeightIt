@@ -83,6 +83,10 @@
 #'
 #' M-estimation is not supported.
 #'
+#' ## Parallelization
+#'
+#' Parallelization is supported; when a `future` plan is specified with more than one worker, balance is assessed on multiple trees in parallel.
+#'
 #' @section Additional Arguments:
 #'
 #' The following additional arguments can be specified:
@@ -506,6 +510,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   current.best.loss <- Inf
 
+  # Add future
+  do_future <- rlang::is_installed(c("future", "future.apply")) &&
+    future::nbrOfWorkers() > 1L
+
   # Maintain seed across tunable params
   genv <- globalenv()
   if (is_null(genv$.Random.seed)) runif(1L)
@@ -563,7 +571,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
 
-      iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
+      if (do_future) {
+        iter.grid.balance <- future.apply::future_apply(w, 2L, cobalt::bal.compute, x = init)
+      }
+      else {
+        iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
+      }
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -606,7 +619,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
           w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
 
-        iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
+        if (do_future) {
+          iter.grid.balance.fine <- future.apply::future_apply(w, 2L, cobalt::bal.compute, x = init)
+        }
+        else {
+          iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
+        }
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -881,6 +899,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   info <- list()
   current.best.loss <- Inf
 
+  # Add future
+  do_future <- rlang::is_installed(c("future", "future.apply")) &&
+    future::nbrOfWorkers() > 1L
+
   # Maintain seed across tunable params
   genv <- globalenv()
   if (is_null(genv$.Random.seed)) runif(1L)
@@ -947,7 +969,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
 
-      iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
+      if (do_future) {
+        iter.grid.balance <- future.apply::future_apply(w, 2L, cobalt::bal.compute, x = init)
+      }
+      else {
+        iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
+      }
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -980,7 +1007,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
           w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
 
-        iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
+        if (do_future) {
+          iter.grid.balance.fine <- future.apply::future_apply(w, 2L, cobalt::bal.compute, x = init)
+        }
+        else {
+          iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
+        }
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]

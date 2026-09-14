@@ -53,6 +53,8 @@ Suggests:
     mlogit,
     dfidx,
     broom,
+    future,
+    future.apply,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),

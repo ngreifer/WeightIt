@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * With `method = "bart"`, `use.offset` can now be set to `TRUE` to use the linear predictor of a GLM as an offset in the BART model.
 
+* With `method = "gbm"`, balance is now assessed on multiple trees in parallel when a [*future*](https://CRAN.R-project.org/package=future) plan with more than one worker is set. This requires [*future.apply*](https://CRAN.R-project.org/package=future.apply) to be installed.
+
 * Model formulas supplied to `weightitMSM()` can now have random effects included. Note this is intended to be used in the case of clustering, not for modeling longitudinal treatments in a single model.
 
 * Fixed a bug in `summary.weightitMSM()` where mean weights would be printed twice, one for each group.
