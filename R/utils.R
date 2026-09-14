@@ -715,18 +715,19 @@ get_varnames <- function(expr) {
 }
 
 #Censoring (IPCW) models are marked by wrapping the censoring indicator in
-#`.cens()` on the LHS of the formula, e.g. `.cens(C) ~ x1 + x2`. The marker is
-#never evaluated; it is detected by name and stripped before the formula reaches
-#`terms()`/`model.frame()`, so that `treat.name` is the indicator's own name
+#`.cens()` on the LHS of the formula, e.g. `.cens(C) ~ x1 + x2`. However the
+#marker reaches the treatment, `treat.name` ends up the indicator's own name
 #(`"C"`, not `".cens(C)"`) and the indicator is otherwise processed like any
 #other treatment.
-#Whether the marker can be stripped rather than evaluated. This is the only thing the
-#syntax is asked about: `weightit(.cens(C) ~ x)` has to work whether or not the package
-#is attached, and a bare `.cens` is exactly the spelling that may not resolve in the
-#formula's environment. Any other spelling -- `WeightIt::.cens(C)`, `cobalt::.cens(C)`,
-#an alias -- names something that does resolve, so it can simply be evaluated, and the
-#indicator it returns says for itself that it is a censoring indicator. Whether a model
-#is a censoring model is therefore read off the treatment's `treat.type`, not off this.
+
+#Whether the marker can be stripped rather than evaluated -- the only thing the
+#syntax is asked about. `weightit(.cens(C) ~ x)` has to work whether or not the
+#package is attached, and a bare `.cens` is exactly the spelling that may not
+#resolve in the formula's environment, so that one is stripped unevaluated. Any
+#other spelling -- `WeightIt::.cens(C)`, `cobalt::.cens(C)`, an alias -- names
+#something that does resolve, so it is evaluated instead, and the indicator it
+#returns says for itself that it is a censoring indicator. Whether a model is a
+#censoring model is therefore read off the treatment's `treat.type`, not off this.
 .is_cens_formula <- function(f) {
   if (!rlang::is_formula(f, lhs = TRUE)) {
     return(FALSE)
