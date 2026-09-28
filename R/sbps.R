@@ -312,11 +312,10 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
     w_o <- obj[["weights"]]
     w_s <- obj2[["weights"]]
 
+    arg::when_supplied(full.search, arg::arg_flag)
+
     if (missing(full.search)) {
       full.search <- (length(R) <= 8)
-    }
-    else {
-      arg::arg_flag(full.search)
     }
 
     get_w <- function(s, moderator.factor, w_o, w_s) {

@@ -235,11 +235,11 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     }
   }
 
-  M1 <- M1 * weights
-
   if (p == 0L) {
     return(Faa)
   }
+
+  M1 <- M1 * weights
 
   Fba <- -crossprod(X, M1)
 
@@ -395,6 +395,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   }
 
   y <- droplevels(as.factor(y))
+
   n <- length(y)
 
   if (is_null(weights)) weights <- rep.int(1, n)
