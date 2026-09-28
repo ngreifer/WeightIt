@@ -118,6 +118,11 @@ are allowed:
 
 M-estimation is not supported.
 
+### Parallelization
+
+Parallelization is supported; when a `future` plan is specified with
+more than one worker, balance is assessed on multiple trees in parallel.
+
 ## Details
 
 Generalized boosted modeling (GBM, also known as gradient boosting

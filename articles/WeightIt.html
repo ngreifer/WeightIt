@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-08-27</h4>
+            <h4 data-toc-skip class="date">2026-09-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -530,7 +530,6 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## Control       1.331 0.752   0.486       0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
-<span><span class="co">## </span></span>
 <span><span class="co">##              </span></span>
 <span><span class="co">## Treated 0.984</span></span>
 <span><span class="co">## Control 1.002</span></span>
@@ -563,7 +562,6 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## Control       1.359 0.75    0.488       0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
-<span><span class="co">## </span></span>
 <span><span class="co">##              </span></span>
 <span><span class="co">## Treated 0.985</span></span>
 <span><span class="co">## Control 0.998</span></span>
@@ -596,7 +594,6 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## Control       1.269 0.672   0.407       0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ─ <span style="font-style: italic;">Mean of Weights</span>:</span></span>
-<span><span class="co">## </span></span>
 <span><span class="co">##              </span></span>
 <span><span class="co">## Treated 1.038</span></span>
 <span><span class="co">## Control 0.967</span></span>
@@ -703,19 +700,18 @@ censored and 0/<code>FALSE</code> for those still under observation.</p>
 makes everything measured afterward unavailable for those units:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span></span>
-<span><span class="va">msmdata2</span> <span class="op">&lt;-</span> <span class="va">msmdata</span></span>
 <span></span>
 <span><span class="co"># Generate censoring probability, to occur between A_2 and X1_2</span></span>
-<span><span class="va">cens</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">msmdata2</span><span class="op">)</span>, <span class="fl">1</span>,</span>
-<span>               prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">.2</span> <span class="op">*</span> <span class="va">msmdata2</span><span class="op">$</span><span class="va">X1_1</span> <span class="op">+</span> <span class="fl">.3</span> <span class="op">*</span> <span class="va">msmdata2</span><span class="op">$</span><span class="va">X1_0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">cens</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">msmdata</span><span class="op">)</span>, <span class="fl">1</span>,</span>
+<span>               prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">msmdata</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">.2</span> <span class="op">*</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="fl">.3</span> <span class="op">*</span> <span class="va">X1_0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Apply censoring to all variables measured after censoring</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">msmdata2</span><span class="op">[</span><span class="va">cens</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X1_2"</span>, <span class="st">"X2_2"</span>, <span class="st">"A_3"</span>, <span class="st">"Y_B"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">msmdata</span><span class="op">[</span><span class="va">cens</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X1_2"</span>, <span class="st">"X2_2"</span>, <span class="st">"A_3"</span>, <span class="st">"Y_B"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span></span>
 <span><span class="co"># Post-censoring variables are unobserved for censored units</span></span>
-<span><span class="va">msmdata2</span><span class="op">$</span><span class="va">C_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">msmdata2</span>,</span>
-<span>                     <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X1_2</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X2_2</span><span class="op">)</span> <span class="op">|</span></span>
-<span>                       <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">A_3</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">Y_B</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">msmdata</span><span class="op">$</span><span class="va">C_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">msmdata</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X1_2</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X2_2</span><span class="op">)</span> <span class="op">|</span></span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">A_3</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">Y_B</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The censoring model goes into <code>formula.list</code> in temporal
 order, alongside the treatment models:</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
@@ -723,7 +719,7 @@ order, alongside the treatment models:</p>
 <span>                        <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span>,</span>
 <span>                        <span class="fu"><a href="../reference/dot-cens.html">.cens</a></span><span class="op">(</span><span class="va">C_2</span><span class="op">)</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">A_2</span>,</span>
 <span>                        <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span><span class="op">)</span>,</span>
-<span>                   data <span class="op">=</span> <span class="va">msmdata2</span>, method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                   data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## A <span style="font-style: italic;">weightitMSM</span> object</span></span>
 <span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span><span class="co">##  - number of obs.: 7500</span></span>
@@ -743,7 +739,7 @@ order, alongside the treatment models:</p>
 it is reached, so the missing values for censored units are not a
 problem. Censored units receive a weight of exactly 0:</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">Wc</span><span class="op">$</span><span class="va">weights</span><span class="op">[</span><span class="va">msmdata2</span><span class="op">$</span><span class="va">C_2</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">Wc</span><span class="op">$</span><span class="va">weights</span><span class="op">[</span><span class="va">msmdata</span><span class="op">$</span><span class="va">C_2</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
 <p>Because they have a weight of 0, censored units contribute nothing to
 a weighted outcome model, and <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> tolerates
@@ -751,13 +747,13 @@ their missing outcomes. Standard errors that account for estimation of
 both the treatment and censoring weights are still available:</p>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fitc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">A_3</span>,</span>
-<span>                     data <span class="op">=</span> <span class="va">msmdata2</span>, weightit <span class="op">=</span> <span class="va">Wc</span>,</span>
+<span>                     data <span class="op">=</span> <span class="va">msmdata</span>, weightit <span class="op">=</span> <span class="va">Wc</span>,</span>
 <span>                     family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fitc</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Call:</span></span></span>
-<span><span class="co">## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata2, </span></span>
+<span><span class="co">## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata, </span></span>
 <span><span class="co">##     family = binomial, weightit = Wc)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Coefficients:</span></span></span>

@@ -127,7 +127,7 @@ fully saturated model will be fit (i.e., all interactions between all
 treatments up to each time point), essentially using the observed treatment
 probabilities in the numerator (for binary and multi-category treatments).
 This may yield an error if some combinations are not observed, and with many time points, saturated
-models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case <code>stabilize</code> replaces <code>num.formula</code> (described below); as with <code>formula.list</code>, these formulas may contain <a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms. Default is <code>FALSE</code> for unstabilized weights.</p></dd>
+models may be time-consuming or impossible to fit. Can also be a one-sided formula or list thereof, in which case <code>stabilize</code> replaces <code>num.formula</code> (described below); as with <code>formula.list</code>, these formulas may contain <span class="pkg">lme4</span>-style random effects terms. Default is <code>FALSE</code> for unstabilized weights.</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
@@ -288,8 +288,7 @@ models. For example,</p>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>            <span class="at">data =</span> d, <span class="at">method =</span> <span class="st">"glm"</span>)</span></code></pre><p></p></div>
 <p>models censoring occurring after the second treatment. Each censoring indicator
 must be 0 for units still under observation and 1 for units censored at that time
-point. See <code><a href="dot-cens.html">.cens()</a></code> for details of what the resulting weights
-estimate.</p>
+point. See <code><a href="dot-cens.html">.cens()</a></code> for details of what the resulting weights estimate.</p>
 <p>Every model, treatment or censoring, is fit only among the units still under
 observation when it is reached, and the resulting weights are multiplied together
 across time points as usual. A unit censored at any time point therefore has a

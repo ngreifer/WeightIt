@@ -7,11 +7,11 @@
   };
 </script><script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Estimate Balancing Weights — weightit"><meta name="description" content="weightit() allows for the easy generation of balancing weights
 using a variety of available methods for binary, continuous, and
-multi-category treatments. Some of these methods require functions in other packages,
+multi-category treatments and for censoring. Some of these methods require functions in other packages,
 which weightit() calls; these packages must be installed to use the desired
 method."><meta property="og:description" content="weightit() allows for the easy generation of balancing weights
 using a variety of available methods for binary, continuous, and
-multi-category treatments. Some of these methods require functions in other packages,
+multi-category treatments and for censoring. Some of these methods require functions in other packages,
 which weightit() calls; these packages must be installed to use the desired
 method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -61,7 +61,7 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
     <div class="ref-description section level2">
     <p><code>weightit()</code> allows for the easy generation of balancing weights
 using a variety of available methods for binary, continuous, and
-multi-category treatments. Some of these methods require functions in other packages,
+multi-category treatments and for censoring. Some of these methods require functions in other packages,
 which <code>weightit()</code> calls; these packages must be installed to use the desired
 method.</p>
     </div>
@@ -93,7 +93,12 @@ method.</p>
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>a formula with a treatment variable on the left hand side and
 the covariates to be balanced on the right hand side. See <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for more
-details. Interactions and functions of covariates are allowed.</p></dd>
+details. Interactions and functions of covariates are allowed. A formula may have an empty
+right hand side (e.g., <code>A ~ 1</code>), which requests a marginal model at that
+time point; see <em>Empty model formulas</em> in Details. The
+formulas may also contain <a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms (e.g.,
+<code>A ~ X1 + (1 | school)</code>) for methods that accept them, in which case a
+multilevel model is fit. To estimate censoring weights, use <code><a href="dot-cens.html">.cens()</a></code> on the left hand side variable.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -112,7 +117,7 @@ linear model to estimate the propensity score.</p></dd>
 <dd><p>the desired estimand. For binary and multi-category
 treatments, can be <code>"ATE"</code>, <code>"ATT"</code>, <code>"ATC"</code>, and, for some methods,
 <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code>. The default for both is <code>"ATE"</code>. This
-argument is ignored for continuous treatments. See the individual pages for
+argument is ignored for continuous treatments and censoring weights. See the individual pages for
 each method for more information on which estimands are allowed with each
 method and what literature to read to interpret these estimands.</p></dd>
 
@@ -124,17 +129,13 @@ the unconditional probability (or density) of each unit's observed
 treatment value. If a formula, a generalized linear model will be fit with
 the included predictors, and the inverse of the corresponding weight will
 be used as the stabilization factor. The formula can contain
-<a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms (e.g., <code>~ (1 | school)</code>) for
+<span class="pkg">lme4</span>-style random effects terms (e.g., <code>~ (1 | school)</code>) for
 methods that accept them, in which case a multilevel model is fit for the
 numerator. Can only be used when <code>estimand = "ATE"</code> or with continuous
 treatments. Default is <code>FALSE</code> for no stabilization. Note that a continuous
 treatment's weights already contain the unconditional density as their
 numerator (see <em>Continuous Treatments</em> at <a href="method_glm.html">method_glm</a>), so <code>stabilize = TRUE</code>
-(equivalently, <code>~1</code>) leaves them unchanged; the resulting object is not
-reported as stabilized, and has no <code>stabilization</code> component. A formula with
-terms in it, as in <code>stabilize = ~ x1</code>, does stabilize them. See also the
-<code>stabilize</code> argument at <code><a href="weightitMSM.html">weightitMSM()</a></code>, where a fully saturated model in the
-preceding treatments makes <code>TRUE</code> meaningful for continuous treatments too.</p></dd>
+(equivalently, <code>~1</code>) leaves them unchanged.</p></dd>
 
 
 <dt id="arg-focal">focal<a class="anchor" aria-label="anchor" href="#arg-focal"></a></dt>
@@ -164,8 +165,8 @@ each method for information on whether sampling weights can be supplied.</p></dd
 
 <dt id="arg-ps">ps<a class="anchor" aria-label="anchor" href="#arg-ps"></a></dt>
 <dd><p>an optional vector of propensity scores or the name of a variable in <code>data</code>
-containing propensity scores. If supplied, <code>method</code> is ignored unless it
-is a user-supplied function, and the propensity scores will be used to
+containing propensity scores. If supplied, <code>method</code> is ignored (unless it
+is a user-supplied function), and the propensity scores will be used to
 create weights. <code>formula</code> must include the treatment variable in <code>data</code>,
 but the listed covariates will play no role in the weight estimation. Using
 <code>ps</code> is similar to calling <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> directly, but produces a full
@@ -276,20 +277,12 @@ of the covariates. With no covariates there is nothing for any method to model o
 balance, and every method's target is met by the same weights: the inverse of the
 marginal treatment probability, or \(1/P(C = 0)\) for a censoring model. Those
 weights are computed by fitting an intercept-only generalized linear model
-whatever <code>method</code> is supplied, which is simply the easiest way to get them; any
-method-specific arguments are ignored, since none of them can apply to covariates
-that do not exist. This is invisible: <code>method</code> is reported as supplied, the
-package for the requested method need not be installed, and the weights are what
-that method would have produced. Every method therefore accepts an empty formula.</p>
+whatever <code>method</code> is supplied, which is simply the easiest way to get them.</p>
 <p>For a continuous treatment the conditional density of the treatment is its
 marginal density, so all the weights are exactly 1 and nothing is estimated; no
 M-estimation components are produced. For the other treatment types the marginal
 probability is estimated, so M-estimation is available as usual.</p>
-<p><code>estimand</code>, <code>focal</code>, <code>by</code>, <code>s.weights</code>, and <code>stabilize</code> are unaffected, and the
-arguments are still checked against the requested <code>method</code>, so a method that
-cannot handle the treatment type at all (e.g., <code>"npcbps"</code> with a censoring model)
-still produces an error.</p>
-<p>A formula whose only terms are <em>lme4</em>-style random effects, such as
+<p>A formula whose only terms are <span class="pkg">lme4</span>-style random effects, such as
 <code>A ~ (1 | school)</code>, is <em>not</em> empty in this sense and is fit as the multilevel
 model it describes.</p>
 </div>
@@ -307,18 +300,15 @@ units that are censored.</p>
 <p>Weights are estimated only for the units still under observation, and are those
 that make their covariate distribution resemble that of the full at-risk sample.
 Writing \(e(X) = P(C = 1 | X)\), the weights are \(1 / (1 - e(X))\) for units with
-\(C = 0\) and exactly 0 for units with \(C = 1\). Because only one group is weighted,
-the estimation problem is smaller and better conditioned than the corresponding
-binary-treatment problem, which would additionally solve for weights among the
-censored units; this matters most when few units are censored.</p>
+\(C = 0\) and exactly 0 for units with \(C = 1\).</p>
 <p><code>estimand</code>, <code>focal</code>, and <code>subclass</code> do not apply and are rejected or ignored.
 <code>by</code> and <code>stabilize</code> can be used; stabilization multiplies the weights by
 \(P(C = 0 | V)\) from a second censoring model (marginal when <code>stabilize</code> is
 <code>TRUE</code>, otherwise fit with the predictors in the supplied formula), giving
 \(P(C = 0 | V) / P(C = 0 | X)\) for the units still under observation and
 leaving the censored units at exactly 0. <code>ps</code> is the
-predicted probability of <em>being censored</em>. Not all methods support estimating censoring
-weights; see the <code>treat_type</code> component of <code><a href="dot-weightit_methods.html">.weightit_methods</a></code>.</p>
+predicted probability of <em>being censored</em> (i.e., of having missing outcomes). Not all methods support estimating censoring
+weights; see the <code>treat_type</code> component of <code><a href="dot-weightit_methods.html">.weightit_methods</a></code> and each method's help page.</p>
 <p>As with a treatment model, the right side of the formula may be empty, as in
 <code>.cens(C) ~ 1</code>, which requests a marginal censoring model that assumes censoring
 is independent of the covariates. The resulting weights are \(1/P(C = 0)\) for
@@ -331,8 +321,7 @@ in <code><a href="weightitMSM.html">weightitMSM()</a></code>. See <em>Empty mode
 weighted outcome model, and <code><a href="glm_weightit.html">glm_weightit()</a></code> and friends tolerate missing values
 in the model variables for those units, including a missing event time in the
 <code>Surv()</code> response of a <code><a href="coxph_weightit.html">coxph_weightit()</a></code> model. Missing values in units with a
-nonzero weight still produce an error. See <code><a href="dot-cens.html">.cens()</a></code> for how to
-assess balance, which requires a little care.</p>
+nonzero weight still produce an error.</p>
 </div>
 
 <div class="section">
@@ -342,11 +331,10 @@ assess balance, which requires a little care.</p>
 <p>For binary and multi-category treatments, the
 argument to <code>estimand</code> determines what distribution the weighted sample
 should resemble. When set to <code>"ATE"</code>, this requests that each group resemble
-the full sample. When set to <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code> (for the methods
-that allow them), this requests that each group resemble an "overlap" sample.
-When set to <code>"ATT"</code> or <code>"ATC"</code>, this requests that each group resemble the
-treated or control group, respectively (termed the "focal" group). Weights
-are set to 1 for the focal group.</p>
+the full sample. When set to <code>"ATT"</code> or <code>"ATC"</code>, this requests that each group resemble the
+treated or control group, respectively (termed the "focal" group); weights
+are set to 1 for the focal group. When set to <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code> (for the methods
+that allow them), this requests that each group resemble an "overlap" sample.</p>
 <p>How does <code>weightit()</code> decide which group is the treated and which group is
 the control? For binary treatments, several heuristics are used. The first is
 by checking whether a valid argument to <code>focal</code> was supplied containing the

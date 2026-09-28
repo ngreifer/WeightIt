@@ -5,6 +5,12 @@
 - With `method = "bart"`, `use.offset` can now be set to `TRUE` to use
   the linear predictor of a GLM as an offset in the BART model.
 
+- With `method = "gbm"`, balance is now assessed on multiple trees in
+  parallel when a [*future*](https://CRAN.R-project.org/package=future)
+  plan with more than one worker is set. This requires
+  [*future.apply*](https://CRAN.R-project.org/package=future.apply) to
+  be installed.
+
 - Model formulas supplied to
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
   can now have random effects included. Note this is intended to be used
@@ -111,15 +117,15 @@
 
 - For a censoring model, the effective sample size reported by
   [`summary()`](https://rdrr.io/r/base/summary.html) is now measured
-  against the units that model was fit on – those still under
-  observation entering it – rather than against all units. With
-  censoring at more than one time point, the latter counted units that
-  had already dropped out and were never eligible.
+  against the units that model was fit on, i.e., those still under
+  observation entering it, rather than against all units. With censoring
+  at more than one time point, the latter counted units that had already
+  dropped out and were never eligible.
 
 - Fixed a bug in
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
   `summary.weightit` object in which the weights of units with no
-  treatment value – those censored at an earlier time point – were
+  treatment value, i.e., those censored at an earlier time point, were
   displayed in a facet of their own, and in which a censoring model’s
   weights were displayed as though the censoring indicator were a
   treatment.
@@ -135,7 +141,7 @@
   supplying `d.moments` greater than any entry of a per-covariate
   `moments` vector (e.g., `moments = c(x1 = 2, x2 = 3)` with
   `d.moments = 3`) would hold only the *means* of the covariates to
-  their unweighted values, rather than the requested number of moments –
+  their unweighted values, rather than the requested number of moments;
   i.e., raising `d.moments` reduced the number of moments held instead
   of increasing it.
 
@@ -169,11 +175,6 @@
   behaves exactly as before, and an indicator tagged with either package
   attached is the same object and accepted by both. *cobalt* 5.0.0 or
   later is required.
-
-- Relatedly, the `[` method for `treat` objects is now *cobalt*’s as
-  well. *WeightIt* tags its processed treatments with *cobalt*’s `treat`
-  class (see `cobalt::treat-class`) and no longer registers a competing
-  method for it. This is internal; no user-facing behavior changes.
 
 - Fixed a bug in which only a bare
   [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)

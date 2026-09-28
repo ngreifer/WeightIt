@@ -81,9 +81,10 @@ weightit.fit(
   the desired estimand. For binary and multi-category treatments, can be
   `"ATE"`, `"ATT"`, `"ATC"`, and, for some methods, `"ATO"`, `"ATM"`, or
   `"ATOS"`. The default for both is `"ATE"`. This argument is ignored
-  for continuous treatments. See the individual pages for each method
-  for more information on which estimands are allowed with each method
-  and what literature to read to interpret these estimands.
+  for continuous treatments and censoring weights. See the individual
+  pages for each method for more information on which estimands are
+  allowed with each method and what literature to read to interpret
+  these estimands.
 
 - focal:
 

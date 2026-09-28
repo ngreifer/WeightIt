@@ -514,7 +514,6 @@ summary(Wmsm.out)
     ## Control       1.331 0.752   0.486       0
     ## 
     ## ─ Mean of Weights:
-    ## 
     ##              
     ## Treated 0.984
     ## Control 1.002
@@ -547,7 +546,6 @@ summary(Wmsm.out)
     ## Control       1.359 0.75    0.488       0
     ## 
     ## ─ Mean of Weights:
-    ## 
     ##              
     ## Treated 0.985
     ## Control 0.998
@@ -580,7 +578,6 @@ summary(Wmsm.out)
     ## Control       1.269 0.672   0.407       0
     ## 
     ## ─ Mean of Weights:
-    ## 
     ##              
     ## Treated 1.038
     ## Control 0.967
@@ -718,19 +715,18 @@ makes everything measured afterward unavailable for those units:
 ``` r
 
 set.seed(2000)
-msmdata2 <- msmdata
 
 # Generate censoring probability, to occur between A_2 and X1_2
-cens <- rbinom(nrow(msmdata2), 1,
-               prob = plogis(-2 + .2 * msmdata2$X1_1 + .3 * msmdata2$X1_0))
+cens <- rbinom(nrow(msmdata), 1,
+               prob = with(msmdata, plogis(-2 + .2 * X1_1 + .3 * X1_0)))
 
 # Apply censoring to all variables measured after censoring
-is.na(msmdata2[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
+is.na(msmdata[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
 
 # Post-censoring variables are unobserved for censored units
-msmdata2$C_2 <- with(msmdata2,
-                     is.na(X1_2) | is.na(X2_2) |
-                       is.na(A_3) | is.na(Y_B))
+msmdata$C_2 <- with(msmdata,
+                    is.na(X1_2) | is.na(X2_2) |
+                      is.na(A_3) | is.na(Y_B))
 ```
 
 The censoring model goes into `formula.list` in temporal order,
@@ -742,7 +738,7 @@ alongside the treatment models:
                         A_2 ~ X1_1 + X2_1 + A_1,
                         .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
                         A_3 ~ X1_2 + X2_2 + A_2),
-                   data = msmdata2, method = "glm"))
+                   data = msmdata, method = "glm"))
 ```
 
     ## A weightitMSM object
@@ -767,7 +763,7 @@ Censored units receive a weight of exactly 0:
 
 ``` r
 
-all(Wc$weights[msmdata2$C_2] == 0)
+all(Wc$weights[msmdata$C_2] == 0)
 ```
 
     ## [1] TRUE
@@ -782,7 +778,7 @@ available:
 ``` r
 
 fitc <- glm_weightit(Y_B ~ A_1 + A_2 + A_3,
-                     data = msmdata2, weightit = Wc,
+                     data = msmdata, weightit = Wc,
                      family = binomial)
 
 summary(fitc)
@@ -790,7 +786,7 @@ summary(fitc)
 
     ## 
     ## Call:
-    ## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata2, 
+    ## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata, 
     ##     family = binomial, weightit = Wc)
     ## 
     ## Coefficients:

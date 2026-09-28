@@ -79,9 +79,8 @@ weightitMSM(
   models may be time-consuming or impossible to fit. Can also be a
   one-sided formula or list thereof, in which case `stabilize` replaces
   `num.formula` (described below); as with `formula.list`, these
-  formulas may contain
-  [lme4](https://CRAN.R-project.org/package=lme4)-style random effects
-  terms. Default is `FALSE` for unstabilized weights.
+  formulas may contain lme4-style random effects terms. Default is
+  `FALSE` for unstabilized weights.
 
 - by:
 

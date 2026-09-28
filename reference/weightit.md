@@ -2,9 +2,9 @@
 
 `weightit()` allows for the easy generation of balancing weights using a
 variety of available methods for binary, continuous, and multi-category
-treatments. Some of these methods require functions in other packages,
-which `weightit()` calls; these packages must be installed to use the
-desired method.
+treatments and for censoring. Some of these methods require functions in
+other packages, which `weightit()` calls; these packages must be
+installed to use the desired method.
 
 ## Usage
 
@@ -34,7 +34,16 @@ weightit(
   a formula with a treatment variable on the left hand side and the
   covariates to be balanced on the right hand side. See
   [`glm()`](https://rdrr.io/r/stats/glm.html) for more details.
-  Interactions and functions of covariates are allowed.
+  Interactions and functions of covariates are allowed. A formula may
+  have an empty right hand side (e.g., `A ~ 1`), which requests a
+  marginal model at that time point; see *Empty model formulas* in
+  Details. The formulas may also contain
+  [lme4](https://CRAN.R-project.org/package=lme4)-style random effects
+  terms (e.g., `A ~ X1 + (1 | school)`) for methods that accept them, in
+  which case a multilevel model is fit. To estimate censoring weights,
+  use
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  on the left hand side variable.
 
 - data:
 
@@ -53,9 +62,10 @@ weightit(
   the desired estimand. For binary and multi-category treatments, can be
   `"ATE"`, `"ATT"`, `"ATC"`, and, for some methods, `"ATO"`, `"ATM"`, or
   `"ATOS"`. The default for both is `"ATE"`. This argument is ignored
-  for continuous treatments. See the individual pages for each method
-  for more information on which estimands are allowed with each method
-  and what literature to read to interpret these estimands.
+  for continuous treatments and censoring weights. See the individual
+  pages for each method for more information on which estimands are
+  allowed with each method and what literature to read to interpret
+  these estimands.
 
 - stabilize:
 
@@ -65,22 +75,15 @@ weightit(
   treatment value. If a formula, a generalized linear model will be fit
   with the included predictors, and the inverse of the corresponding
   weight will be used as the stabilization factor. The formula can
-  contain [lme4](https://CRAN.R-project.org/package=lme4)-style random
-  effects terms (e.g., `~ (1 | school)`) for methods that accept them,
-  in which case a multilevel model is fit for the numerator. Can only be
-  used when `estimand = "ATE"` or with continuous treatments. Default is
-  `FALSE` for no stabilization. Note that a continuous treatment's
-  weights already contain the unconditional density as their numerator
-  (see *Continuous Treatments* at
+  contain lme4-style random effects terms (e.g., `~ (1 | school)`) for
+  methods that accept them, in which case a multilevel model is fit for
+  the numerator. Can only be used when `estimand = "ATE"` or with
+  continuous treatments. Default is `FALSE` for no stabilization. Note
+  that a continuous treatment's weights already contain the
+  unconditional density as their numerator (see *Continuous Treatments*
+  at
   [method_glm](https://ngreifer.github.io/WeightIt/reference/method_glm.md)),
-  so `stabilize = TRUE` (equivalently, `~1`) leaves them unchanged; the
-  resulting object is not reported as stabilized, and has no
-  `stabilization` component. A formula with terms in it, as in
-  `stabilize = ~ x1`, does stabilize them. See also the `stabilize`
-  argument at
-  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
-  where a fully saturated model in the preceding treatments makes `TRUE`
-  meaningful for continuous treatments too.
+  so `stabilize = TRUE` (equivalently, `~1`) leaves them unchanged.
 
 - focal:
 
@@ -114,8 +117,8 @@ weightit(
 
   an optional vector of propensity scores or the name of a variable in
   `data` containing propensity scores. If supplied, `method` is ignored
-  unless it is a user-supplied function, and the propensity scores will
-  be used to create weights. `formula` must include the treatment
+  (unless it is a user-supplied function), and the propensity scores
+  will be used to create weights. `formula` must include the treatment
   variable in `data`, but the listed covariates will play no role in the
   weight estimation. Using `ps` is similar to calling
   [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
@@ -272,12 +275,7 @@ any method to model or balance, and every method's target is met by the
 same weights: the inverse of the marginal treatment probability, or
 \\1/P(C = 0)\\ for a censoring model. Those weights are computed by
 fitting an intercept-only generalized linear model whatever `method` is
-supplied, which is simply the easiest way to get them; any
-method-specific arguments are ignored, since none of them can apply to
-covariates that do not exist. This is invisible: `method` is reported as
-supplied, the package for the requested method need not be installed,
-and the weights are what that method would have produced. Every method
-therefore accepts an empty formula.
+supplied, which is simply the easiest way to get them.
 
 For a continuous treatment the conditional density of the treatment is
 its marginal density, so all the weights are exactly 1 and nothing is
@@ -285,12 +283,7 @@ estimated; no M-estimation components are produced. For the other
 treatment types the marginal probability is estimated, so M-estimation
 is available as usual.
 
-`estimand`, `focal`, `by`, `s.weights`, and `stabilize` are unaffected,
-and the arguments are still checked against the requested `method`, so a
-method that cannot handle the treatment type at all (e.g., `"npcbps"`
-with a censoring model) still produces an error.
-
-A formula whose only terms are *lme4*-style random effects, such as
+A formula whose only terms are lme4-style random effects, such as
 `A ~ (1 | school)`, is *not* empty in this sense and is fit as the
 multilevel model it describes.
 
@@ -309,10 +302,7 @@ Weights are estimated only for the units still under observation, and
 are those that make their covariate distribution resemble that of the
 full at-risk sample. Writing \\e(X) = P(C = 1 \| X)\\, the weights are
 \\1 / (1 - e(X))\\ for units with \\C = 0\\ and exactly 0 for units with
-\\C = 1\\. Because only one group is weighted, the estimation problem is
-smaller and better conditioned than the corresponding binary-treatment
-problem, which would additionally solve for weights among the censored
-units; this matters most when few units are censored.
+\\C = 1\\.
 
 `estimand`, `focal`, and `subclass` do not apply and are rejected or
 ignored. `by` and `stabilize` can be used; stabilization multiplies the
@@ -320,10 +310,11 @@ weights by \\P(C = 0 \| V)\\ from a second censoring model (marginal
 when `stabilize` is `TRUE`, otherwise fit with the predictors in the
 supplied formula), giving \\P(C = 0 \| V) / P(C = 0 \| X)\\ for the
 units still under observation and leaving the censored units at exactly
-0. `ps` is the predicted probability of *being censored*. Not all
-methods support estimating censoring weights; see the `treat_type`
-component of
-[`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md).
+0. `ps` is the predicted probability of *being censored* (i.e., of
+having missing outcomes). Not all methods support estimating censoring
+weights; see the `treat_type` component of
+[`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
+and each method's help page.
 
 As with a treatment model, the right side of the formula may be empty,
 as in `.cens(C) ~ 1`, which requests a marginal censoring model that
@@ -344,20 +335,18 @@ and friends tolerate missing values in the model variables for those
 units, including a missing event time in the `Surv()` response of a
 [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
 model. Missing values in units with a nonzero weight still produce an
-error. See
-[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
-for how to assess balance, which requires a little care.
+error.
 
 ### `estimand` and `focal`
 
 For binary and multi-category treatments, the argument to `estimand`
 determines what distribution the weighted sample should resemble. When
 set to `"ATE"`, this requests that each group resemble the full sample.
-When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods that allow
-them), this requests that each group resemble an "overlap" sample. When
-set to `"ATT"` or `"ATC"`, this requests that each group resemble the
-treated or control group, respectively (termed the "focal" group).
-Weights are set to 1 for the focal group.
+When set to `"ATT"` or `"ATC"`, this requests that each group resemble
+the treated or control group, respectively (termed the "focal" group);
+weights are set to 1 for the focal group. When set to `"ATO"`, `"ATM"`,
+or `"ATOS"` (for the methods that allow them), this requests that each
+group resemble an "overlap" sample.
 
 How does `weightit()` decide which group is the treated and which group
 is the control? For binary treatments, several heuristics are used. The
