@@ -21,7 +21,7 @@ anova.glm_weightit()."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -220,8 +220,9 @@ data. That is, calling <code>update(obj, data = d)</code> is equivalent to calli
 <code>weightit</code> object was supplied to the model fitting function. Similarly,
 supplying <code>s.weights</code> or <code>weights</code> passes the argument through to
 <code><a href="weightit.html">weightit()</a></code> to be refit. When <code>s.weights</code> or <code>weights</code> are supplied and no
-<code>weightit</code> object is present, a fake one containing just the supplied weights
-will be created.</p>
+<code>weightit</code> object is present, they are supplied to the <code>weights</code> argument of
+the model fitting function, which treats them as fixed. Supplying <code>weightit</code>
+replaces any <code>weights</code> supplied to the original call.</p>
 <p><code>estfun()</code> extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with <code>bread()</code>, is used by <code><a href="https://zeileis.codeberg.page/sandwich/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code> to compute the robust covariance matrix of the estimated coefficients. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> above for more details.</p>
     </div>
     <div class="section level2">

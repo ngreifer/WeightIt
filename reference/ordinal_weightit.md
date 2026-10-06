@@ -25,6 +25,7 @@ ordinal_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 ```
@@ -55,7 +56,8 @@ ordinal_weightit(
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   or
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  If not supplied, an unweighted model will be fit.
+  If neither `weightit` nor `weights` is supplied, an unweighted model
+  will be fit.
 
 - vcov:
 
@@ -132,6 +134,19 @@ ordinal_weightit(
   estimates are not (e.g., when an end category is unobserved). Default
   is `FALSE`. See Details.
 
+- weights:
+
+  an optional vector of weights to be used in the fitting process, which
+  are treated as fixed. Can be supplied as for
+  [`glm()`](https://rdrr.io/r/stats/glm.html) (e.g., as the unquoted
+  name of a variable in `data`), as a numeric vector, or as a string
+  containing the name of a variable in `data`. Only one of `weights` and
+  `weightit` can be supplied; a `weightit` or `weightitMSM` object
+  supplied to `weights` is treated as though it had been supplied to
+  `weightit`. When `weights` is supplied, the default `vcov` is `"HC0"`,
+  and bootstrapping holds the weights fixed rather than re-estimating
+  them.
+
 - ...:
 
   arguments to be used to form the default control argument if it is not
@@ -156,7 +171,8 @@ weights and the sampling weights, if any) and `(s.weights)` containing
 the sampling weights, which will be 1 if `s.weights` is not supplied in
 the original
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-call.
+call. When `weights` is supplied instead, only `(weights)` is included,
+containing those weights.
 
 ## Details
 
@@ -219,10 +235,11 @@ this: `br.maxit` (the maximum number of iterations, default 100) and
 `br.tol` (the convergence tolerance for the adjusted score relative to
 the sum of the weights, default `1e-10`).
 
-Weights are treated as multinomial totals, which makes the estimates
-invariant to whether the data are supplied as individual units or as
-groups of identical units with weights equal to their counts. As for
-`br = TRUE` in
+The weights are scaled to have a mean of 1 among the units with a
+nonzero weight before fitting (Mukhopadhyay, 2020). The adjustment does
+not grow with the weights as the score does, so this makes the estimates
+invariant to multiplying the weights by a constant, as estimates without
+bias reduction are. As for `br = TRUE` in
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 the reported variance matrix uses the information matrix at the
 estimates rather than the Jacobian of the adjusted score, i.e., the
@@ -248,6 +265,10 @@ Kosmidis, I. (2014). Improved estimation in cumulative link models.
 *Journal of the Royal Statistical Society: Series B (Statistical
 Methodology)*, 76(1), 169–196.
 [doi:10.1111/rssb.12025](https://doi.org/10.1111/rssb.12025)
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for
+proportional hazards regressions for complex surveys. *Survey
+Methodology*, 46(2), 215–241.
 
 ## See also
 
@@ -320,11 +341,11 @@ summary(fit_br)
 #> 
 #> Coefficients:
 #>       Estimate Std. Error z value Pr(>|z|)
-#> treat  0.05513    0.11121   0.496     0.62
+#> treat  0.05524    0.11126   0.496     0.62
 #> Standard error: HC0 robust (adjusted for estimation of weights)
 #> 
 #> Thresholds:
 #>     Estimate Std. Error z value Pr(>|z|)    
-#> 1|2  0.16856    0.07469   2.257    0.024 *  
-#> 2|3  0.82099    0.08172  10.046   <1e-06 ***
+#> 1|2  0.16884    0.07473   2.259   0.0239 *  
+#> 2|3  0.82249    0.08181  10.054   <1e-06 ***
 ```

@@ -21,6 +21,8 @@ coxph_weightit(
   x = FALSE,
   y = TRUE,
   fwb.args = list(),
+  br = FALSE,
+  weights,
   ...
 )
 ```
@@ -49,7 +51,8 @@ coxph_weightit(
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   or
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  If not supplied, an unweighted model will be fit.
+  If neither `weightit` nor `weights` is supplied, an unweighted model
+  will be fit.
 
 - vcov:
 
@@ -104,6 +107,29 @@ coxph_weightit(
   [`fwb::fwb()`](https://ngreifer.github.io/fwb/reference/fwb.html) when
   `vcov = "FWB"`.
 
+- br:
+
+  `logical`; whether to use bias reduction, i.e., to maximize the
+  partial likelihood penalized by the Jeffreys invariant prior as
+  described by Heinze and Schemper (2001) rather than the partial
+  likelihood. This yields estimates with smaller asymptotic bias that
+  are always finite, even when the maximum partial likelihood estimates
+  are not (e.g., under a monotone likelihood). Default is `FALSE`. See
+  Details.
+
+- weights:
+
+  an optional vector of weights to be used in the fitting process, which
+  are treated as fixed. Can be supplied as for
+  [`glm()`](https://rdrr.io/r/stats/glm.html) (e.g., as the unquoted
+  name of a variable in `data`), as a numeric vector, or as a string
+  containing the name of a variable in `data`. Only one of `weights` and
+  `weightit` can be supplied; a `weightit` or `weightitMSM` object
+  supplied to `weights` is treated as though it had been supplied to
+  `weightit`. When `weights` is supplied, the default `vcov` is `"HC0"`,
+  and bootstrapping holds the weights fixed rather than re-estimating
+  them.
+
 - ...:
 
   other arguments passed to
@@ -131,7 +157,8 @@ weights and the sampling weights, if any) and `(s.weights)` containing
 the sampling weights, which will be 1 if `s.weights` is not supplied in
 the original
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-call.
+call. When `weights` is supplied instead, only `(weights)` is included,
+containing those weights.
 
 ## Details
 
@@ -196,11 +223,60 @@ reliable but requires the weighting method to accept sampling weights
 performs the resampling-based bootstrap but with the additional features
 fwb provides (e.g., a progress bar and parallelization).
 
+### Bias reduction
+
+When `br = TRUE`, the coefficients maximize the partial likelihood
+penalized by the Jeffreys invariant prior, which is equivalent to
+solving the bias-reducing adjusted score equations of Firth (1993) and
+removes the first-order term in the asymptotic bias of the estimates.
+The estimates are finite even when the likelihood is monotone, i.e.,
+when some maximum partial likelihood estimates are infinite, which
+happens most often in small samples with heavy censoring and strongly
+predictive covariates (Heinze & Schemper, 2001). Without weights,
+estimation should align with that from
+[`coxphf::coxphf()`](https://rdrr.io/pkg/coxphf/man/coxphf.html) . The
+penalized likelihood is maximized by Newton-Raphson iterations using the
+information matrix, which converge more slowly than those for the
+unpenalized likelihood, so the maximum number of iterations is 100
+rather than 20 unless `iter.max` is supplied.
+
+As in
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+and
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+the weights are scaled to have a mean of 1 among the units with a
+nonzero weight before fitting (Mukhopadhyay, 2020), which makes the
+estimates invariant to multiplying the weights by a constant, and the
+reported variance matrix uses the information matrix at the estimates,
+i.e., the adjustment is treated as fixed. M-estimation and bootstrapping
+can be used with `br = TRUE` just as they can without it. Note that
+under a monotone likelihood, the distribution of the estimates can be
+far from normal, so Wald confidence intervals can perform poorly (Heinze
+& Schemper, 2001); bootstrapping may be preferable in that case.
+
+## References
+
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+*Biometrika*, 80(1), 27–38.
+[doi:10.1093/biomet/80.1.27](https://doi.org/10.1093/biomet/80.1.27)
+
+Heinze, G., & Schemper, M. (2001). A solution to the problem of monotone
+likelihood in Cox regression. *Biometrics*, 57(1), 114–119.
+[doi:10.1111/j.0006-341X.2001.00114.x](https://doi.org/10.1111/j.0006-341X.2001.00114.x)
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for
+proportional hazards regressions for complex surveys. *Survey
+Methodology*, 46(2), 215–241.
+
 ## See also
 
 - [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) for
   fitting Cox proportional hazards models without adjusting standard
   errors for estimation of the weights.
+
+- [`coxphf::coxphf()`](https://rdrr.io/pkg/coxphf/man/coxphf.html) for
+  fitting bias-reduced Cox proportional hazards models that do not
+  account for estimation of the weights.
 
 - [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   for fitting generalized linear models that adjust for estimation of

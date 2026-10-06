@@ -29,6 +29,7 @@ glm_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 
@@ -44,6 +45,7 @@ lm_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  weights,
   ...
 )
 ```
@@ -76,7 +78,8 @@ lm_weightit(
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   or
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  If not supplied, an unweighted model will be fit.
+  If neither `weightit` nor `weights` is supplied, an unweighted model
+  will be fit.
 
 - vcov:
 
@@ -156,7 +159,22 @@ lm_weightit(
   (including Firth logistic regression). If `TRUE`, arguments passed to
   `control` or ... will be passed to
   [`brglm2::brglmControl()`](https://rdrr.io/pkg/brglm2/man/brglmControl.html)
-  .
+  . The weights are scaled to have a mean of 1 among the units with a
+  nonzero weight before fitting, so that the estimates do not depend on
+  the scale of the weights.
+
+- weights:
+
+  an optional vector of weights to be used in the fitting process, which
+  are treated as fixed. Can be supplied as for
+  [`glm()`](https://rdrr.io/r/stats/glm.html) (e.g., as the unquoted
+  name of a variable in `data`), as a numeric vector, or as a string
+  containing the name of a variable in `data`. Only one of `weights` and
+  `weightit` can be supplied; a `weightit` or `weightitMSM` object
+  supplied to `weights` is treated as though it had been supplied to
+  `weightit`. When `weights` is supplied, the default `vcov` is `"HC0"`,
+  and bootstrapping holds the weights fixed rather than re-estimating
+  them.
 
 - ...:
 
@@ -182,7 +200,8 @@ weights and the sampling weights, if any) and `(s.weights)` containing
 the sampling weights, which will all be 1 if `s.weights` is not supplied
 in the original
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-call.
+call. When `weights` is supplied instead, only `(weights)` is included,
+containing those weights.
 
 ## Details
 

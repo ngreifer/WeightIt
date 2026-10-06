@@ -195,7 +195,10 @@ specified:
   these, arguments matching those of
   [`logistf::logistf.control()`](https://rdrr.io/pkg/logistf/man/logistf.control.html)
   are passed to the fitting function as `control`, and a `modcontrol`
-  list is passed to its `modcontrol` argument.
+  list is passed to its `modcontrol` argument. With a `br.` prefix,
+  `"flic"`, or `"flac"`, the sampling weights are scaled to have a mean
+  of 1 among the units with a nonzero weight before fitting, so that the
+  estimates do not depend on their scale.
 
 - `subclass`:
 

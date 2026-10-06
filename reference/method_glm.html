@@ -303,7 +303,7 @@ methods are.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -498,7 +498,7 @@ methods are.</p>
 
 </dl><p>For binary treatments, the following additional argument can be specified:</p><dl><dt><code>link</code></dt>
 <dd><p>the link used in the generalized linear model for the propensity scores. <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code> as well as <code>"loglog"</code> and <code>"clog"</code>. A <code>br.</code> prefix can be added (e.g., <code>"br.logit"</code>); this changes the fitting method to the bias-corrected generalized linear models implemented in the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package. <code>link</code> can also be either <code>"flic"</code> or <code>"flac"</code> to fit the corresponding Firth corrected logistic regression models implemented in the <a href="https://CRAN.R-project.org/package=logistf" class="external-link"><span class="pkg">logistf</span></a> package; with these, arguments matching those of <code><a href="https://rdrr.io/pkg/logistf/man/logistf.control.html" class="external-link">logistf::logistf.control()</a></code>
- are passed to the fitting function as <code>control</code>, and a <code>modcontrol</code> list is passed to its <code>modcontrol</code> argument.</p></dd>
+ are passed to the fitting function as <code>control</code>, and a <code>modcontrol</code> list is passed to its <code>modcontrol</code> argument. With a <code>br.</code> prefix, <code>"flic"</code>, or <code>"flac"</code>, the sampling weights are scaled to have a mean of 1 among the units with a nonzero weight before fitting, so that the estimates do not depend on their scale.</p></dd>
 
 <dt><code>subclass</code></dt>
 <dd><p><code>integer</code>; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details and references.</p></dd>

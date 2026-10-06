@@ -695,7 +695,7 @@ summary(fit)
     ## 
     ## Coefficients:
     ##   Estimate Std. Error z value Pr(>|z|)    
-    ## A    0.356      0.106    3.37  0.00074 ***
+    ## A    0.356      0.102    3.49  0.00048 ***
     ## Standard error: HC0 robust (adjusted for estimation of weights)
     ## 
 
@@ -719,7 +719,7 @@ summary(fit, ci = TRUE, transform = "exp")
     ## 
     ## Coefficients (transformed):
     ##   Estimate z value Pr(>|z|) 2.5 % 97.5 %    
-    ## A     1.43    3.37  0.00074  1.16   1.76 ***
+    ## A     1.43    3.49  0.00048  1.17   1.74 ***
     ## Standard error: HC0 robust (adjusted for estimation of weights)
     ## 
 
@@ -740,7 +740,7 @@ avg_comparisons(fit, variables = "A",
 
     ## 
     ##  Estimate Std. Error     z Pr(>|z|)    S  2.5 %  97.5 %
-    ##    -0.127     0.0357 -3.57   <0.001 11.4 -0.197 -0.0574
+    ##    -0.127     0.0346 -3.69   <0.001 12.1 -0.195 -0.0597
     ## 
     ## Term: A
     ## Type: survival

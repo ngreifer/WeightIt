@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,7 @@
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fwb.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  br <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">weights</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,8 +99,8 @@ environment from which the function is called.</p></dd>
 
 <dt id="arg-weightit">weightit<a class="anchor" aria-label="anchor" href="#arg-weightit"></a></dt>
 <dd><p>a <code>weightit</code> or <code>weightitMSM</code> object; the output of a call to
-<code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. If not supplied, an unweighted model will
-be fit.</p></dd>
+<code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. If neither <code>weightit</code> nor <code>weights</code> is
+supplied, an unweighted model will be fit.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
@@ -173,6 +174,17 @@ finite, even when the maximum likelihood estimates are not (e.g., under
 separation). Default is <code>FALSE</code>. See Details.</p></dd>
 
 
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
+<dd><p>an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> (e.g.,
+as the unquoted name of a variable in <code>data</code>), as a numeric vector, or as a
+string containing the name of a variable in <code>data</code>. Only one of <code>weights</code>
+and <code>weightit</code> can be supplied; a <code>weightit</code> or <code>weightitMSM</code> object
+supplied to <code>weights</code> is treated as though it had been supplied to
+<code>weightit</code>. When <code>weights</code> is supplied, the default <code>vcov</code> is <code>"HC0"</code>, and
+bootstrapping holds the weights fixed rather than re-estimating them.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments to be used to form the default control argument if it
 is not supplied directly.</p></dd>
@@ -191,7 +203,8 @@ will include two extra columns when <code>weightit</code> is supplied: <code>(we
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and <code>(s.weights)</code> containing the
 sampling weights, which will be 1 if <code>s.weights</code> is not supplied in the
-original <code><a href="weightit.html">weightit()</a></code> call.</p>
+original <code><a href="weightit.html">weightit()</a></code> call. When <code>weights</code> is supplied instead, only <code>(weights)</code>
+is included, containing those weights.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -241,9 +254,12 @@ always finite and correspond to the maximum of a penalized likelihood.
 Estimation should align with that from <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>
  with its
 default <code>type = "AS_mean"</code>.</p>
-<p>Weights are treated as multinomial totals, as they are by <span class="pkg">brglm2</span>, which
-makes the estimates invariant to whether the data are supplied as individual
-units or as groups of identical units with weights equal to their counts. As
+<p>The weights are scaled to have a mean of 1 among the units with a nonzero
+weight before fitting (Mukhopadhyay, 2020). The adjustment does not grow with
+the weights as the score does, so this makes the estimates invariant to
+multiplying the weights by a constant, as estimates without bias reduction are.
+<span class="pkg">brglm2</span> treats weights as counts instead, so its estimates agree with these
+only when the weights already have a mean of 1. As
 for <code>br = TRUE</code> in <code><a href="glm_weightit.html">glm_weightit()</a></code>, the reported variance matrix uses the
 information matrix at the estimates rather than the Jacobian of the adjusted
 score, i.e., the adjustment is treated as fixed; the two differ by a term that
@@ -259,6 +275,8 @@ vanishes asymptotically. M-estimation and bootstrapping can be used with
 <p>Kosmidis, I., &amp; Firth, D. (2011). Multinomial logit bias reduction via the
 Poisson log-linear model. <em>Biometrika</em>, 98(3), 755–759.
 <a href="https://doi.org/10.1093/biomet/asr026" class="external-link">doi:10.1093/biomet/asr026</a></p>
+<p>Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+hazards regressions for complex surveys. <em>Survey Methodology</em>, 46(2), 215–241.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -319,10 +337,10 @@ Poisson log-linear model. <em>Biometrika</em>, 98(3), 755–759.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Coefficients:</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Estimate Std. Error z value Pr(&gt;|z|)    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2~(Intercept) -0.89698    0.14881  -6.027   &lt;1e-06 ***</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2~treat        0.04968    0.23596   0.211    0.833    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3~(Intercept) -1.01323    0.15654  -6.473   &lt;1e-06 ***</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3~treat        0.11886    0.23780   0.500    0.617    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2~(Intercept) -0.89976    0.14892  -6.042   &lt;1e-06 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2~treat        0.04983    0.23611   0.211    0.833    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3~(Intercept) -1.01660    0.15672  -6.487   &lt;1e-06 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3~treat        0.11938    0.23802   0.502    0.616    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>

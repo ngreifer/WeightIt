@@ -200,7 +200,11 @@ The following additional arguments can be specified:
   treatments and censoring weights), multinomial logistic regression
   score equations (for multi-category treatments), or linear regression
   score equations (for continuous treatments) to the balance moment
-  conditions. Default is `FALSE` to use the just-identified CBPS.
+  conditions. Default is `FALSE` to use the just-identified CBPS. With a
+  binary treatment, `estimand = "ATO"`, and the logit link, `over` is
+  ignored and the just-identified CBPS is used, since the balance
+  conditions are then the logistic regression score equations and the
+  two versions have the same solution.
 
 - `twostep`:
 

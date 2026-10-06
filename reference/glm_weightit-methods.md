@@ -191,8 +191,10 @@ Similarly, supplying `s.weights` or `weights` passes the argument
 through to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 to be refit. When `s.weights` or `weights` are supplied and no
-`weightit` object is present, a fake one containing just the supplied
-weights will be created.
+`weightit` object is present, they are supplied to the `weights`
+argument of the model fitting function, which treats them as fixed.
+Supplying `weightit` replaces any `weights` supplied to the original
+call.
 
 `estfun()` extracts the empirical estimating functions for the fitted
 model, optionally accounting for the estimation of the weights (if

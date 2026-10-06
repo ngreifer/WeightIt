@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-09-28</h4>
+            <h4 data-toc-skip class="date">2026-10-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -711,7 +711,7 @@ setting <code>vcov</code> to <code>"BS"</code> or
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Coefficients:</span></span></span>
 <span><span class="co">##   Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## A    0.356      0.106    3.37  0.00074 ***</span></span>
+<span><span class="co">## A    0.356      0.102    3.49  0.00048 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
 <p>Note that the output differs from that of
@@ -729,7 +729,7 @@ the call to <code><a href="https://rdrr.io/r/base/summary.html" class="external-
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Coefficients (transformed):</span></span></span>
 <span><span class="co">##   Estimate z value Pr(&gt;|z|) 2.5 % 97.5 %    </span></span>
-<span><span class="co">## A     1.43    3.37  0.00074  1.16   1.76 ***</span></span>
+<span><span class="co">## A     1.43    3.49  0.00048  1.17   1.74 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
 <p>A more interpretable estimand is the survival probability difference
@@ -743,7 +743,7 @@ days) using the <code>newdata</code> argument as follows:</p>
 <span>                newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/datagrid.html" class="external-link">datagrid</a></span><span class="op">(</span>Y_S <span class="op">=</span> <span class="fl">300</span>, grid_type <span class="op">=</span> <span class="st">"counterfactual"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 %  97.5 %</span></span>
-<span><span class="co">##    -0.127     0.0357 -3.57   &lt;0.001 11.4 -0.197 -0.0574</span></span>
+<span><span class="co">##    -0.127     0.0346 -3.69   &lt;0.001 12.1 -0.195 -0.0597</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Term: A</span></span>
 <span><span class="co">## Type: survival</span></span>

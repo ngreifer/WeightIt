@@ -25,6 +25,7 @@ multinom_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 ```
@@ -54,7 +55,8 @@ multinom_weightit(
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   or
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-  If not supplied, an unweighted model will be fit.
+  If neither `weightit` nor `weights` is supplied, an unweighted model
+  will be fit.
 
 - vcov:
 
@@ -130,6 +132,19 @@ multinom_weightit(
   that are always finite, even when the maximum likelihood estimates are
   not (e.g., under separation). Default is `FALSE`. See Details.
 
+- weights:
+
+  an optional vector of weights to be used in the fitting process, which
+  are treated as fixed. Can be supplied as for
+  [`glm()`](https://rdrr.io/r/stats/glm.html) (e.g., as the unquoted
+  name of a variable in `data`), as a numeric vector, or as a string
+  containing the name of a variable in `data`. Only one of `weights` and
+  `weightit` can be supplied; a `weightit` or `weightitMSM` object
+  supplied to `weights` is treated as though it had been supplied to
+  `weightit`. When `weights` is supplied, the default `vcov` is `"HC0"`,
+  and bootstrapping holds the weights fixed rather than re-estimating
+  them.
+
 - ...:
 
   arguments to be used to form the default control argument if it is not
@@ -154,7 +169,8 @@ weights and the sampling weights, if any) and `(s.weights)` containing
 the sampling weights, which will be 1 if `s.weights` is not supplied in
 the original
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-call.
+call. When `weights` is supplied instead, only `(weights)` is included,
+containing those weights.
 
 ## Details
 
@@ -215,10 +231,13 @@ from
 [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
 with its default `type = "AS_mean"`.
 
-Weights are treated as multinomial totals, as they are by brglm2, which
-makes the estimates invariant to whether the data are supplied as
-individual units or as groups of identical units with weights equal to
-their counts. As for `br = TRUE` in
+The weights are scaled to have a mean of 1 among the units with a
+nonzero weight before fitting (Mukhopadhyay, 2020). The adjustment does
+not grow with the weights as the score does, so this makes the estimates
+invariant to multiplying the weights by a constant, as estimates without
+bias reduction are. brglm2 treats weights as counts instead, so its
+estimates agree with these only when the weights already have a mean
+of 1. As for `br = TRUE` in
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 the reported variance matrix uses the information matrix at the
 estimates rather than the Jacobian of the adjusted score, i.e., the
@@ -235,6 +254,10 @@ Firth, D. (1993). Bias reduction of maximum likelihood estimates.
 Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via
 the Poisson log-linear model. *Biometrika*, 98(3), 755–759.
 [doi:10.1093/biomet/asr026](https://doi.org/10.1093/biomet/asr026)
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for
+proportional hazards regressions for complex surveys. *Survey
+Methodology*, 46(2), 215–241.
 
 ## See also
 
@@ -305,10 +328,10 @@ summary(fit_br)
 #> 
 #> Coefficients:
 #>               Estimate Std. Error z value Pr(>|z|)    
-#> 2~(Intercept) -0.89698    0.14881  -6.027   <1e-06 ***
-#> 2~treat        0.04968    0.23596   0.211    0.833    
-#> 3~(Intercept) -1.01323    0.15654  -6.473   <1e-06 ***
-#> 3~treat        0.11886    0.23780   0.500    0.617    
+#> 2~(Intercept) -0.89976    0.14892  -6.042   <1e-06 ***
+#> 2~treat        0.04983    0.23611   0.211    0.833    
+#> 3~(Intercept) -1.01660    0.15672  -6.487   <1e-06 ***
+#> 3~treat        0.11938    0.23802   0.502    0.616    
 #> Standard error: HC0 robust (adjusted for estimation of weights)
 #> 
 ```

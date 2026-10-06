@@ -197,7 +197,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -406,7 +406,7 @@ essentially 0 when the conditions were solved.</p>
 
 
 <p>The following additional arguments can be specified:</p><dl><dt><code>over</code></dt>
-<dd><p><code>logical</code>; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is <code>FALSE</code> to use the just-identified CBPS.</p></dd>
+<dd><p><code>logical</code>; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is <code>FALSE</code> to use the just-identified CBPS. With a binary treatment, <code>estimand = "ATO"</code>, and the logit link, <code>over</code> is ignored and the just-identified CBPS is used, since the balance conditions are then the logistic regression score equations and the two versions have the same solution.</p></dd>
 
 <dt><code>twostep</code></dt>
 <dd><p><code>logical</code>; when <code>over = TRUE</code>, whether to use the two-step approximation to the generalized method of moments variance. Default is <code>TRUE</code>. Setting to <code>FALSE</code> increases computation time but may improve estimation. Ignored with a warning when <code>over = FALSE</code>.</p></dd>

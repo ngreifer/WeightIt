@@ -25,7 +25,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,6 +92,7 @@ model when available.</p>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fwb.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  br <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">weights</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -107,6 +108,7 @@ model when available.</p>
 <span>  y <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fwb.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">weights</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -135,8 +137,8 @@ a family function or the result of a call to a family function. See
 
 <dt id="arg-weightit">weightit<a class="anchor" aria-label="anchor" href="#arg-weightit"></a></dt>
 <dd><p>a <code>weightit</code> or <code>weightitMSM</code> object; the output of a call to
-<code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. If not supplied, an unweighted model will
-be fit.</p></dd>
+<code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. If neither <code>weightit</code> nor <code>weights</code> is
+supplied, an unweighted model will be fit.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
@@ -212,7 +214,20 @@ See <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-li
 <code><a href="https://rdrr.io/pkg/brglm2/man/brglmFit.html" class="external-link">brglm2::brglmFit()</a></code>
  (including Firth logistic regression). If <code>TRUE</code>, arguments passed to <code>control</code> or
 ... will be passed to <code><a href="https://rdrr.io/pkg/brglm2/man/brglmControl.html" class="external-link">brglm2::brglmControl()</a></code>
-.</p></dd>
+. The weights are scaled
+to have a mean of 1 among the units with a nonzero weight before fitting, so
+that the estimates do not depend on the scale of the weights.</p></dd>
+
+
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
+<dd><p>an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> (e.g.,
+as the unquoted name of a variable in <code>data</code>), as a numeric vector, or as a
+string containing the name of a variable in <code>data</code>. Only one of <code>weights</code>
+and <code>weightit</code> can be supplied; a <code>weightit</code> or <code>weightitMSM</code> object
+supplied to <code>weights</code> is treated as though it had been supplied to
+<code>weightit</code>. When <code>weights</code> is supplied, the default <code>vcov</code> is <code>"HC0"</code>, and
+bootstrapping holds the weights fixed rather than re-estimating them.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -233,7 +248,8 @@ will include two extra columns when <code>weightit</code> is supplied: <code>(we
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and <code>(s.weights)</code> containing the
 sampling weights, which will all be 1 if <code>s.weights</code> is not supplied in the
-original <code><a href="weightit.html">weightit()</a></code> call.</p>
+original <code><a href="weightit.html">weightit()</a></code> call. When <code>weights</code> is supplied instead, only <code>(weights)</code>
+is included, containing those weights.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

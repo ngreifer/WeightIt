@@ -1,6 +1,111 @@
 # Changelog
 
+## `WeightIt` (development version)
+
+- [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  gains a `br` argument, which, when set to `TRUE`, maximizes the
+  partial likelihood penalized by the Jeffreys invariant prior as
+  described by Heinze and Schemper (2001). This yields estimates with
+  smaller asymptotic bias that are finite even when the likelihood is
+  monotone and composes with M-estimation, cluster-robust standard
+  errors, and bootstrapping. Without weights, estimates match those from
+  [`coxphf::coxphf()`](https://rdrr.io/pkg/coxphf/man/coxphf.html).
+
+- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  gain a `weights` argument for supplying fixed weights, which works
+  like the `weights` argument of
+  [`glm()`](https://rdrr.io/r/stats/glm.html). This makes it easier to
+  use these functions outside of weighting for covariate balance (e.g.,
+  for bias reduction or robust and bootstrap standard errors) without
+  constructing a `weightit` object. Only one of `weights` and `weightit`
+  can be supplied, and a `weightit` object supplied to `weights` is
+  treated as though it had been supplied to `weightit`. Previously,
+  `weights` was ignored with a warning.
+
+- With `br = TRUE` in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and with a `br.` link or `link = "flic"` or `"flac"` for
+  `method = "glm"`, the weights are now scaled to have a mean of 1 among
+  the units with a nonzero weight before fitting, following Mukhopadhyay
+  (2020). Previously, multiplying the weights by a constant changed the
+  estimates, and weights with a mean above 1 (e.g., ATE weights or
+  survey weights) weakened the adjustment. Estimates change unless the
+  weights already had a mean of 1, and they are no longer invariant to
+  aggregating identical units into a single unit with a weight equal to
+  their count.
+
+- Fixed a bug when using `method = "cbps"` with `estimand = "ATO"`, the
+  logit link, and `over = TRUE`, in which the over-identified CBPS was
+  fit instead of the equivalent just-identified one, so M-estimation was
+  not available for outcome models.
+
+- Fixed a bug in which setting `density = "kernel"` with a continuous
+  treatment produced a warning about an unused argument on versions of R
+  before 4.3.0.
+
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which M-estimation-based standard errors (the default when the
+  supplied `weightit` object supports M-estimation) were incorrect, as
+  was the output of
+  [`sandwich::estfun()`](https://zeileis.codeberg.page/sandwich/reference/estfun.html).
+  The derivative of the outcome score with respect to the weighting
+  model’s coefficients was computed as though each unit’s contribution
+  depended only on its own weight, but in a Cox model it also depends on
+  the other units’ weights through the risk sets. Standard errors will
+  change, in some cases noticeably.
+
+- [`sandwich::estfun()`](https://zeileis.codeberg.page/sandwich/reference/estfun.html)
+  on objects fit with `br = TRUE` now computes the derivative of the
+  outcome score with respect to the weighting model’s coefficients by
+  numeric differentiation, as
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) has since version 2.1.0.
+  Previously the two gave slightly different results.
+
+- Fixed a bug in which
+  [`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html)
+  and the other *sandwich* functions that use `bread()` (e.g.,
+  [`sandwich::vcovCL()`](https://zeileis.codeberg.page/sandwich/reference/vcovCL.html))
+  gave variances that were too small for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  fits in which some weights were 0 (e.g., with censoring weights).
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) was unaffected.
+
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which arguments to
+  [`survival::coxph.control()`](https://rdrr.io/pkg/survival/man/coxph.control.html)
+  supplied through `...` (e.g., `iter.max`) were ignored. Arguments
+  supplied in a list to `control` were unaffected.
+
+- Warnings raised while refitting the model in bootstrap replicates are
+  now issued once each after the bootstrap, along with the number of
+  replicates that raised them, rather than once per replicate.
+  Previously, a warning raised in many replicates led R to report only
+  that there were 50 or more warnings. Fixed a bug in which such
+  warnings from
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  began with an empty function name, as in `(from ):`.
+
 ## `WeightIt` 2.1.0
+
+CRAN release: 2026-09-30
 
 - With `method = "bart"`, `use.offset` can now be set to `TRUE` to use
   the linear predictor of a GLM as an offset in the BART model.
