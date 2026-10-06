@@ -161,7 +161,7 @@ essentially 0 when the conditions were solved.
 
 The following additional arguments can be specified:
 \describe{
-\item{\code{over}}{\code{logical}; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is \code{FALSE} to use the just-identified CBPS.
+\item{\code{over}}{\code{logical}; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is \code{FALSE} to use the just-identified CBPS. With a binary treatment, \code{estimand = "ATO"}, and the logit link, \code{over} is ignored and the just-identified CBPS is used, since the balance conditions are then the logistic regression score equations and the two versions have the same solution.
 }
 \item{\code{twostep}}{\code{logical}; when \code{over = TRUE}, whether to use the two-step approximation to the generalized method of moments variance. Default is \code{TRUE}. Setting to \code{FALSE} increases computation time but may improve estimation. Ignored with a warning when \code{over = FALSE}.
 }

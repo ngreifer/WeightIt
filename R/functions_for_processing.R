@@ -1626,17 +1626,26 @@ stabilize_w <- function(weights, treat) {
     if (is_null(bw)) bw <- "nrd0"
     if (is_null(kernel)) kernel <- "gaussian"
 
+    #`warnWbw` (R >= 4.3.0) silences the warning that the bandwidth ignores the weights;
+    #older versions of R neither give that warning nor accept the argument
+    .density <- stats::density
+
+    if (getRversion() >= "4.3.0") {
+      .density <- function(...) {
+        stats::density(..., warnWbw = FALSE)
+      }
+    }
+
     make_dens_fun <- function(mu, weights, grid) {
-      .d <- stats::density(mu,
-                           weights = weights / sum(weights),
-                           n = n,
-                           give.Rkern = FALSE,
-                           warnWbw = FALSE,
-                           bw = bw,
-                           adjust = adjust,
-                           kernel = kernel,
-                           from = min(grid),
-                           to = max(grid))
+      .d <- .density(mu,
+                     weights = weights / sum(weights),
+                     n = n,
+                     give.Rkern = FALSE,
+                     bw = bw,
+                     adjust = adjust,
+                     kernel = kernel,
+                     from = min(grid),
+                     to = max(grid))
 
       function(r) {
         approxfun(x = .d$x, y = .d$y)(r) |>

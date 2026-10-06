@@ -967,7 +967,24 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   orig_weightit <- NULL
 
   if (is_not_null(extras)) {
-    if (evaluate && all(names(extras) %in% vcov_args)) {
+    vcov_only <- evaluate && all(names(extras) %in% vcov_args)
+
+    #Re-estimating only the variance gives the same object as refitting unless the
+    #variance is being removed, which a fit records differently, or the fit itself
+    #depends on the variance type, as ordinal and multinomial fits do through the Hessian
+    if (vcov_only) {
+      new_vcov <- {
+        if (utils::hasName(extras, "vcov")) eval.parent(extras[["vcov"]]) %or% object[["vcov_type"]]
+        else object[["vcov_type"]]
+      }
+
+      vcov_only <- rlang::is_string(new_vcov) && new_vcov != "none" &&
+        !(inherits(object, c("ordinal_weightit", "multinom_weightit")) &&
+            !identical(.vcov_uses_hessian(new_vcov),
+                       .vcov_uses_hessian(object[["vcov_type"]])))
+    }
+
+    if (vcov_only) {
       #Just re-estimate vcov, don't change anything else
       update_call[[1L]] <- .vcov_glm_weightit.internal
 

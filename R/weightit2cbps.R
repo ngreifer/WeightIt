@@ -80,7 +80,7 @@
 #'
 #' The following additional arguments can be specified:
 #' \describe{
-#'     \item{`over`}{`logical`; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is `FALSE` to use the just-identified CBPS.
+#'     \item{`over`}{`logical`; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is `FALSE` to use the just-identified CBPS. With a binary treatment, `estimand = "ATO"`, and the logit link, `over` is ignored and the just-identified CBPS is used, since the balance conditions are then the logistic regression score equations and the two versions have the same solution.
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Setting to `FALSE` increases computation time but may improve estimation. Ignored with a warning when `over = FALSE`.
 #'     }
@@ -340,10 +340,6 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
                              "log", "clog", "identity", "softplus"))
 
     link <- .make_link(link)
-
-    if (identical(link, "logit") && estimand == "ATO") {
-      over <- FALSE
-    }
   }
   else if (inherits(link, "family") && is_not_null(link$linkfun) &&
            is_not_null(link$linkinv) && is_not_null(link$mu.eta) &&
@@ -357,6 +353,12 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   }
   else if (!inherits(link, "link-glm")) {
     arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
+  }
+
+  #With the logit link, the ATO balance conditions are the logistic regression score
+  #equations, so the over-identified CBPS has the same solution as the just-identified one
+  if (estimand == "ATO" && identical(link$name, "logit")) {
+    over <- FALSE
   }
 
   .fam <- quasibinomial(link)

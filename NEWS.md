@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` (development version)
+
+* Fixed a bug when using `method = "cbps"` with `estimand = "ATO"`, the logit link, and `over = TRUE`, in which the over-identified CBPS was fit instead of the equivalent just-identified one, so M-estimation was not available for outcome models.
+
+* Fixed a bug in which setting `density = "kernel"` with a continuous treatment produced a warning about an unused argument on versions of R before 4.3.0.
+
 # `WeightIt` 2.1.0
 
 * With `method = "bart"`, `use.offset` can now be set to `TRUE` to use the linear predictor of a GLM as an offset in the BART model.

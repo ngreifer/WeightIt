@@ -689,6 +689,12 @@
 
 # Sets the vcov, vcov_type, and cluster components when given a user-supplied vcov;
 # for use in summary.glm_weightit()
+# The ordinal and multinomial fitters compute the Hessian only for the variance types that
+# use it, so for those models the fit itself depends on which type is requested
+.vcov_uses_hessian <- function(vcov) {
+  vcov %nin% c("none", "BS", "FWB")
+}
+
 .set_vcov <- function(object, vcov, vcov_type = NULL) {
   object$vcov_type <- {
     if (is_null(vcov)) "none"
@@ -1110,7 +1116,7 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
-    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+    model_call$hess <- .vcov_uses_hessian(vcov)
     model_call$na.action <- .na_zero_weight
     model_call$br <- br
   }
@@ -1126,7 +1132,7 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
-    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+    model_call$hess <- .vcov_uses_hessian(vcov)
     model_call$na.action <- .na_zero_weight
     model_call$br <- br
   }
