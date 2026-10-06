@@ -1,3 +1,12 @@
+expect_balance_improved_cont <- function(W, ...) {
+  weighted <- abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                    s.weights = W$s.weights))
+  unweighted <- abs(cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                      s.weights = W$s.weights))
+
+  expect_true(max(weighted) < max(unweighted), ...)
+}
+
 test_that("Binary treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
@@ -18,50 +27,6 @@ test_that("Binary treatment", {
   expect_true(all(W0$ps > 0 & W0$ps < 1))
   expect_false(is_null(W0$obj))
   expect_true(is_null(attr(W0, "Mparts", exact = TRUE))) #gbm does not support M-estimation
-
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATC", "ATO", "ATM")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("GBM: sw = %s, estimand = %s", sw, estimand), {
-        set.seed(123)
-        W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                      data = test_data, method = "gbm", estimand = estimand,
-                      criterion = "smd.max", n.trees = 200,
-                      s.weights = if (sw) "SW" else NULL,
-                      include.obj = TRUE)
-
-        expect_true(is.numeric(W$ps))
-        expect_true(all(is.finite(W$ps) & W$ps > 0 & W$ps < 1))
-        expect_true(all(is.finite(W$weights) & W$weights > 0))
-        expect_false(is_null(W$obj))
-
-        expect_balance_improved(W)
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[, i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[, k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
 
   # Spot-checks of additional arguments; not crossed into the main grid.
 
@@ -202,8 +167,8 @@ test_that("Binary treatment", {
     expect_true(all(is.finite(W_ind$weights) & W_ind$weights > 0))
     expect_true(all(is.finite(W_surr$weights) & W_surr$weights > 0))
 
-    # See doc-vs-behavior note above: this currently holds exactly, which is
-    # surprising given the documented difference between "ind" and "surr".
+    # This currently holds exactly, which is surprising given the documented
+    # difference between "ind" and "surr".
     expect_equal(W_ind$weights, W_surr$weights, tolerance = eps)
   })
 
@@ -224,6 +189,54 @@ test_that("Binary treatment", {
   }, "not an allowable estimand", ignore.case = TRUE)
 })
 
+test_that("Binary treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("gbm")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "GBM: sw = {sw}, estimand = {estimand}",
+    {
+      set.seed(123)
+      W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "gbm", estimand = estimand,
+                    criterion = "smd.max", n.trees = 200,
+                    s.weights = if (sw) "SW" else NULL,
+                    include.obj = TRUE)
+
+      expect_true(is.numeric(W$ps))
+      expect_true(all(is.finite(W$ps) & W$ps > 0 & W$ps < 1))
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+      expect_false(is_null(W$obj))
+
+      expect_balance_improved(W)
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATC", "ATO", "ATM"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
+})
+
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
@@ -231,22 +244,6 @@ test_that("Multi-category treatment", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-
-  expect_balance_improved_multi <- function(W, ...) {
-    weighted <- vapply(combn(levels(W$treat), 2, simplify = FALSE), function(tt) {
-      in_tt <- W$treat %in% tt
-      max(abs(cobalt::col_w_smd(W$covs[in_tt, ], W$treat[in_tt], W$weights[in_tt],
-                                s.weights = W$s.weights[in_tt])))
-    }, numeric(1L))
-
-    unweighted <- vapply(combn(levels(W$treat), 2, simplify = FALSE), function(tt) {
-      in_tt <- W$treat %in% tt
-      max(abs(cobalt::col_w_smd(W$covs[in_tt, ], W$treat[in_tt],
-                                s.weights = W$s.weights[in_tt])))
-    }, numeric(1L))
-
-    expect_true(max(weighted) < max(unweighted), ...)
-  }
 
   set.seed(123)
   expect_no_condition({
@@ -259,53 +256,6 @@ test_that("Multi-category treatment", {
   expect_true(is_null(W0$ps))
   expect_false(is_null(W0$obj))
   expect_true(is_null(attr(W0, "Mparts", exact = TRUE))) #gbm does not support M-estimation
-
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATO", "ATM")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-  sw.used <- estimand.used <- character(ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("GBM: sw = %s, estimand = %s", sw, estimand), {
-        set.seed(123)
-        W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                      data = test_data, method = "gbm", estimand = estimand,
-                      focal = if (estimand %in% c("ATT")) "T" else NULL,
-                      criterion = "smd.max", n.trees = 100,
-                      s.weights = if (sw) "SW" else NULL,
-                      include.obj = TRUE)
-
-        expect_true(is_null(W$ps))
-        expect_true(all(is.finite(W$weights) & W$weights > 0))
-        expect_false(is_null(W$obj))
-
-        expect_balance_improved_multi(W)
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[, i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[, k] <<- W$weights
-        sw.used[k] <<- sw
-        estimand.used[k] <<- estimand
-        k <<- k + 1
-      })
-    }
-  }
 
   test_that("GBM: alternative criterion (ks.mean) - multi-category", {
     set.seed(123)
@@ -356,6 +306,70 @@ test_that("Multi-category treatment", {
   })
 })
 
+test_that("Multi-category treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("gbm")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  expect_balance_improved_multi <- function(W, ...) {
+    weighted <- vapply(combn(levels(W$treat), 2, simplify = FALSE), function(tt) {
+      in_tt <- W$treat %in% tt
+      max(abs(cobalt::col_w_smd(W$covs[in_tt, ], W$treat[in_tt], W$weights[in_tt],
+                                s.weights = W$s.weights[in_tt])))
+    }, numeric(1L))
+
+    unweighted <- vapply(combn(levels(W$treat), 2, simplify = FALSE), function(tt) {
+      in_tt <- W$treat %in% tt
+      max(abs(cobalt::col_w_smd(W$covs[in_tt, ], W$treat[in_tt],
+                                s.weights = W$s.weights[in_tt])))
+    }, numeric(1L))
+
+    expect_true(max(weighted) < max(unweighted), ...)
+  }
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "GBM: sw = {sw}, estimand = {estimand}",
+    {
+      set.seed(123)
+      W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                    data = test_data, method = "gbm", estimand = estimand,
+                    focal = if (estimand %in% c("ATT")) "T" else NULL,
+                    criterion = "smd.max", n.trees = 100,
+                    s.weights = if (sw) "SW" else NULL,
+                    include.obj = TRUE)
+
+      expect_true(is_null(W$ps))
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+      expect_false(is_null(W$obj))
+
+      expect_balance_improved_multi(W)
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATO", "ATM"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
+})
+
 test_that("Continuous treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
@@ -363,15 +377,6 @@ test_that("Continuous treatment", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-
-  expect_balance_improved_cont <- function(W, ...) {
-    weighted <- abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
-                                      s.weights = W$s.weights))
-    unweighted <- abs(cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                        s.weights = W$s.weights))
-
-    expect_true(max(weighted) < max(unweighted), ...)
-  }
 
   set.seed(123)
   expect_no_condition({
@@ -385,41 +390,6 @@ test_that("Continuous treatment", {
   expect_false(is_null(W0$obj))
   expect_true(is_null(attr(W0, "Mparts", exact = TRUE))) #gbm does not support M-estimation
   expect_balance_improved_cont(W0)
-
-  sw.opts <- c(FALSE, TRUE)
-
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(sw.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    test_that(sprintf("GBM: sw = %s", sw), {
-      set.seed(123)
-      W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                    data = test_data, method = "gbm",
-                    criterion = "p.max", n.trees = 1000,
-                    s.weights = if (sw) "SW" else NULL,
-                    include.obj = TRUE)
-
-      expect_true(is_null(W$ps))
-      expect_true(all(is.finite(W$weights) & W$weights > 0))
-      expect_false(is_null(W$obj))
-
-      expect_balance_improved_cont(W)
-
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[, i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                         tolerance = eps)
-      }
-
-      n <- sprintf("W_%s", sw)
-      colnames(weight.mat)[k] <<- n
-      weight.mat[, k] <<- W$weights
-      k <<- k + 1
-    })
-  }
 
   test_that("GBM: alternative criterion (p.max) - continuous", {
     set.seed(123)
@@ -443,45 +413,6 @@ test_that("Continuous treatment", {
     expect_true(max_corr(W) <= max_corr(W_alt) + eps)
   })
 
-  test_that("GBM: density = 'kernel' - continuous", {
-    set.seed(123)
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300,
-                  density = "kernel")
-
-    expect_true(all(is.finite(W$weights) & W$weights > 0))
-  })
-
-  test_that("GBM: density = 'dt_3' - continuous", {
-    set.seed(123)
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300,
-                  density = "dt_3")
-
-    expect_true(all(is.finite(W$weights) & W$weights > 0))
-  })
-
-  test_that("GBM: distribution sets density", {
-    set.seed(123)
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300,
-                  distribution = "laplace")
-
-    expect_true(all(is.finite(W$weights) & W$weights > 0))
-
-    W1 <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300,
-                  distribution = "laplace", density = "dlaplace")
-
-    expect_true(all(is.finite(W1$weights) & W1$weights > 0))
-
-    expect_equal(W$weights, W1$weights, tolerance = eps)
-  })
-
   test_that("GBM: trim.at - continuous", {
     W0trim <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                        data = test_data, method = "gbm",
@@ -493,23 +424,6 @@ test_that("Continuous treatment", {
 
     expect_true(all(is.finite(Wtrim$weights) & Wtrim$weights > 0))
     expect_true(max(Wtrim$weights) <= max(W0trim$weights) + eps)
-  })
-
-  test_that("GBM: distribution = 'tdist' - continuous", {
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300,
-                  distribution = "tdist")
-
-    expect_true(all(is.finite(W$weights) & W$weights > 0))
-  })
-
-  test_that("GBM: use.offset - continuous", {
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "gbm",
-                  criterion = "p.max", n.trees = 300, use.offset = TRUE)
-
-    expect_true(all(is.finite(W$weights) & W$weights > 0))
   })
 
   test_that("GBM: cv-based criterion works for continuous treatments", {
@@ -543,6 +457,88 @@ test_that("Continuous treatment", {
     expect_true(all(is.finite(W_ind$weights) & W_ind$weights > 0))
     expect_true(all(is.finite(W_surr$weights) & W_surr$weights > 0))
   })
+})
+
+test_that("Continuous treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("gbm")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "GBM: sw = {sw}",
+    {
+      set.seed(123)
+      W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "gbm",
+                    criterion = "p.max", n.trees = 1000,
+                    s.weights = if (sw) "SW" else NULL,
+                    include.obj = TRUE)
+
+      expect_true(is_null(W$ps))
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+      expect_false(is_null(W$obj))
+
+      expect_balance_improved_cont(W)
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s", sw)]] <- unname(W$weights)
+    },
+    sw = c(FALSE, TRUE)
+  )
+
+  patrick::with_parameters_test_that(
+    "GBM: {setting}",
+    {
+      set.seed(123)
+      W <- do.call("weightit",
+                   c(list(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                          data = quote(test_data), method = "gbm",
+                          criterion = "p.max", n.trees = 300),
+                     args))
+
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+
+      # Spelling out the density that `distribution` implies should not change
+      # the weights
+      if (!is_null(equiv_args)) {
+        W1 <- do.call("weightit",
+                      c(list(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                             data = quote(test_data), method = "gbm",
+                             criterion = "p.max", n.trees = 300),
+                        args, equiv_args))
+
+        expect_true(all(is.finite(W1$weights) & W1$weights > 0))
+
+        expect_equal(W$weights, W1$weights, tolerance = eps)
+      }
+    },
+    .cases = patrick::cases(
+      list(setting = "density = 'kernel' - continuous",
+           args = list(density = "kernel")),
+      list(setting = "density = 'dt_3' - continuous",
+           args = list(density = "dt_3")),
+      list(setting = "distribution sets density - continuous",
+           args = list(distribution = "laplace"),
+           equiv_args = list(density = "dlaplace")),
+      list(setting = "distribution = 'tdist' - continuous",
+           args = list(distribution = "tdist")),
+      list(setting = "use.offset - continuous",
+           args = list(use.offset = TRUE))
+    )
+  )
 })
 
 test_that("ATOS is not an allowed estimand for GBM", {

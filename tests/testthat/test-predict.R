@@ -274,7 +274,8 @@ test_that("predict.coxph_weightit", {
   for (tt in c("lp", "risk", "expected", "terms")) {
     p_tt <- predict(fit, type = tt)
     p_tt_direct <- survival:::predict.coxph(fit, type = tt)
-    expect_equal(p_tt, p_tt_direct)
+    expect_equal(p_tt, p_tt_direct,
+                 label = sprintf('predict(fit, type = "%s")', tt))
   }
 
   #newdata

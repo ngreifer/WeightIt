@@ -58,6 +58,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
+    patrick (>= 0.3.0),
     waldo (>= 0.6.0)
 License: GPL (>=2)
 Language: en-US

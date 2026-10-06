@@ -68,63 +68,6 @@ test_that("Binary treatment", {
              n.chains = 1, n.threads = 1)
   })
 
-  estimand.opts <- c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS")
-
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (estimand in estimand.opts) {
-    test_that(sprintf("BART: estimand = %s", estimand), {
-      set.seed(123)
-      W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                    data = test_data, method = "bart", estimand = estimand,
-                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
-                    n.chains = 1, n.threads = 1,
-                    include.obj = TRUE)
-
-      expect_true(is.numeric(W$ps))
-      expect_true(all(W$ps > 0 & W$ps < 1))
-      expect_false(is_null(W$obj))
-      expect_true(all(is.finite(W$weights) & W$weights >= 0))
-
-      # BART is a machine-learning PS method; it approximates but does not
-      # solve exactly for balance, so we check improvement over the
-      # unweighted sample rather than exact-zero SMDs.
-      expect_balance_improved(W)
-
-      if (estimand %in% c("ATT", "ATC")) {
-        expect_ATT_weights_okay(W, tolerance = eps)
-      }
-
-      for (i in 0:1) {
-        e <- {
-          if (estimand == "ATT" && i == 1) expect_equal
-          else if (estimand == "ATC" && i == 0) expect_equal
-          else expect_not_equal
-        }
-
-        e(unname(W$weights[W$treat == i]),
-          rep(1, sum(W$treat == i)),
-          label = sprintf("%s weights", i),
-          expected.label = "all 1s",
-          tolerance = eps)
-      }
-
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                         tolerance = eps)
-      }
-
-      n <- sprintf("W_%s", estimand)
-      colnames(weight.mat)[k] <<- n
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
-
   # Estimands
   expect_error({
     weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -213,6 +156,75 @@ test_that("Binary treatment", {
   }, "only.*allowed for.*missing", ignore.case = TRUE)
 })
 
+test_that("Binary treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("dbarts")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Small tree/posterior-draw settings, single-threaded; see "Binary treatment"
+  n.trees <- 20
+  n.samples <- 50
+  n.burn <- 50
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "BART: estimand = {estimand}",
+    {
+      set.seed(123)
+      W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "bart", estimand = estimand,
+                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
+                    n.chains = 1, n.threads = 1,
+                    include.obj = TRUE)
+
+      expect_true(is.numeric(W$ps))
+      expect_true(all(W$ps > 0 & W$ps < 1))
+      expect_false(is_null(W$obj))
+      expect_true(all(is.finite(W$weights) & W$weights >= 0))
+
+      # BART is a machine-learning PS method; it approximates but does not
+      # solve exactly for balance, so we check improvement over the
+      # unweighted sample rather than exact-zero SMDs.
+      expect_balance_improved(W)
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in 0:1) {
+        e <- {
+          if (estimand == "ATT" && i == 1) expect_equal
+          else if (estimand == "ATC" && i == 0) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("estimand = %s", estimand)]] <- unname(W$weights)
+    },
+    estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS")
+  )
+})
+
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("dbarts")
@@ -238,15 +250,60 @@ test_that("Multi-category treatment", {
   expect_true(is_null(W0$ps)) #ps not directly returned for multi-category bart
   expect_false(is_null(W0$obj))
 
-  estimand.opts <- c("ATE", "ATT", "ATO", "ATM")
+  # Documented behavior noted above: ATC == ATT for multi-category treatments
+  # with the same focal.
+  set.seed(123)
+  W.att <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                    data = test_data, method = "bart", estimand = "ATT",
+                    focal = "T",
+                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
+                    n.chains = 1, n.threads = 1)
+  set.seed(123)
+  W.atc <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                    data = test_data, method = "bart", estimand = "ATC",
+                    focal = "T",
+                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
+                    n.chains = 1, n.threads = 1)
 
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
+  expect_equal(W.att$weights, W.atc$weights)
 
-  k <- 1
+  # `ATOS` is not an allowable estimand for multi-category treatments
+  expect_error({
+    weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+             data = test_data, method = "bart", estimand = "ATOS",
+             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
+  }, "not an allowable estimand", ignore.case = TRUE)
 
-  for (estimand in estimand.opts) {
-    test_that(sprintf("BART: estimand = %s", estimand), {
+  # `s.weights` errors for multi-category treatments too
+  expect_error({
+    weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+             data = test_data, method = "bart", estimand = "ATE",
+             s.weights = "SW",
+             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
+  }, "sampling weights cannot be used", ignore.case = TRUE)
+})
+
+test_that("Multi-category treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("dbarts")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  n.trees <- 20
+  n.samples <- 50
+  n.burn <- 50
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "BART: estimand = {estimand}",
+    {
       set.seed(123)
       W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                     data = test_data, method = "bart", estimand = estimand,
@@ -293,50 +350,16 @@ test_that("Multi-category treatment", {
           tolerance = eps)
       }
 
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
                          tolerance = eps)
       }
 
-      n <- sprintf("W_%s", estimand)
-      colnames(weight.mat)[k] <<- n
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
-
-  # Documented behavior noted above: ATC == ATT for multi-category treatments
-  # with the same focal.
-  set.seed(123)
-  W.att <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                    data = test_data, method = "bart", estimand = "ATT",
-                    focal = "T",
-                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
-                    n.chains = 1, n.threads = 1)
-  set.seed(123)
-  W.atc <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                    data = test_data, method = "bart", estimand = "ATC",
-                    focal = "T",
-                    n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
-                    n.chains = 1, n.threads = 1)
-
-  expect_equal(W.att$weights, W.atc$weights)
-
-  # `ATOS` is not an allowable estimand for multi-category treatments
-  expect_error({
-    weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-             data = test_data, method = "bart", estimand = "ATOS",
-             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
-  }, "not an allowable estimand", ignore.case = TRUE)
-
-  # `s.weights` errors for multi-category treatments too
-  expect_error({
-    weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-             data = test_data, method = "bart", estimand = "ATE",
-             s.weights = "SW",
-             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
-  }, "sampling weights cannot be used", ignore.case = TRUE)
+      seen[[sprintf("estimand = %s", estimand)]] <- unname(W$weights)
+    },
+    estimand = c("ATE", "ATT", "ATO", "ATM")
+  )
 })
 
 test_that("Continuous treatment", {
@@ -364,15 +387,47 @@ test_that("Continuous treatment", {
   expect_false(is_null(W0$obj))
   expect_true(all(is.finite(W0$weights) & W0$weights >= 0))
 
-  density.opts <- c("dnorm", "kernel")
+  # Non-full rank
+  set.seed(123)
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+                    I(1 - X5) + I(X9 * 2),
+                  data = test_data, method = "bart",
+                  n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
+                  n.chains = 1, n.threads = 1)
+  })
 
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(density.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
+  expect_true(all(is.finite(W$weights) & W$weights >= 0))
 
-  k <- 1
+  # `s.weights` errors for continuous treatments too
+  expect_error({
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "bart", s.weights = "SW",
+             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
+  }, "sampling weights cannot be used", ignore.case = TRUE)
+})
 
-  for (density in density.opts) {
-    test_that(sprintf("BART: density = %s", density), {
+test_that("Continuous treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("dbarts")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  n.trees <- 20
+  n.samples <- 50
+  n.burn <- 50
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "BART: density = {density}",
+    {
       set.seed(123)
       W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                     data = test_data, method = "bart",
@@ -392,37 +447,16 @@ test_that("Continuous treatment", {
                                           s.weights = W$s.weights))
       expect_true(max(weighted) < max(unweighted))
 
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
                          tolerance = eps)
       }
 
-      n <- sprintf("W_%s", density)
-      colnames(weight.mat)[k] <<- n
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
-
-  # Non-full rank
-  set.seed(123)
-  expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                    I(1 - X5) + I(X9 * 2),
-                  data = test_data, method = "bart",
-                  n.trees = n.trees, n.samples = n.samples, n.burn = n.burn,
-                  n.chains = 1, n.threads = 1)
-  })
-
-  expect_true(all(is.finite(W$weights) & W$weights >= 0))
-
-  # `s.weights` errors for continuous treatments too
-  expect_error({
-    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-             data = test_data, method = "bart", s.weights = "SW",
-             n.trees = n.trees, n.samples = n.samples, n.burn = n.burn)
-  }, "sampling weights cannot be used", ignore.case = TRUE)
+      seen[[sprintf("density = %s", density)]] <- unname(W$weights)
+    },
+    density = c("dnorm", "kernel")
+  )
 })
 
 test_that("The documented bart2() argument exceptions are enforced", {

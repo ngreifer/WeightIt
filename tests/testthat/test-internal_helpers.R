@@ -8,6 +8,8 @@ skip_on_cran()
 # ---- .gradient() -----------------------------------------------------------
 
 test_that(".gradient() differentiates an arbitrary subset of the parameters", {
+  skip_if_not_installed("patrick")
+
   #Both components have gradients that are easy to write down
   f <- function(x) c(sum(x^2), prod(x))
   x <- c(1, 2, 3)
@@ -15,28 +17,32 @@ test_that(".gradient() differentiates an arbitrary subset of the parameters", {
   analytic <- rbind(2 * x,
                     c(x[2L] * x[3L], x[1L] * x[3L], x[1L] * x[2L]))
 
-  for (.method in c("fd", "richardson")) {
-    #All parameters, the default
-    expect_equal(unname(.gradient(f, x, .method = .method)), analytic,
-                 tolerance = 1e-5, info = .method)
+  patrick::with_parameters_test_that(
+    ".method = {method}",
+    {
+      #All parameters, the default
+      expect_equal(unname(.gradient(f, x, .method = method)), analytic,
+                   tolerance = 1e-5, info = method)
 
-    #A subset that does not start at the first parameter. This used to error
-    #("object 'jacob' not found") for "fd" and to return an extra all-NA column
-    #for "richardson".
-    expect_equal(unname(.gradient(f, x, .parm = 2:3, .method = .method)),
-                 analytic[, 2:3],
-                 tolerance = 1e-5, info = .method)
+      #A subset that does not start at the first parameter. This used to error
+      #("object 'jacob' not found") for "fd" and to return an extra all-NA column
+      #for "richardson".
+      expect_equal(unname(.gradient(f, x, .parm = 2:3, .method = method)),
+                   analytic[, 2:3],
+                   tolerance = 1e-5, info = method)
 
-    #An out-of-order subset: the columns follow `.parm`, not `x`
-    expect_equal(unname(.gradient(f, x, .parm = c(3L, 1L), .method = .method)),
-                 analytic[, c(3L, 1L)],
-                 tolerance = 1e-5, info = .method)
+      #An out-of-order subset: the columns follow `.parm`, not `x`
+      expect_equal(unname(.gradient(f, x, .parm = c(3L, 1L), .method = method)),
+                   analytic[, c(3L, 1L)],
+                   tolerance = 1e-5, info = method)
 
-    #A single parameter
-    expect_equal(unname(.gradient(f, x, .parm = 2L, .method = .method)),
-                 analytic[, 2L, drop = FALSE],
-                 tolerance = 1e-5, info = .method)
-  }
+      #A single parameter
+      expect_equal(unname(.gradient(f, x, .parm = 2L, .method = method)),
+                   analytic[, 2L, drop = FALSE],
+                   tolerance = 1e-5, info = method)
+    },
+    .cases = data.frame(method = c("fd", "richardson"))
+  )
 })
 
 test_that(".gradient() names its columns after the differentiated parameters", {

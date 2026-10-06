@@ -2,6 +2,7 @@ test_that("Binary treatment", {
   skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -18,70 +19,61 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W0, tolerance = eps)
 
-  sw.opts <- c(FALSE, TRUE)
-  bw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATC")
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
 
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) *
-                         length(bw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
+  patrick::with_parameters_test_that(
+    "Ebal: sw = {sw}, bw = {bw}, estimand = {estimand}",
+    {
+      W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "ebal", estimand = estimand,
+                    s.weights = if (sw) "SW" else NULL,
+                    base.weights = if (bw) base_weights else NULL,
+                    include.obj = TRUE, solver = "multiroot")
 
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (bw in bw.opts) {
-      for (estimand in estimand.opts) {
-        test_that(sprintf("Ebal: sw = %s, bw = %s, estimand = %s", sw, bw, estimand), {
-          W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                        data = test_data, method = "ebal", estimand = estimand,
-                        s.weights = if (sw) "SW" else NULL,
-                        base.weights = if (bw) base_weights else NULL,
-                        include.obj = TRUE, solver = "multiroot")
-
-          expect_M_parts_okay(W, tolerance = eps)
-          expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
+      expect_M_parts_okay(W, tolerance = eps)
+      expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
+                                     s.weights = W$s.weights),
+                   0 * cobalt::col_w_smd(W$covs, W$treat,
                                          s.weights = W$s.weights),
-                       0 * cobalt::col_w_smd(W$covs, W$treat,
-                                             s.weights = W$s.weights),
-                       expected.label = "all 0s",
-                       tolerance = eps)
+                   expected.label = "all 0s",
+                   tolerance = eps)
 
-          expect_true(is_null(W$ps))
-          expect_false(is_null(W$obj))
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
 
-          if (estimand %in% c("ATT", "ATC")) {
-            expect_ATT_weights_okay(W, tolerance = eps)
-          }
-
-          for (i in 0:1) {
-            e <- {
-              if (estimand == "ATT" && i == 1) expect_equal
-              else if (estimand == "ATC" && i == 0) expect_equal
-              else expect_not_equal
-            }
-
-            e(unname(W$weights[W$treat == i]),
-              rep(1, sum(W$treat == i)),
-              label = sprintf("%s weights", i),
-              expected.label = "all 1s",
-              tolerance = eps)
-          }
-
-          for (i in seq_len(k - 1)) {
-            expect_not_equal(unname(W$weights), weight.mat[,i],
-                             expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                             tolerance = eps)
-          }
-
-          n <- sprintf("W_%s_%s_%s", sw, bw, estimand)
-          colnames(weight.mat)[k] <<- n
-          weight.mat[,k] <<- W$weights
-          k <<- k + 1
-        })
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
       }
-    }
-  }
+
+      for (i in 0:1) {
+        e <- {
+          if (estimand == "ATT" && i == 1) expect_equal
+          else if (estimand == "ATC" && i == 0) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, bw = %s, estimand = %s", sw, bw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATC"),
+                         bw = c(FALSE, TRUE),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
 
   # Estimands
   expect_error({
@@ -90,30 +82,30 @@ test_that("Binary treatment", {
   }, "not an allowable estimand", ignore.case = TRUE)
 
   #Non-full rank
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                    I(1 - X5) + I(X9 * 2),
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, solver = "optim")
+  W <- expect_no_condition({
+    weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+               I(1 - X5) + I(X9 * 2),
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, solver = "optim")
   })
 
   expect_M_parts_okay(W, tolerance = eps)
   expect_equal(W$weights, W0$weights, tolerance = eps)
 
   # All categorical covariates (issue #86)
-  expect_no_condition({
-    W <- weightit(A ~ cut(X1, 3) + cut(X2, 3) + cut(X3, 3),
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, solver = "optim", reltol = 1e-12)
+  W <- expect_no_condition({
+    weightit(A ~ cut(X1, 3) + cut(X2, 3) + cut(X3, 3),
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, solver = "optim", reltol = 1e-12)
   })
 
   expect_M_parts_okay(W, tolerance = eps)
 
   # tols > 0
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                   data = test_data, method = "ebal", estimand = "ATE",
-                   include.obj = TRUE, tols = .05)
+  W <- expect_no_condition({
+    weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+              data = test_data, method = "ebal", estimand = "ATE",
+              include.obj = TRUE, tols = .05)
   })
 
   expect_not_equal(W$weights, W0$weights)
@@ -122,10 +114,10 @@ test_that("Binary treatment", {
   expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
 
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  W <- expect_no_condition({
+    weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
   expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
@@ -133,8 +125,9 @@ test_that("Binary treatment", {
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
 
   #Should be equivalent to CBPS and IPT with logit link for ATT
-  for (sw in sw.opts) {
-    test_that(sprintf("Ebal matches CBPS/IPT for ATT: sw = %s", sw), {
+  patrick::with_parameters_test_that(
+    "Ebal matches CBPS/IPT for ATT: sw = {sw}",
+    {
       W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                     data = test_data, method = "ebal", estimand = "ATT",
                     s.weights = if (sw) "SW" else NULL,
@@ -161,14 +154,16 @@ test_that("Binary treatment", {
                    ESS(Wipt$weights[Wipt$treat == 0] * Wipt$s.weights[Wipt$treat == 0]),
                    expected.label = "ESS for IPT",
                    tolerance = .01)
-    })
-  }
+    },
+    sw = c(FALSE, TRUE)
+  )
 })
 
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -183,80 +178,71 @@ test_that("Multi-category treatment", {
                    include.obj = TRUE, solver = "optim")
   })
 
-  sw.opts <- c(FALSE, TRUE)
-  bw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT")
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
 
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) *
-                         length(bw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
+  patrick::with_parameters_test_that(
+    "Ebal: sw = {sw}, bw = {bw}, estimand = {estimand}",
+    {
+      W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                    data = test_data, method = "ebal", estimand = estimand,
+                    focal = if (estimand == "ATE") NULL else "T",
+                    s.weights = if (sw) "SW" else NULL,
+                    base.weights = if (bw) base_weights else NULL,
+                    include.obj = TRUE, solver = "multiroot")
 
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (bw in bw.opts) {
-      for (estimand in estimand.opts) {
-        test_that(sprintf("Ebal: sw = %s, bw = %s, estimand = %s", sw, bw, estimand), {
-          W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                        data = test_data, method = "ebal", estimand = estimand,
-                        focal = if (estimand == "ATE") NULL else "T",
-                        s.weights = if (sw) "SW" else NULL,
-                        base.weights = if (bw) base_weights else NULL,
-                        include.obj = TRUE, solver = "multiroot")
-
-          expect_M_parts_okay(W, tolerance = eps)
-          for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
-            in_tt <- W$treat %in% tt
-            expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
+      expect_M_parts_okay(W, tolerance = eps)
+      for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
+        in_tt <- W$treat %in% tt
+        expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
+                                       s.weights = W$s.weights[in_tt]),
+                     0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
                                            s.weights = W$s.weights[in_tt]),
-                         0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
-                                               s.weights = W$s.weights[in_tt]),
-                         label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")),
-                         expected.label = "all 0s",
-                         tolerance = eps)
-          }
-
-          expect_true(is_null(W$ps))
-          expect_false(is_null(W$obj))
-
-          if (estimand %in% c("ATT", "ATC")) {
-            expect_ATT_weights_okay(W, tolerance = eps)
-          }
-
-          for (i in levels(W$treat)) {
-            e <- {
-              if (estimand == "ATT" && i == W$focal) expect_equal
-              else expect_not_equal
-            }
-
-            e(unname(W$weights[W$treat == i]),
-              rep(1, sum(W$treat == i)),
-              label = sprintf("%s weights", i),
-              expected.label = "all 1s",
-              tolerance = eps)
-          }
-
-          for (i in seq_len(k - 1)) {
-            expect_not_equal(unname(W$weights), weight.mat[,i],
-                             expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                             tolerance = eps)
-          }
-
-          n <- sprintf("W_%s_%s_%s", sw, bw, estimand)
-          colnames(weight.mat)[k] <<- n
-          weight.mat[,k] <<- W$weights
-          k <<- k + 1
-        })
+                     label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")),
+                     expected.label = "all 0s",
+                     tolerance = eps)
       }
-    }
-  }
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in levels(W$treat)) {
+        e <- {
+          if (estimand == "ATT" && i == W$focal) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, bw = %s, estimand = %s", sw, bw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT"),
+                         bw = c(FALSE, TRUE),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
 
   # tols > 0
-  expect_no_condition({
-    W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, tols = .05)
+  W <- expect_no_condition({
+    weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, tols = .05)
   })
 
   expect_not_equal(W$weights, W0$weights)
@@ -265,10 +251,10 @@ test_that("Multi-category treatment", {
   expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) > eps)) #Some worse than 0
 
-  expect_no_condition({
-    W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  W <- expect_no_condition({
+    weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
   expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
@@ -280,6 +266,7 @@ test_that("Continuous treatment", {
   skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -296,77 +283,67 @@ test_that("Continuous treatment", {
 
   expect_M_parts_okay(W0, tolerance = eps)
 
-  sw.opts <- c(FALSE, TRUE)
-  bw.opts <- c(FALSE, TRUE)
-  d.moments.opts <- c(1, 3)
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
 
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) *
-                         length(bw.opts) * length(d.moments.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
+  patrick::with_parameters_test_that(
+    "Ebal: sw = {sw}, bw = {bw}, d.moments = {d.moments}",
+    {
+      W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "ebal",
+                    d.moments = d.moments,
+                    s.weights = if (sw) "SW" else NULL,
+                    base.weights = if (bw) base_weights else NULL,
+                    include.obj = TRUE, solver = "multiroot")
 
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (bw in bw.opts) {
-      for (d.moments in d.moments.opts) {
-        test_that(sprintf("Ebal: sw = %s, bw = %s, d.moments = %s", sw, bw, d.moments), {
-          W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                        data = test_data, method = "ebal",
-                        d.moments = d.moments,
-                        s.weights = if (sw) "SW" else NULL,
-                        base.weights = if (bw) base_weights else NULL,
-                        include.obj = TRUE, solver = "multiroot")
-
-          expect_M_parts_okay(W, tolerance = eps)
-          expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+      expect_M_parts_okay(W, tolerance = eps)
+      expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                     s.weights = W$s.weights),
+                   0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
                                          s.weights = W$s.weights),
-                       0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                             s.weights = W$s.weights),
-                       expected.label = "all 0s",
-                       tolerance = eps)
+                   expected.label = "all 0s",
+                   tolerance = eps)
 
-          expect_equal(cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs), W$weights,
-                                          s.weights = W$s.weights),
-                       cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs),
-                                              s.weights = W$s.weights),
-                       expected.label = "unweighted means",
-                       tolerance = eps)
+      expect_equal(cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs), W$weights,
+                                      s.weights = W$s.weights),
+                   cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs),
+                                      s.weights = W$s.weights),
+                   expected.label = "unweighted means",
+                   tolerance = eps)
 
-          expect_true(is_null(W$ps))
-          expect_false(is_null(W$obj))
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
 
-          for (i in seq_len(k - 1)) {
-            expect_not_equal(unname(W$weights), weight.mat[,i],
-                             expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                             tolerance = eps)
-          }
-
-          n <- sprintf("W_%s_%s_%s", sw, bw, d.moments)
-          colnames(weight.mat)[k] <<- n
-          weight.mat[,k] <<- W$weights
-          k <<- k + 1
-        })
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
       }
-    }
-  }
+
+      seen[[sprintf("sw = %s, bw = %s, d.moments = %s", sw, bw, d.moments)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(d.moments = c(1, 3),
+                         bw = c(FALSE, TRUE),
+                         sw = c(FALSE, TRUE))
+  )
 
   #Non-full rank
-  expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                    I(1 - X5) + I(X9 * 2),
-                  data = test_data, method = "ebal",
-                  include.obj = TRUE, solver = "optim")
+  W <- expect_no_condition({
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+               I(1 - X5) + I(X9 * 2),
+             data = test_data, method = "ebal",
+             include.obj = TRUE, solver = "optim")
   })
 
   expect_M_parts_okay(W, tolerance = eps)
   expect_equal(W$weights, W0$weights, tolerance = eps)
 
   # tols > 0
-  expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, tols = .05)
+  W <- expect_no_condition({
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, tols = .05)
   })
 
   expect_not_equal(W$weights, W0$weights)
@@ -375,10 +352,10 @@ test_that("Continuous treatment", {
   expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 
-  expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "ebal", estimand = "ATE",
-                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  W <- expect_no_condition({
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "ebal", estimand = "ATE",
+             include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
   expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols

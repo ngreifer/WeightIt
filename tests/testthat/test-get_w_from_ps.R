@@ -63,86 +63,72 @@ test_that("get_w_from_ps() works for binary, PS 0/1", {
   expect_equal(get_w_from_ps(ps, treat, estimand = "ATM"), w_atm)
 })
 
-test_that("get_w_from_ps() agrees with .get_w_from_ps_internal_bin() for binary", {
-  set.seed(1234)
-  treat <- sample(0:1, 1e3, TRUE)
-  ps <- runif(1e3)
+test_that("get_w_from_ps() agrees with .get_w_from_ps_internal_bin() and .get_w_from_ps_internal_array() for binary", {
+  skip_if_not_installed("patrick")
 
-  w_ate <- .get_w_from_ps_internal_bin(ps, treat, "ATE")
-  w_att <- .get_w_from_ps_internal_bin(ps, treat, "ATT")
-  w_atc <- .get_w_from_ps_internal_bin(ps, treat, "ATC")
-  w_ato <- .get_w_from_ps_internal_bin(ps, treat, "ATO")
-  w_atm <- .get_w_from_ps_internal_bin(ps, treat, "ATM")
+  # The random setups each reset the seed before drawing
+  setups <- list(
+    "internal_bin" = local({
+      set.seed(1234)
+      treat <- sample(0:1, 1e3, TRUE)
+      ps <- runif(1e3)
 
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATE"), w_ate)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATT"), w_att)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATC"), w_atc)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATO"), w_ato)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATM"), w_atm)
-})
+      list(treat = treat, ps = ps)
+    }),
+    "internal_bin, PS 0/1" = local({
+      treat <- rep(0:1, each = 2)
+      ps <- rep(0:1, 2)
 
-test_that("get_w_from_ps() agrees with .get_w_from_ps_internal_bin() for binary, PS 0/1", {
-  treat <- rep(0:1, each = 2)
-  ps <- rep(0:1, 2)
+      list(treat = treat, ps = ps)
+    }),
+    "internal_array" = local({
+      set.seed(1234)
+      treat <- sample(0:1, 1e3, TRUE)
+      ps <- matrix(runif(1e3 * 50), nrow = 1e3)
 
-  w_ate <- .get_w_from_ps_internal_bin(ps, treat, "ATE")
-  w_att <- .get_w_from_ps_internal_bin(ps, treat, "ATT")
-  w_atc <- .get_w_from_ps_internal_bin(ps, treat, "ATC")
-  w_ato <- .get_w_from_ps_internal_bin(ps, treat, "ATO")
-  w_atm <- .get_w_from_ps_internal_bin(ps, treat, "ATM")
+      list(treat = treat, ps = ps)
+    }),
+    "internal_array, PS 0/1" = local({
+      set.seed(1234)
+      treat <- sample(0:1, 1e3, TRUE)
+      ps <- matrix(round(runif(1e3 * 50)), nrow = 1e3)
 
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATE"), w_ate)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATT"), w_att)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATC"), w_atc)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATO"), w_ato)
-  expect_equal(get_w_from_ps(ps, treat, estimand = "ATM"), w_atm)
-})
+      #Do same adjustment that .get_w_from_ps_internal_array() does
+      ps_ <- ps
+      ps_[ps_ < 1e-8] <- 1e-8
+      ps_[ps_ > 1 - 1e-8] <- 1 - 1e-8
 
-test_that("get_w_from_ps() agrees with .get_w_from_ps_internal_array() for binary", {
-  set.seed(1234)
-  treat <- sample(0:1, 1e3, TRUE)
-  ps <- matrix(runif(1e3 * 50), nrow = 1e3)
+      list(treat = treat, ps = ps, ps_ = ps_)
+    })
+  )
 
-  w_ate <- .get_w_from_ps_internal_array(ps, treat, "ATE")
-  w_att <- .get_w_from_ps_internal_array(ps, treat, "ATT")
-  w_atc <- .get_w_from_ps_internal_array(ps, treat, "ATC")
-  w_ato <- .get_w_from_ps_internal_array(ps, treat, "ATO")
-  w_atm <- .get_w_from_ps_internal_array(ps, treat, "ATM")
+  # `input` is the propensity score given to get_w_from_ps(); the internal functions
+  # always get the raw `ps`. A matrix of scores is passed column by column.
+  patrick::with_parameters_test_that(
+    "{setup}, estimand = {estimand}",
+    {
+      s <- setups[[setup]]
 
-  w_ate2 <- apply(ps, 2, get_w_from_ps, treat, estimand = "ATE")
-  w_att2 <- apply(ps, 2, get_w_from_ps, treat, estimand = "ATT")
-  w_atc2 <- apply(ps, 2, get_w_from_ps, treat, estimand = "ATC")
-  w_ato2 <- apply(ps, 2, get_w_from_ps, treat, estimand = "ATO")
-  w_atm2 <- apply(ps, 2, get_w_from_ps, treat, estimand = "ATM")
+      if (is.matrix(s$ps)) {
+        w_public <- apply(s[[input]], 2, get_w_from_ps, s$treat, estimand = estimand)
+        w_internal <- .get_w_from_ps_internal_array(s$ps, s$treat, estimand)
+      }
+      else {
+        w_public <- get_w_from_ps(s[[input]], s$treat, estimand = estimand)
+        w_internal <- .get_w_from_ps_internal_bin(s$ps, s$treat, estimand)
+      }
 
-  expect_equal(w_ate, w_ate2)
-  expect_equal(w_att, w_att2)
-  expect_equal(w_atc, w_atc2)
-  expect_equal(w_ato, w_ato2)
-  expect_equal(w_atm, w_atm2)
-})
-
-test_that("get_w_from_ps() agrees with .get_w_from_ps_internal_array() for binary, PS 0/1", {
-  set.seed(1234)
-  treat <- sample(0:1, 1e3, TRUE)
-  ps <- matrix(round(runif(1e3 * 50)), nrow = 1e3)
-
-  w_ate <- .get_w_from_ps_internal_array(ps, treat, "ATE")
-  w_att <- .get_w_from_ps_internal_array(ps, treat, "ATT")
-  w_atc <- .get_w_from_ps_internal_array(ps, treat, "ATC")
-  w_ato <- .get_w_from_ps_internal_array(ps, treat, "ATO")
-  w_atm <- .get_w_from_ps_internal_array(ps, treat, "ATM")
-
-  #Do same adjustment that .get_w_from_ps_internal_array() does
-  ps_ <- ps
-  ps_[ps_ < 1e-8] <- 1e-8
-  ps_[ps_ > 1 - 1e-8] <- 1 - 1e-8
-
-  expect_equal(apply(ps_, 2, get_w_from_ps, treat, estimand = "ATE"), w_ate)
-  expect_equal(apply(ps_, 2, get_w_from_ps, treat, estimand = "ATT"), w_att)
-  expect_equal(apply(ps_, 2, get_w_from_ps, treat, estimand = "ATC"), w_atc)
-  expect_equal(apply(ps, 2, get_w_from_ps, treat, estimand = "ATO"), w_ato)
-  expect_equal(apply(ps_, 2, get_w_from_ps, treat, estimand = "ATM"), w_atm)
+      expect_equal(w_public, w_internal)
+    },
+    .cases = rbind(expand.grid(estimand = c("ATE", "ATT", "ATC", "ATO", "ATM"),
+                               setup = c("internal_bin", "internal_bin, PS 0/1",
+                                         "internal_array"),
+                               input = "ps",
+                               stringsAsFactors = FALSE),
+                   data.frame(estimand = c("ATE", "ATT", "ATC", "ATO", "ATM"),
+                              setup = "internal_array, PS 0/1",
+                              input = c("ps_", "ps_", "ps_", "ps", "ps_")))
+  )
 })
 
 test_that("get_w_from_ps() works for multi-category", {

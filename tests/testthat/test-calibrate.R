@@ -14,24 +14,30 @@ ps_fit <- function(d) {
 }
 
 test_that("both methods return calibrated probabilities", {
+  skip_if_not_installed("patrick")
+
   d <- test_data
   ps <- ps_fit(d)
 
-  for (method in c("platt", "isoreg")) {
-    p <- calibrate(ps, treat = d$A, method = method)
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      p <- calibrate(ps, treat = d$A, method = method)
 
-    expect_length(p, nrow(d))
-    expect_false(anyNA(p))
-    expect_named(p, names(ps))
-    expect_true(all(p >= 0 & p <= 1),
-                label = sprintf("calibrated scores in [0, 1] for %s", method))
+      expect_length(p, nrow(d))
+      expect_false(anyNA(p))
+      expect_named(p, names(ps))
+      expect_true(all(p >= 0 & p <= 1),
+                  label = sprintf("calibrated scores in [0, 1] for %s", method))
 
-    # The defining property of calibration: the mean predicted probability equals the
-    # observed treatment prevalence. Both methods hit this exactly, so it is a tight
-    # check on the weighting inside each.
-    expect_equal(mean(p), mean(d$A), tolerance = eps,
-                 label = sprintf("mean calibrated score for %s", method))
-  }
+      # The defining property of calibration: the mean predicted probability equals the
+      # observed treatment prevalence. Both methods hit this exactly, so it is a tight
+      # check on the weighting inside each.
+      expect_equal(mean(p), mean(d$A), tolerance = eps,
+                   label = sprintf("mean calibrated score for %s", method))
+    },
+    .cases = data.frame(method = c("platt", "isoreg"))
+  )
 })
 
 test_that("Platt scaling is a smooth monotone transformation", {
@@ -75,26 +81,32 @@ test_that("isotonic calibration is a monotone step function within treatment gro
 })
 
 test_that("s.weights are honored", {
+  skip_if_not_installed("patrick")
+
   d <- test_data
   ps <- ps_fit(d)
 
-  for (method in c("platt", "isoreg")) {
-    p_unw <- calibrate(ps, treat = d$A, method = method)
-    p_sw <- calibrate(ps, treat = d$A, s.weights = d$SW, method = method)
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      p_unw <- calibrate(ps, treat = d$A, method = method)
+      p_sw <- calibrate(ps, treat = d$A, s.weights = d$SW, method = method)
 
-    expect_not_equal(unname(p_sw), unname(p_unw))
-    expect_true(all(p_sw >= 0 & p_sw <= 1))
+      expect_not_equal(unname(p_sw), unname(p_unw))
+      expect_true(all(p_sw >= 0 & p_sw <= 1))
 
-    # Calibration now targets the sampling-weighted prevalence
-    expect_equal(weighted.mean(p_sw, d$SW), weighted.mean(d$A, d$SW),
-                 tolerance = eps,
-                 label = sprintf("weighted mean calibrated score for %s", method))
+      # Calibration now targets the sampling-weighted prevalence
+      expect_equal(weighted.mean(p_sw, d$SW), weighted.mean(d$A, d$SW),
+                   tolerance = eps,
+                   label = sprintf("weighted mean calibrated score for %s", method))
 
-    # `s.weights` may also name a variable in `data`
-    p_str <- calibrate(ps, treat = d$A, s.weights = "SW", data = d,
-                       method = method)
-    expect_equal(unname(p_str), unname(p_sw), tolerance = eps)
-  }
+      # `s.weights` may also name a variable in `data`
+      p_str <- calibrate(ps, treat = d$A, s.weights = "SW", data = d,
+                         method = method)
+      expect_equal(unname(p_str), unname(p_sw), tolerance = eps)
+    },
+    .cases = data.frame(method = c("platt", "isoreg"))
+  )
 })
 
 test_that("calibrate.weightit() replaces the scores and the weights", {
@@ -168,14 +180,21 @@ test_that("calibrate() rejects what it cannot handle", {
   expect_error(calibrate(ps_fit(d), treat = d$A, method = "nope"))
 
   # On a `weightit` object, estimated propensity scores are required; multi-category and
-  # continuous glm fits store none, so that is the error they raise
-  for (f in list(Am ~ X1 + X2, Ac ~ X1 + X2)) {
-    W <- weightit(f, data = d, method = "glm")
-    expect_null(W$ps)
-    expect_error(calibrate(W), "propensity score")
-  }
+  # continuous glm fits store none, so that is the error they raise, and so does a
+  # binary ebal fit
+  skip_if_not_installed("patrick")
 
-  W_ebal <- weightit(A ~ X1 + X2, data = d, method = "ebal")
-  expect_null(W_ebal$ps)
-  expect_error(calibrate(W_ebal), "propensity score")
+  patrick::with_parameters_test_that(
+    "{treat_type} treatment, method = {method}",
+    {
+      W <- weightit(f, data = d, method = method)
+      expect_null(W$ps)
+      expect_error(calibrate(W), "propensity score")
+    },
+    .cases = patrick::cases(
+      list(treat_type = "multi-category", f = Am ~ X1 + X2, method = "glm"),
+      list(treat_type = "continuous", f = Ac ~ X1 + X2, method = "glm"),
+      list(treat_type = "binary", f = A ~ X1 + X2, method = "ebal")
+    )
+  )
 })

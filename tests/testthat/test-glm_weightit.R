@@ -7,15 +7,15 @@ test_that("No weights", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  expect_no_condition({
-    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, family = binomial)
+  fit0 <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, family = binomial)
   })
 
   #M-estimation for glm
-  expect_no_condition({
-    fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, family = binomial, vcov = "HC0")
+  fit <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, family = binomial, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -31,9 +31,9 @@ test_that("No weights", {
   set.seed(123)
   off <- runif(nrow(test_data))
 
-  expect_no_condition({
-    fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9) + offset(off),
-                        data = test_data, family = binomial)
+  fit <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9) + offset(off),
+                 data = test_data, family = binomial)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -47,9 +47,9 @@ test_that("No weights", {
   #Cluster-robust SEs
   clus <- sample(1:50, nrow(test_data), replace = TRUE)
 
-  expect_no_condition({
-    fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, family = binomial, cluster = clus)
+  fit <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, family = binomial, cluster = clus)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -61,9 +61,9 @@ test_that("No weights", {
                tolerance = eps)
 
   #BR
-  expect_no_condition({
-    fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, family = binomial("probit"), br = TRUE)
+  fit <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, family = binomial("probit"), br = TRUE)
   })
 
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
@@ -92,9 +92,9 @@ test_that("No weights", {
   }, "missing values", ignore.case = TRUE)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, family = binomial)
+  fit0 <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, family = binomial)
   })
 
   expect_equal(vcov(fit0), sandwich::sandwich(fit0),
@@ -115,35 +115,35 @@ test_that("Binary treatment", {
                    include.obj = TRUE)
   })
 
-  expect_no_condition({
-    fit0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W)
+  fit0 <- expect_no_condition({
+    glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                data = test_data, weightit = W)
   })
 
   #M-estimation for glm
-  expect_no_condition({
-    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W,
-                        vcov = "asympt")
+  fit <- expect_no_condition({
+    glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W,
+                 vcov = "asympt")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
-  expect_no_condition({
-    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W,
-                        vcov = "HC0")
+  fit <- expect_no_condition({
+    glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W,
+                 vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_not_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   set.seed(123)
-  expect_no_condition({
-    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W,
-                        vcov = "FWB", R = 50)
+  fit <- expect_no_condition({
+    glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W,
+                 vcov = "FWB", R = 50)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -160,10 +160,10 @@ test_that("Binary treatment", {
   expect_equal(coef(fit), coef(fit_), tolerance = eps)
   expect_not_equal(vcov(fit), vcov(fit_), tolerance = eps)
 
-  expect_no_condition({
-    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W,
-                        vcov = "BS", R = 50)
+  fit <- expect_no_condition({
+    glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W,
+                 vcov = "BS", R = 50)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -183,9 +183,9 @@ test_that("Binary treatment", {
   }, "missing values", ignore.case = TRUE)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, weightit = W, family = binomial)
+  fit0 <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W, family = binomial)
   })
 
   expect_equal(vcov(fit0),
@@ -209,68 +209,54 @@ test_that("Gaussian and Poisson families", {
   set.seed(123)
   test_data$Y_P <- rpois(nrow(test_data), lambda = exp(.3 + .05 * test_data$X1))
 
-  ##No weightit object -- Gaussian
-  expect_no_condition({
-    fit0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, family = gaussian())
-  })
-
-  fit_g <- glm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-              data = test_data, family = gaussian())
-
-  expect_equal(coef(fit0), coef(fit_g), tolerance = eps)
-  expect_equal(vcov(fit0), sandwich::sandwich(fit_g), tolerance = eps)
-
-  ##No weightit object -- Poisson
-  expect_no_condition({
-    fit0_p <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                           data = test_data, family = poisson())
-  })
-
-  fit_g_p <- glm(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                data = test_data, family = poisson())
-
-  expect_equal(coef(fit0_p), coef(fit_g_p), tolerance = eps)
-  expect_equal(vcov(fit0_p), sandwich::sandwich(fit_g_p), tolerance = eps)
-
-  ##With a weightit object
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
                   include.obj = TRUE)
   })
 
-  #Gaussian, M-estimation vs. HC0 (should differ but agree on coefficients)
-  expect_no_condition({
-    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                        data = test_data, weightit = W, family = gaussian())
-  })
+  skip_if_not_installed("patrick")
 
-  expect_no_condition({
-    fit_hc0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                            data = test_data, weightit = W, family = gaussian(),
-                            vcov = "HC0")
-  })
+  patrick::with_parameters_test_that(
+    "family = {family}, weighted = {weighted}",
+    {
+      f <- reformulate("A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9)",
+                       response = outcome)
+      fam <- match.fun(family)()
 
-  expect_equal(coef(fit), coef(fit_hc0), tolerance = eps)
-  expect_not_equal(vcov(fit), vcov(fit_hc0), tolerance = eps)
-  expect_equal(vcov(fit_hc0), sandwich::sandwich(fit_hc0, asympt = FALSE), tolerance = eps)
+      if (weighted) {
+        ##With a weightit object
+        #M-estimation vs. HC0 (should differ but agree on coefficients)
+        expect_no_condition({
+          fit <- glm_weightit(f, data = test_data, weightit = W, family = fam)
+        })
 
-  #Poisson, M-estimation vs. HC0
-  expect_no_condition({
-    fit_p <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                          data = test_data, weightit = W, family = poisson())
-  })
+        expect_no_condition({
+          fit_hc0 <- glm_weightit(f, data = test_data, weightit = W, family = fam,
+                                  vcov = "HC0")
+        })
 
-  expect_no_condition({
-    fit_p_hc0 <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                              data = test_data, weightit = W, family = poisson(),
-                              vcov = "HC0")
-  })
+        expect_equal(coef(fit), coef(fit_hc0), tolerance = eps)
+        expect_not_equal(vcov(fit), vcov(fit_hc0), tolerance = eps)
+        expect_equal(vcov(fit_hc0), sandwich::sandwich(fit_hc0, asympt = FALSE), tolerance = eps)
+      }
+      else {
+        ##No weightit object
+        expect_no_condition({
+          fit0 <- glm_weightit(f, data = test_data, family = fam)
+        })
 
-  expect_equal(coef(fit_p), coef(fit_p_hc0), tolerance = eps)
-  expect_not_equal(vcov(fit_p), vcov(fit_p_hc0), tolerance = eps)
-  expect_equal(vcov(fit_p_hc0), sandwich::sandwich(fit_p_hc0, asympt = FALSE), tolerance = eps)
+        fit_g <- glm(f, data = test_data, family = fam)
+
+        expect_equal(coef(fit0), coef(fit_g), tolerance = eps)
+        expect_equal(vcov(fit0), sandwich::sandwich(fit_g), tolerance = eps)
+      }
+    },
+    .cases = merge(data.frame(family = c("gaussian", "poisson"),
+                              outcome = c("Y_C", "Y_P")),
+                   data.frame(weighted = c(FALSE, TRUE)),
+                   by = NULL)
+  )
 })
 
 test_that("family = 'multinomial' is rejected", {
@@ -386,35 +372,6 @@ test_that("dropping a collinear covariate doesn't change the estimable results",
                   estimand = "ATE")
   })
 
-  #A perfectly collinear column carries no information, so fitting with it must
-  #give exactly what fitting without it does. This covers the M-estimation
-  #(`asympt`) path, where the aliased columns must be dropped from the model
-  #matrix consistently with the NA coefficients.
-  for (v in c("const", "HC0")) {
-    fit_full <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
-                             family = binomial, vcov = v)
-    fit_red <- glm_weightit(Y_B ~ A + X1 + X2, data = test_data,
-                            family = binomial, vcov = v)
-
-    expect_equal(coef(fit_full)[!is.na(coef(fit_full))], coef(fit_red),
-                 tolerance = eps)
-    expect_equal(vcov(fit_full, complete = FALSE), vcov(fit_red),
-                 ignore_attr = TRUE, tolerance = eps)
-  }
-
-  for (v in c("asympt", "HC0")) {
-    fit_full <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
-                             family = binomial, weightit = W, vcov = v)
-    fit_red <- glm_weightit(Y_B ~ A + X1 + X2, data = test_data,
-                            family = binomial, weightit = W, vcov = v)
-
-    expect_identical(fit_full$vcov_type, v)
-    expect_equal(coef(fit_full)[!is.na(coef(fit_full))], coef(fit_red),
-                 tolerance = eps)
-    expect_equal(vcov(fit_full, complete = FALSE), vcov(fit_red),
-                 ignore_attr = TRUE, tolerance = eps)
-  }
-
   #M-estimation still yields smaller SEs than treating the weights as fixed
   fit_asympt <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
                              family = binomial, weightit = W, vcov = "asympt")
@@ -423,4 +380,35 @@ test_that("dropping a collinear covariate doesn't change the estimable results",
 
   expect_true(all(diag(vcov(fit_asympt, complete = FALSE)) <=
                     diag(vcov(fit_hc0, complete = FALSE))))
+
+  #A perfectly collinear column carries no information, so fitting with it must
+  #give exactly what fitting without it does. This covers the M-estimation
+  #(`asympt`) path, where the aliased columns must be dropped from the model
+  #matrix consistently with the NA coefficients.
+  skip_if_not_installed("patrick")
+
+  patrick::with_parameters_test_that(
+    "weighted = {weighted}, vcov = {v}",
+    {
+      fit_full <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
+                               family = binomial, weightit = if (weighted) W,
+                               vcov = v)
+      fit_red <- glm_weightit(Y_B ~ A + X1 + X2, data = test_data,
+                              family = binomial, weightit = if (weighted) W,
+                              vcov = v)
+
+      if (weighted) {
+        expect_identical(fit_full$vcov_type, v)
+      }
+
+      expect_equal(coef(fit_full)[!is.na(coef(fit_full))], coef(fit_red),
+                   tolerance = eps)
+      expect_equal(vcov(fit_full, complete = FALSE), vcov(fit_red),
+                   ignore_attr = TRUE, tolerance = eps)
+    },
+    .cases = rbind(expand.grid(v = c("const", "HC0"), weighted = FALSE,
+                               stringsAsFactors = FALSE),
+                   expand.grid(v = c("asympt", "HC0"), weighted = TRUE,
+                               stringsAsFactors = FALSE))
+  )
 })

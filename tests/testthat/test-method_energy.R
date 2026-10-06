@@ -18,87 +18,6 @@ test_that("Binary treatment", {
   expect_false(is_null(W0$obj))
   expect_balance_improved(W0)
 
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATC")
-
-  # Main grid uses moments = 1, which (per the documented behavior of
-  # `moments` for this method) guarantees exact mean balance at tols = 0
-  # (the default tols). This is the balance-optimizing regime analogous to
-  # ebal/ipt's default behavior.
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("Energy: sw = %s, estimand = %s", sw, estimand), {
-        conv_warning <- FALSE
-
-        withCallingHandlers({
-          W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                        data = test_data, method = "energy", estimand = estimand,
-                        moments = 1,
-                        s.weights = if (sw) "SW" else NULL,
-                        include.obj = TRUE)
-        }, warning = function(w) {
-          # s.weights can occasionally cause the QP to be non-convex or
-          # infeasible (documented in ?method_energy); tolerate that here
-          # rather than treating it as a hard test failure.
-          if (grepl("converge|feasible", conditionMessage(w))) {
-            conv_warning <<- TRUE
-          }
-          invokeRestart("muffleWarning")
-        })
-
-        expect_true(is_null(W$ps))
-        expect_false(is_null(W$obj))
-
-        if (!conv_warning) {
-          expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
-                                         s.weights = W$s.weights),
-                       0 * cobalt::col_w_smd(W$covs, W$treat,
-                                             s.weights = W$s.weights),
-                       expected.label = "all 0s",
-                       tolerance = eps)
-        }
-
-        expect_true(all(is.finite(W$weights)))
-        expect_true(all(W$weights >= 0))
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in 0:1) {
-          e <- {
-            if (estimand == "ATT" && i == 1) expect_equal
-            else if (estimand == "ATC" && i == 0) expect_equal
-            else expect_not_equal
-          }
-
-          e(unname(W$weights[W$treat == i]),
-            rep(1, sum(W$treat == i)),
-            label = sprintf("%s weights", i),
-            expected.label = "all 1s",
-            tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
-
   # Estimands
   expect_error({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -109,21 +28,21 @@ test_that("Binary treatment", {
   # invariant to adding a redundant/collinear column, because the distance
   # matrix (computed on the *scaled* covariates) changes when a covariate's
   # information is duplicated.
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                    I(1 - X5) + I(X9 * 2),
-                  data = test_data, method = "energy", estimand = "ATE",
-                  include.obj = TRUE)
+  W <- expect_no_condition({
+    weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+               I(1 - X5) + I(X9 * 2),
+             data = test_data, method = "energy", estimand = "ATE",
+             include.obj = TRUE)
   })
 
   expect_true(all(is.finite(W$weights)))
 
   # tols > 0 (requires moments > 0 for tols to have any effect; tols is
   # documented as "Ignored when moments = 0")
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "energy", estimand = "ATE",
-                  moments = 1, tols = .05, include.obj = TRUE)
+  W <- expect_no_condition({
+    weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "energy", estimand = "ATE",
+             moments = 1, tols = .05, include.obj = TRUE)
   })
 
   Wexact <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -204,6 +123,93 @@ test_that("Binary treatment", {
   expect_true(any(W_minw$weights < 0))
 })
 
+test_that("Binary treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("osqp")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Main grid uses moments = 1, which (per the documented behavior of
+  # `moments` for this method) guarantees exact mean balance at tols = 0
+  # (the default tols). This is the balance-optimizing regime analogous to
+  # ebal/ipt's default behavior.
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Energy: sw = {sw}, estimand = {estimand}",
+    {
+      conv_warning <- FALSE
+
+      withCallingHandlers({
+        W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                      data = test_data, method = "energy", estimand = estimand,
+                      moments = 1,
+                      s.weights = if (sw) "SW" else NULL,
+                      include.obj = TRUE)
+      }, warning = function(w) {
+        # s.weights can occasionally cause the QP to be non-convex or
+        # infeasible (documented in ?method_energy); tolerate that here
+        # rather than treating it as a hard test failure.
+        if (grepl("converge|feasible", conditionMessage(w))) {
+          conv_warning <<- TRUE
+        }
+        invokeRestart("muffleWarning")
+      })
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+
+      if (!conv_warning) {
+        expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
+                                       s.weights = W$s.weights),
+                     0 * cobalt::col_w_smd(W$covs, W$treat,
+                                           s.weights = W$s.weights),
+                     expected.label = "all 0s",
+                     tolerance = eps)
+      }
+
+      expect_true(all(is.finite(W$weights)))
+      expect_true(all(W$weights >= 0))
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in 0:1) {
+        e <- {
+          if (estimand == "ATT" && i == 1) expect_equal
+          else if (estimand == "ATC" && i == 0) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATC"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
+})
+
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("osqp")
@@ -233,81 +239,6 @@ test_that("Multi-category treatment", {
                              W0$weights[W0$treat %in% c("T", "C1")])
   expect_true(max(abs(smd_w)) < max(abs(smd_unw)))
 
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("Energy: sw = %s, estimand = %s", sw, estimand), {
-        conv_warning <- FALSE
-
-        withCallingHandlers({
-          W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                        data = test_data, method = "energy", estimand = estimand,
-                        moments = 1,
-                        focal = if (estimand == "ATE") NULL else "T",
-                        s.weights = if (sw) "SW" else NULL,
-                        include.obj = TRUE)
-        }, warning = function(w) {
-          if (grepl("converge|feasible", conditionMessage(w))) {
-            conv_warning <<- TRUE
-          }
-          invokeRestart("muffleWarning")
-        })
-
-        expect_true(is_null(W$ps))
-        expect_false(is_null(W$obj))
-
-        if (!conv_warning) {
-          for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
-            in_tt <- W$treat %in% tt
-            expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
-                                           s.weights = W$s.weights[in_tt]),
-                         0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
-                                               s.weights = W$s.weights[in_tt]),
-                         label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")),
-                         expected.label = "all 0s",
-                         tolerance = eps)
-          }
-        }
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in levels(W$treat)) {
-          e <- {
-            if (estimand == "ATT" && i == W$focal) expect_equal
-            else expect_not_equal
-          }
-
-          e(unname(W$weights[W$treat == i]),
-            rep(1, sum(W$treat == i)),
-            label = sprintf("%s weights", i),
-            expected.label = "all 1s",
-            tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
-
   # tols > 0
   expect_no_condition({
     W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
@@ -333,6 +264,86 @@ test_that("Multi-category treatment", {
   expect_not_equal(Wexact$weights, W_imp_false$weights)
 })
 
+test_that("Multi-category treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("osqp")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Energy: sw = {sw}, estimand = {estimand}",
+    {
+      conv_warning <- FALSE
+
+      withCallingHandlers({
+        W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                      data = test_data, method = "energy", estimand = estimand,
+                      moments = 1,
+                      focal = if (estimand == "ATE") NULL else "T",
+                      s.weights = if (sw) "SW" else NULL,
+                      include.obj = TRUE)
+      }, warning = function(w) {
+        if (grepl("converge|feasible", conditionMessage(w))) {
+          conv_warning <<- TRUE
+        }
+        invokeRestart("muffleWarning")
+      })
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+
+      if (!conv_warning) {
+        for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
+          in_tt <- W$treat %in% tt
+          expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
+                                         s.weights = W$s.weights[in_tt]),
+                       0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
+                                             s.weights = W$s.weights[in_tt]),
+                       label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")),
+                       expected.label = "all 0s",
+                       tolerance = eps)
+        }
+      }
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in levels(W$treat)) {
+        e <- {
+          if (estimand == "ATT" && i == W$focal) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
+})
+
 test_that("Continuous treatment", {
   skip_on_cran()
   skip_if_not_installed("osqp")
@@ -355,69 +366,6 @@ test_that("Continuous treatment", {
   # correlation reduction, not exact.
   expect_true(max(abs(cobalt::col_w_cov(W0$covs, W0$treat, W0$weights, std = TRUE))) <
                 max(abs(cobalt::col_w_cov(W0$covs, W0$treat, std = TRUE))))
-
-  sw.opts <- c(FALSE, TRUE)
-  d.moments.opts <- c(1, 3)
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(d.moments.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (d.moments in d.moments.opts) {
-      test_that(sprintf("Energy: sw = %s, d.moments = %s", sw, d.moments), {
-        conv_warning <- FALSE
-
-        withCallingHandlers({
-          W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                        data = test_data, method = "energy",
-                        moments = 1, d.moments = d.moments,
-                        s.weights = if (sw) "SW" else NULL,
-                        include.obj = TRUE)
-        }, warning = function(w) {
-          if (grepl("converge|feasible", conditionMessage(w))) {
-            conv_warning <<- TRUE
-          }
-          invokeRestart("muffleWarning")
-        })
-
-        expect_true(is_null(W$ps))
-        expect_false(is_null(W$obj))
-
-        if (!conv_warning) {
-          expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
-                                         s.weights = W$s.weights),
-                       0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                             s.weights = W$s.weights),
-                       expected.label = "all 0s",
-                       tolerance = eps)
-
-          expect_equal(cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs), W$weights,
-                                          s.weights = W$s.weights),
-                       cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs),
-                                          s.weights = W$s.weights),
-                       expected.label = "unweighted means",
-                       tolerance = eps)
-        }
-
-        expect_true(all(is.finite(W$weights)))
-        expect_true(all(W$weights >= 0))
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, d.moments)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
 
   # tols > 0
   expect_no_condition({
@@ -442,4 +390,71 @@ test_that("Continuous treatment", {
                           dimension.adj = FALSE)
 
   expect_not_equal(W0$weights, W_adj_false$weights)
+})
+
+test_that("Continuous treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("osqp")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Energy: sw = {sw}, d.moments = {d.moments}",
+    {
+      conv_warning <- FALSE
+
+      withCallingHandlers({
+        W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                      data = test_data, method = "energy",
+                      moments = 1, d.moments = d.moments,
+                      s.weights = if (sw) "SW" else NULL,
+                      include.obj = TRUE)
+      }, warning = function(w) {
+        if (grepl("converge|feasible", conditionMessage(w))) {
+          conv_warning <<- TRUE
+        }
+        invokeRestart("muffleWarning")
+      })
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+
+      if (!conv_warning) {
+        expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                       s.weights = W$s.weights),
+                     0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                           s.weights = W$s.weights),
+                     expected.label = "all 0s",
+                     tolerance = eps)
+
+        expect_equal(cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs), W$weights,
+                                        s.weights = W$s.weights),
+                     cobalt::col_w_mean(cbind(poly(W$treat, d.moments), W$covs),
+                                        s.weights = W$s.weights),
+                     expected.label = "unweighted means",
+                     tolerance = eps)
+      }
+
+      expect_true(all(is.finite(W$weights)))
+      expect_true(all(W$weights >= 0))
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, d.moments = %s", sw, d.moments)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(d.moments = c(1, 3),
+                         sw = c(FALSE, TRUE))
+  )
 })

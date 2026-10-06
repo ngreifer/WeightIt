@@ -22,47 +22,6 @@ test_that("Binary treatment", {
 
   expect_balance_improved(W0)
 
-  # Additional arguments (moments, int, quantile) are spot-checked
-  # individually rather than crossed, since only ATE is allowed and there is
-  # no s.weights/estimand grid to combine them with.
-  configs <- list(
-    "moments = 2" = list(moments = 2),
-    "int = TRUE" = list(int = TRUE),
-    "quantile" = list(quantile = list(X1 = c(.25, .5, .75)))
-  )
-
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(configs))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (nm in names(configs)) {
-    test_that(sprintf("npCBPS: %s", nm), {
-      W <- do.call(weightit,
-                  c(list(A ~ X1 + X2 + X3,
-                        data = test_data, method = "npcbps", estimand = "ATE",
-                        include.obj = TRUE),
-                    configs[[nm]]))
-
-      expect_true(is_null(W$ps))
-      expect_false(is_null(W$obj))
-      expect_balance_improved(W)
-
-      expect_not_equal(unname(W$weights), unname(W0$weights),
-                       expected.label = "weights for baseline")
-
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                         tolerance = eps)
-      }
-
-      colnames(weight.mat)[k] <<- nm
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
-
   # Estimands: only ATE is allowed for npcbps
   for (estimand in c("ATT", "ATC", "ATO")) {
     expect_error({
@@ -101,6 +60,60 @@ test_that("Binary treatment", {
   }, "sampling weights cannot be used", ignore.case = TRUE)
 })
 
+test_that("Binary treatment: configurations", {
+  skip_on_cran()
+  skip_if_not_installed("CBPS")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Baseline for the additional arguments below; checked in "Binary treatment"
+  W0 <- weightit(A ~ X1 + X2 + X3,
+                 data = test_data, method = "npcbps", estimand = "ATE",
+                 include.obj = TRUE)
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  # Additional arguments (moments, int, quantile) are spot-checked
+  # individually rather than crossed, since only ATE is allowed and there is
+  # no s.weights/estimand grid to combine them with.
+  patrick::with_parameters_test_that(
+    "npCBPS: {config}",
+    {
+      W <- do.call("weightit",
+                   c(list(A ~ X1 + X2 + X3,
+                          data = quote(test_data), method = "npcbps", estimand = "ATE",
+                          include.obj = TRUE),
+                     args))
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+      expect_balance_improved(W)
+
+      expect_not_equal(unname(W$weights), unname(W0$weights),
+                       expected.label = "weights for baseline")
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[config]] <- unname(W$weights)
+    },
+    .cases = patrick::cases(
+      list(config = "moments = 2", args = list(moments = 2)),
+      list(config = "int = TRUE", args = list(int = TRUE)),
+      list(config = "quantile", args = list(quantile = list(X1 = c(.25, .5, .75))))
+    )
+  )
+})
+
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("CBPS")
@@ -136,25 +149,21 @@ test_that("Multi-category treatment", {
     }, "not an allowable estimand", ignore.case = TRUE)
   }
 
+  skip_if_not_installed("patrick")
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
   # Additional arguments: spot-checked individually
-  configs <- list(
-    "moments = 2" = list(moments = 2),
-    "int = TRUE" = list(int = TRUE),
-    "quantile" = list(quantile = list(X1 = c(.25, .5, .75)))
-  )
-
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(configs))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (nm in names(configs)) {
-    test_that(sprintf("npCBPS: %s", nm), {
-      W <- do.call(weightit,
-                  c(list(Am ~ X1 + X2 + X3,
-                        data = test_data, method = "npcbps", estimand = "ATE",
-                        include.obj = TRUE),
-                    configs[[nm]]))
+  patrick::with_parameters_test_that(
+    "npCBPS: {config}",
+    {
+      W <- do.call("weightit",
+                   c(list(Am ~ X1 + X2 + X3,
+                          data = quote(test_data), method = "npcbps", estimand = "ATE",
+                          include.obj = TRUE),
+                     args))
 
       expect_true(is_null(W$ps))
       expect_false(is_null(W$obj))
@@ -162,17 +171,20 @@ test_that("Multi-category treatment", {
       expect_not_equal(unname(W$weights), unname(W0$weights),
                        expected.label = "weights for baseline")
 
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
                          tolerance = eps)
       }
 
-      colnames(weight.mat)[k] <<- nm
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
+      seen[[config]] <- unname(W$weights)
+    },
+    .cases = patrick::cases(
+      list(config = "moments = 2", args = list(moments = 2)),
+      list(config = "int = TRUE", args = list(int = TRUE)),
+      list(config = "quantile", args = list(quantile = list(X1 = c(.25, .5, .75))))
+    )
+  )
 })
 
 test_that("Continuous treatment", {
@@ -208,24 +220,21 @@ test_that("Continuous treatment", {
 
   expect_equal(W$weights, W0$weights, tolerance = eps)
 
+  skip_if_not_installed("patrick")
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
   # moments/int spot-checks
-  configs <- list(
-    "moments = 2" = list(moments = 2),
-    "int = TRUE" = list(int = TRUE)
-  )
-
-  weight.mat <- matrix(nrow = nrow(test_data), ncol = length(configs))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (nm in names(configs)) {
-    test_that(sprintf("npCBPS: %s", nm), {
-      W <- do.call(weightit,
-                  c(list(Ac ~ X1 + X2 + X3,
-                        data = test_data, method = "npcbps",
-                        include.obj = TRUE),
-                    configs[[nm]]))
+  patrick::with_parameters_test_that(
+    "npCBPS: {config}",
+    {
+      W <- do.call("weightit",
+                   c(list(Ac ~ X1 + X2 + X3,
+                          data = quote(test_data), method = "npcbps",
+                          include.obj = TRUE),
+                     args))
 
       expect_true(is_null(W$ps))
       expect_false(is_null(W$obj))
@@ -233,15 +242,17 @@ test_that("Continuous treatment", {
       expect_not_equal(unname(W$weights), unname(W0$weights),
                        expected.label = "weights for baseline")
 
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
                          tolerance = eps)
       }
 
-      colnames(weight.mat)[k] <<- nm
-      weight.mat[,k] <<- W$weights
-      k <<- k + 1
-    })
-  }
+      seen[[config]] <- unname(W$weights)
+    },
+    .cases = patrick::cases(
+      list(config = "moments = 2", args = list(moments = 2)),
+      list(config = "int = TRUE", args = list(int = TRUE))
+    )
+  )
 })

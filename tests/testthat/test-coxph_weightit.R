@@ -235,17 +235,6 @@ test_that("an intercept-only (null) model is supported", {
   expect_no_condition(invisible(capture.output(print(fit_null))))
   expect_no_condition(invisible(capture.output(print(summary(fit_null)))))
 
-  # Every variance type is a no-op for a model with no coefficients
-  for (v in c("const", "HC0")) {
-    expect_no_condition({
-      fit_v <- coxph_weightit(survival::Surv(time, event) ~ 1,
-                              data = test_data, vcov = v)
-    })
-
-    expect_identical(dim(vcov(fit_v)), c(0L, 0L))
-    expect_identical(fit_v$vcov_type, v)
-  }
-
   # Also works when weights are supplied, including with M-estimation
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5, data = test_data,
@@ -265,6 +254,30 @@ test_that("an intercept-only (null) model is supported", {
                                     data = test_data, weights = W$weights)
 
   expect_equal(fit_null_w$loglik, fit_null_w_ref$loglik, tolerance = eps)
+})
+
+test_that("every variance type is a no-op for an intercept-only (null) model", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+  skip_if_not_installed("patrick")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  # Every variance type is a no-op for a model with no coefficients
+  patrick::with_parameters_test_that(
+    "vcov = {v}",
+    {
+      fit_v <- expect_no_condition({
+        coxph_weightit(survival::Surv(time, event) ~ 1,
+                       data = test_data, vcov = v)
+      })
+
+      expect_identical(dim(vcov(fit_v)), c(0L, 0L))
+      expect_identical(fit_v$vcov_type, v)
+    },
+    v = c("const", "HC0")
+  )
 })
 
 test_that("a rank-deficient fit gives estimable coefficients and NA for the rest", {
@@ -500,16 +513,26 @@ test_that("a model with no events returns NA coefficients rather than erroring",
   expect_true(all(is.na(coef(fit_w))))
   expect_true(all(is.na(vcov(fit_w))))
 
-  for (v in c("HC0", "BS", "FWB")) {
-    expect_warning({
-      fit_v <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
-                              data = test_data, weightit = W, vcov = v, R = 5)
-    }, "no events", ignore.case = TRUE)
+  skip_if_not_installed("patrick")
 
-    # `vcov_type` carries R/fwb.args attributes for the bootstrap types
-    expect_equal(fit_v$vcov_type, v, ignore_attr = TRUE)
-    expect_true(all(is.na(vcov(fit_v))))
-  }
+  patrick::with_parameters_test_that(
+    "vcov = {v}",
+    {
+      if (v == "FWB") {
+        skip_if_not_installed("fwb")
+      }
+
+      expect_warning({
+        fit_v <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
+                                data = test_data, weightit = W, vcov = v, R = 5)
+      }, "no events", ignore.case = TRUE)
+
+      # `vcov_type` carries R/fwb.args attributes for the bootstrap types
+      expect_equal(fit_v$vcov_type, v, ignore_attr = TRUE)
+      expect_true(all(is.na(vcov(fit_v))))
+    },
+    v = c("HC0", "BS", "FWB")
+  )
 })
 
 test_that("anova() against a null (intercept-only) model works", {
@@ -684,131 +707,72 @@ test_that("Weighting method 'ebal' also works as input to coxph_weightit()", {
   expect_equal(unname(coef(fit)), unname(coef(fit_ref)), tolerance = eps)
 })
 
-test_that("strata() cannot be used in the formula", {
+test_that("unsupported formula terms and responses are rejected", {
   skip_on_cran()
   skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ A + survival::strata(X6),
-                   data = test_data),
-    "strata.*cannot be used", ignore.case = TRUE
-  )
-})
-
-test_that("cluster() cannot be used as a formula term (must use cluster= argument)", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
+  skip_if_not_installed("patrick")
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data <- .censor_Y_S(test_data)
   test_data$clus <- rep(1:20, length.out = nrow(test_data))
 
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ A + survival::cluster(clus),
-                   data = test_data),
-    "cluster.*cannot be used in the model formula", ignore.case = TRUE
-  )
-})
-
-test_that("frailty() cannot be used in the formula", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-  test_data$clus <- rep(1:20, length.out = nrow(test_data))
-
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ A + survival::frailty(clus),
-                   data = test_data),
-    "frailty.*cannot be used", ignore.case = TRUE
-  )
-})
-
-test_that("pspline() cannot be used in the formula", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ A + survival::pspline(X1),
-                   data = test_data),
-    "pspline.*cannot be used", ignore.case = TRUE
-  )
-})
-
-test_that("tt() cannot be used in the formula", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ survival::tt(A),
-                   data = test_data),
-    "tt.*cannot be used", ignore.case = TRUE
-  )
-})
-
-test_that("ridge() cannot be used in the formula", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  expect_error(
-    coxph_weightit(survival::Surv(time, event) ~ A + survival::ridge(X1, X2),
-                   data = test_data),
-    "ridge.*cannot be used", ignore.case = TRUE
-  )
-})
-
-test_that("non-right-censored Surv() types are rejected", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  # Counting-process (start, stop] format
-  expect_error(
-    coxph_weightit(survival::Surv(time, time + 1, event, type = "counting") ~ A + X1,
-                   data = test_data),
-    "only supports right-censoring", ignore.case = TRUE
+  patrick::with_parameters_test_that(
+    "{term}() cannot be used in the formula",
+    {
+      expect_error(
+        coxph_weightit(formula, data = test_data),
+        regex, ignore.case = TRUE
+      )
+    },
+    .cases = patrick::cases(
+      list(term = "strata",
+           formula = survival::Surv(time, event) ~ A + survival::strata(X6),
+           regex = "strata.*cannot be used"),
+      # cluster() must be supplied through the `cluster` argument instead
+      list(term = "cluster",
+           formula = survival::Surv(time, event) ~ A + survival::cluster(clus),
+           regex = "cluster.*cannot be used in the model formula"),
+      list(term = "frailty",
+           formula = survival::Surv(time, event) ~ A + survival::frailty(clus),
+           regex = "frailty.*cannot be used"),
+      list(term = "pspline",
+           formula = survival::Surv(time, event) ~ A + survival::pspline(X1),
+           regex = "pspline.*cannot be used"),
+      list(term = "tt",
+           formula = survival::Surv(time, event) ~ survival::tt(A),
+           regex = "tt.*cannot be used"),
+      list(term = "ridge",
+           formula = survival::Surv(time, event) ~ A + survival::ridge(X1, X2),
+           regex = "ridge.*cannot be used")
+    )
   )
 
-  # Interval censoring
-  expect_error(
-    coxph_weightit(survival::Surv(time, time + 1, type = "interval2") ~ A + X1,
-                   data = test_data),
-    "only supports right-censoring", ignore.case = TRUE
-  )
-})
-
-test_that("a non-Surv response (including Surv2) is rejected", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  expect_error(
-    coxph_weightit(A ~ X1 + X2, data = test_data),
-    "must be a survival.*object", ignore.case = TRUE
-  )
-
-  # Surv2 (time-varying / (id, time) long format) is also rejected -- it
-  # inherits from "Surv" but is explicitly excluded
-  expect_error(
-    coxph_weightit(survival::Surv2(time, event) ~ A + X1, data = test_data),
-    "must be a survival.*object", ignore.case = TRUE
+  patrick::with_parameters_test_that(
+    "{response} response is rejected",
+    {
+      expect_error(
+        coxph_weightit(formula, data = test_data),
+        regex, ignore.case = TRUE
+      )
+    },
+    .cases = patrick::cases(
+      # Counting-process (start, stop] format
+      list(response = "counting-process Surv()",
+           formula = survival::Surv(time, time + 1, event, type = "counting") ~ A + X1,
+           regex = "only supports right-censoring"),
+      # Interval censoring
+      list(response = "interval-censored Surv()",
+           formula = survival::Surv(time, time + 1, type = "interval2") ~ A + X1,
+           regex = "only supports right-censoring"),
+      list(response = "non-Surv",
+           formula = A ~ X1 + X2,
+           regex = "must be a survival.*object"),
+      # Surv2 (time-varying / (id, time) long format) is also rejected -- it
+      # inherits from "Surv" but is explicitly excluded
+      list(response = "Surv2",
+           formula = survival::Surv2(time, event) ~ A + X1,
+           regex = "must be a survival.*object")
+    )
   )
 })
 

@@ -13,15 +13,15 @@ test_that("No weights", {
   test_data$off <- runif(nrow(test_data))
   test_data$clus <- sample(1:50, nrow(test_data), replace = TRUE)
 
-  expect_no_condition({
-    fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                              data = test_data)
+  fit0 <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data)
   })
 
   #M-estimation for mlogit
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                             data = test_data, vcov = "HC0")
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -38,9 +38,9 @@ test_that("No weights", {
   expect_equal(unname(vcov(fit0)), unname(sandwich::sandwich(fit_g)[ind, ind]),
                tolerance = eps)
 
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                             data = test_data)
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
+                      data = test_data)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -51,17 +51,17 @@ test_that("No weights", {
                tolerance = eps)
 
   #Offset
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                             data = test_data)
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
+                      data = test_data)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                              data = test_data)
+  fit0 <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                      data = test_data)
   })
 
   expect_equal(vcov(fit0), sandwich::sandwich(fit0),
@@ -88,23 +88,23 @@ test_that("Binary treatment", {
                   include.obj = TRUE)
   })
 
-  expect_no_condition({
-    fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                              data = test_data, weightit = W)
+  fit0 <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, weightit = W)
   })
 
   #M-estimation for mlogit
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                             data = test_data,  weightit = W, vcov = "asympt")
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data,  weightit = W, vcov = "asympt")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A  * (X1 + X2 + X3 + X4 + X5),
-                             data = test_data, weightit = W, vcov = "HC0")
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A  * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, weightit = W, vcov = "HC0")
   })
 
   mlogit_data <- dfidx::dfidx(transform(test_data, .weights = W$weights),
@@ -122,9 +122,9 @@ test_that("Binary treatment", {
   # expect_equal(unname(vcov(fit)), unname(sandwich::sandwich(fit_g)[ind, ind]),
   #              tolerance = eps)
 
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                             data = test_data, weightit = W, vcov = "HC0")
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
+                      data = test_data, weightit = W, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -135,17 +135,17 @@ test_that("Binary treatment", {
   #              tolerance = eps)
 
   #Offset
-  expect_no_condition({
-    fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                             data = test_data)
+  fit <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
+                      data = test_data)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                              data = test_data, weightit = W)
+  fit0 <- expect_no_condition({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, weightit = W)
   })
 
   expect_equal(vcov(fit0),
@@ -159,7 +159,6 @@ test_that("Binary treatment", {
 
 test_that("Bootstrap vcov (BS, FWB)", {
   skip_on_cran()
-  skip_if_not_installed("fwb")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -178,25 +177,27 @@ test_that("Bootstrap vcov (BS, FWB)", {
                               data = test_data, weightit = W)
   })
 
-  set.seed(123)
-  expect_no_condition({
-    fit_bs <- multinom_weightit(Y_M ~ A + X1,
-                                data = test_data, weightit = W,
-                                vcov = "BS", R = 30)
-  })
+  skip_if_not_installed("patrick")
 
-  expect_equal(coef(fit0), coef(fit_bs), tolerance = eps)
-  expect_not_equal(vcov(fit0), vcov(fit_bs), tolerance = eps)
+  patrick::with_parameters_test_that(
+    "vcov = {vcov_type}",
+    {
+      if (vcov_type == "FWB") {
+        skip_if_not_installed("fwb")
+      }
 
-  set.seed(123)
-  expect_no_condition({
-    fit_fwb <- multinom_weightit(Y_M ~ A + X1,
+      set.seed(123)
+      expect_no_condition({
+        fit <- multinom_weightit(Y_M ~ A + X1,
                                  data = test_data, weightit = W,
-                                 vcov = "FWB", R = 30)
-  })
+                                 vcov = vcov_type, R = 30)
+      })
 
-  expect_equal(coef(fit0), coef(fit_fwb), tolerance = eps)
-  expect_not_equal(vcov(fit0), vcov(fit_fwb), tolerance = eps)
+      expect_equal(coef(fit0), coef(fit), tolerance = eps)
+      expect_not_equal(vcov(fit0), vcov(fit), tolerance = eps)
+    },
+    vcov_type = c("BS", "FWB")
+  )
 })
 
 test_that("vcov = 'const' returns the model-based variance", {

@@ -397,7 +397,7 @@ test_that("as.weightitMSM() takes a censoring indicator among the treatments", {
 # ---- tidy() and glance() ---------------------------------------------------
 
 test_that("tidy() and glance() work for every outcome-model class", {
-  skip_if_not_installed("survival")
+  skip_if_not_installed("patrick")
 
   d <- test_data
   d$Y_M <- factor(d$Y_O, ordered = FALSE)
@@ -407,49 +407,55 @@ test_that("tidy() and glance() work for every outcome-model class", {
 
   W <- weightit(A ~ X1 + X2 + X3, data = d, method = "glm")
 
-  fits <- list(
-    glm = glm_weightit(Y_B ~ A + X1, data = d, weightit = W, family = binomial),
-    multinom = multinom_weightit(Y_M ~ A, data = d, weightit = W),
-    ordinal = ordinal_weightit(Y_O ~ A, data = d, weightit = W),
-    coxph = coxph_weightit(survival::Surv(time, event) ~ A, data = d,
-                           weightit = W)
+  patrick::with_parameters_test_that(
+    "tidy() and glance() work for {nm}_weightit",
+    {
+      if (nm == "coxph") {
+        skip_if_not_installed("survival")
+      }
+
+      fit <- switch(nm,
+                    glm = glm_weightit(Y_B ~ A + X1, data = d, weightit = W,
+                                       family = binomial),
+                    multinom = multinom_weightit(Y_M ~ A, data = d, weightit = W),
+                    ordinal = ordinal_weightit(Y_O ~ A, data = d, weightit = W),
+                    coxph = coxph_weightit(survival::Surv(time, event) ~ A, data = d,
+                                           weightit = W))
+
+      tid <- generics::tidy(fit)
+      expect_s3_class(tid, "tbl_df")
+      expect_named(tid, c("term", "estimate", "std.error", "statistic", "p.value"))
+      expect_identical(nrow(tid), length(coef(fit)))
+      expect_equal(tid$estimate, unname(coef(fit)), tolerance = eps,
+                   ignore_attr = TRUE)
+      expect_equal(tid$std.error, unname(sqrt(diag(vcov(fit)))), tolerance = eps,
+                   ignore_attr = TRUE)
+
+      # `conf.int = TRUE` adds properly named limits that bracket the estimate
+      tid_ci <- generics::tidy(fit, conf.int = TRUE)
+      expect_named(tid_ci, c("term", "estimate", "std.error", "statistic",
+                             "p.value", "conf.low", "conf.high"))
+      expect_true(all(tid_ci$conf.low <= tid_ci$estimate),
+                  label = sprintf("conf.low below estimate for %s", nm))
+      expect_true(all(tid_ci$conf.high >= tid_ci$estimate),
+                  label = sprintf("conf.high above estimate for %s", nm))
+
+      # `exponentiate = TRUE` transforms the estimate and its limits together. It also
+      # drops the standard error, since that is not the transform of the original, so the
+      # remaining columns must still be labeled correctly rather than shifted by one.
+      tid_exp <- generics::tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+      expect_named(tid_exp, c("term", "estimate", "statistic", "p.value",
+                              "conf.low", "conf.high"))
+      expect_equal(tid_exp$estimate, exp(tid$estimate), tolerance = eps)
+      expect_equal(tid_exp$statistic, tid$statistic, tolerance = eps)
+      expect_equal(tid_exp$p.value, tid$p.value, tolerance = eps)
+      expect_true(all(tid_exp$conf.low > 0))
+      expect_equal(tid_exp$conf.low, exp(tid_ci$conf.low), tolerance = eps)
+
+      gl <- generics::glance(fit)
+      expect_s3_class(gl, "tbl_df")
+      expect_identical(gl$nobs, nobs(fit))
+    },
+    nm = c("glm", "multinom", "ordinal", "coxph")
   )
-
-  for (nm in names(fits)) {
-    fit <- fits[[nm]]
-
-    tid <- generics::tidy(fit)
-    expect_s3_class(tid, "tbl_df")
-    expect_named(tid, c("term", "estimate", "std.error", "statistic", "p.value"))
-    expect_identical(nrow(tid), length(coef(fit)))
-    expect_equal(tid$estimate, unname(coef(fit)), tolerance = eps,
-                 ignore_attr = TRUE)
-    expect_equal(tid$std.error, unname(sqrt(diag(vcov(fit)))), tolerance = eps,
-                 ignore_attr = TRUE)
-
-    # `conf.int = TRUE` adds properly named limits that bracket the estimate
-    tid_ci <- generics::tidy(fit, conf.int = TRUE)
-    expect_named(tid_ci, c("term", "estimate", "std.error", "statistic",
-                           "p.value", "conf.low", "conf.high"))
-    expect_true(all(tid_ci$conf.low <= tid_ci$estimate),
-                label = sprintf("conf.low below estimate for %s", nm))
-    expect_true(all(tid_ci$conf.high >= tid_ci$estimate),
-                label = sprintf("conf.high above estimate for %s", nm))
-
-    # `exponentiate = TRUE` transforms the estimate and its limits together. It also
-    # drops the standard error, since that is not the transform of the original, so the
-    # remaining columns must still be labeled correctly rather than shifted by one.
-    tid_exp <- generics::tidy(fit, conf.int = TRUE, exponentiate = TRUE)
-    expect_named(tid_exp, c("term", "estimate", "statistic", "p.value",
-                            "conf.low", "conf.high"))
-    expect_equal(tid_exp$estimate, exp(tid$estimate), tolerance = eps)
-    expect_equal(tid_exp$statistic, tid$statistic, tolerance = eps)
-    expect_equal(tid_exp$p.value, tid$p.value, tolerance = eps)
-    expect_true(all(tid_exp$conf.low > 0))
-    expect_equal(tid_exp$conf.low, exp(tid_ci$conf.low), tolerance = eps)
-
-    gl <- generics::glance(fit)
-    expect_s3_class(gl, "tbl_df")
-    expect_identical(gl$nobs, nobs(fit))
-  }
 })

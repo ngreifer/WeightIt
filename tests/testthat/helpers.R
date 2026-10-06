@@ -99,3 +99,23 @@ expect_no_unexpected_warning <- function(expr, known = "could not be solved") {
 
   invisible(val)
 }
+
+# The methods reachable with a given treatment type, named as `.weightit_methods`
+# names them. With `installed = FALSE`, methods whose packages are missing are kept,
+# for case tables that should skip them visibly with `skip_if_method_unavailable()`
+# rather than drop them.
+methods_for <- function(treat.type, installed = TRUE) {
+  Filter(function(m) {
+    treat.type %in% .weightit_methods[[m]]$treat_type &&
+      (!installed || all(vapply(.weightit_methods[[m]]$packages_needed,
+                                rlang::is_installed, logical(1L))))
+  }, names(.weightit_methods))
+}
+
+# Skips the current test, naming the missing package, when any package `method`
+# needs is not installed
+skip_if_method_unavailable <- function(method) {
+  for (pkg in .weightit_methods[[method]]$packages_needed) {
+    skip_if_not_installed(pkg)
+  }
+}

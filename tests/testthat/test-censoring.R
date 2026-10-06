@@ -59,6 +59,8 @@ test_that(".cens() is detected, stripped, and tagged", {
 })
 
 test_that("a censoring model is recognized however the marker is spelled", {
+  skip_if_not_installed("patrick")
+
   d <- make_cens_data()
 
   # What marks a censoring model is the indicator `.cens()` returns, not the syntax
@@ -69,15 +71,26 @@ test_that("a censoring model is recognized however the marker is spelled", {
   # identifies the time point.
   mycens <- WeightIt::.cens
 
-  for (f in list(.cens(C) ~ X1 + X2,
-                 WeightIt::.cens(C) ~ X1 + X2,
-                 cobalt::.cens(C) ~ X1 + X2,
-                 mycens(C) ~ X1 + X2)) {
-    t.c <- get_covs_and_treat_from_formula2(f, d)
+  # The formulas are built here, so `mycens` resolves from their environment
+  patrick::with_parameters_test_that(
+    "marker = {.test_name}",
+    {
+      t.c <- get_covs_and_treat_from_formula2(f, d)
 
-    expect_identical(attr(t.c$treat, "treat.name"), "C")
-    expect_identical(get_treat_type(t.c$treat), "censoring")
-  }
+      expect_identical(attr(t.c$treat, "treat.name"), "C")
+      expect_identical(get_treat_type(t.c$treat), "censoring")
+    },
+    .cases = patrick::cases(
+      ".cens(C)" = list(f = .cens(C) ~ X1 + X2),
+      "WeightIt::.cens(C)" = list(f = WeightIt::.cens(C) ~ X1 + X2),
+      "cobalt::.cens(C)" = list(f = cobalt::.cens(C) ~ X1 + X2),
+      "mycens(C)" = list(f = mycens(C) ~ X1 + X2)
+    )
+  )
+})
+
+test_that("a tagged indicator is recognized, and only a bare marker is stripped", {
+  d <- make_cens_data()
 
   # An indicator tagged ahead of time is recognized too, and keeps the name it is
   # given here rather than the one `.cens()` recorded
@@ -235,18 +248,26 @@ test_that("get_w_from_ps() ignores inapplicable arguments with a warning", {
 
 test_that("a tagged indicator routes weightit.fit() to every .cens method", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
   X <- as.matrix(d[c("X1", "X2", "X3")])
 
-  for (m in c("glm", "ebal", "cbps", "ipt")) {
-    WF <- weightit.fit(X, treat = .cens(d$C), method = m)
-    W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = m)
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
 
-    expect_equal(unname(WF$weights), unname(W$weights), tolerance = eps,
-                 label = sprintf("weightit.fit vs weightit for method = \"%s\"", m))
-  }
+      WF <- weightit.fit(X, treat = .cens(d$C), method = method)
+      W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = method)
+
+      expect_equal(unname(WF$weights), unname(W$weights), tolerance = eps,
+                   label = sprintf("weightit.fit vs weightit for method = \"%s\"",
+                                   method))
+    },
+    method = c("glm", "ebal", "cbps", "ipt")
+  )
 })
 
 # ---- weightit(): weights, output shape, and options ------------------------
@@ -411,6 +432,8 @@ test_that("bart censoring weights zero out the censored and invert P(C = 0 | X)"
 })
 
 test_that("every method gives the same marginal censoring weights", {
+  skip_if_not_installed("patrick")
+
   d <- make_cens_data()
 
   # With no covariates there is nothing for any method to model or balance, so
@@ -418,17 +441,18 @@ test_that("every method gives the same marginal censoring weights", {
   # test-empty_formula.R.
   W_glm <- weightit(.cens(C) ~ 1, data = d, method = "glm")
 
-  for (m in c("ebal", "ipt", "cbps", "energy", "optweight", "cfd")) {
-    if (!all(vapply(.weightit_methods[[m]]$packages_needed,
-                    rlang::is_installed, logical(1L)))) {
-      next
-    }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
 
-    W <- weightit(.cens(C) ~ 1, data = d, method = m)
+      W <- weightit(.cens(C) ~ 1, data = d, method = method)
 
-    expect_identical(as.character(W$method), m)
-    expect_equal(unname(W$weights), unname(W_glm$weights), tolerance = eps)
-  }
+      expect_identical(as.character(W$method), method)
+      expect_equal(unname(W$weights), unname(W_glm$weights), tolerance = eps)
+    },
+    method = c("ebal", "ipt", "cbps", "energy", "optweight", "cfd")
+  )
 })
 
 test_that("a marginal censoring model composes with by, s.weights, and stabilize", {
@@ -464,13 +488,24 @@ test_that("a marginal censoring model composes with by, s.weights, and stabilize
 
 test_that("a marginal censoring model supports M-estimation", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
-  for (m in c("glm", "ebal", "ipt")) {
-    W <- weightit(.cens(C) ~ 1, data = d, method = m)
-    expect_M_parts_okay(W, tolerance = eps)
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- weightit(.cens(C) ~ 1, data = d, method = method)
+      expect_M_parts_okay(W, tolerance = eps)
+    },
+    method = c("glm", "ebal", "ipt")
+  )
+})
+
+test_that("a marginal censoring model tolerates outcome NAs in the censored units", {
+  d <- make_cens_data()
 
   # NAs are still tolerated in the censored units, since their weight is 0
   d$Y <- d$Y_B
@@ -485,14 +520,23 @@ test_that("a marginal censoring model supports M-estimation", {
 # ---- Degenerate risk sets --------------------------------------------------
 
 test_that("no censored units gives all weights of 1", {
+  skip_if_not_installed("patrick")
+
   d <- make_cens_data()
   d$C <- 0L
 
-  for (m in c("glm", "ebal", "cbps", "ipt", "energy", "optweight")) {
-    W <- expect_no_error(weightit(.cens(C) ~ X1 + X2, data = d, method = m))
-    expect_true(all(W$weights == 1),
-                label = sprintf("all weights 1 for method = \"%s\"", m))
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- expect_no_error(weightit(.cens(C) ~ X1 + X2, data = d,
+                                    method = method))
+      expect_true(all(W$weights == 1),
+                  label = sprintf("all weights 1 for method = \"%s\"", method))
+    },
+    method = c("glm", "ebal", "cbps", "ipt", "energy", "optweight")
+  )
 })
 
 test_that("all units censored warns and gives all weights of 0", {
@@ -519,16 +563,25 @@ test_that("both degenerate risk sets are caught before an empty model is fit", {
 })
 
 test_that("very few uncensored units still works", {
+  skip_if_not_installed("patrick")
+
   # ~5% uncensored: the case that motivates estimating weights for one group only
   d <- make_cens_data(seed = 5L, p = 3)
 
   skip_if(mean(d$C == 0) > .15)
 
-  for (m in c("glm", "ebal", "cbps", "ipt")) {
-    W <- expect_no_error(weightit(.cens(C) ~ X1 + X2, data = d, method = m))
-    expect_true(all(W$weights[d$C == 1L] == 0))
-    expect_true(all(W$weights[d$C == 0L] > 0))
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- expect_no_error(weightit(.cens(C) ~ X1 + X2, data = d,
+                                    method = method))
+      expect_true(all(W$weights[d$C == 1L] == 0))
+      expect_true(all(W$weights[d$C == 0L] > 0))
+    },
+    method = c("glm", "ebal", "cbps", "ipt")
+  )
 })
 
 # ---- Per-method behavior ---------------------------------------------------
@@ -537,17 +590,28 @@ test_that("balance-based methods hit the full-sample target exactly", {
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("osqp")
   skip_if_not_installed("optweight")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
   # These methods solve the balance conditions directly, so the weighted
   # uncensored means equal the full at-risk sample means to solver precision.
-  for (m in c("ebal", "cbps", "ipt", "optweight")) {
-    W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = m)
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
 
-    expect_lt(target_diff(W, d), 1e-5)
-    expect_true(all(W$weights[d$C == 1L] == 0))
-  }
+      W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = method)
+
+      expect_lt(target_diff(W, d), 1e-5)
+      expect_true(all(W$weights[d$C == 1L] == 0))
+    },
+    method = c("ebal", "cbps", "ipt", "optweight")
+  )
+})
+
+test_that("glm substantially reduces the imbalance against the full-sample target", {
+  d <- make_cens_data()
 
   # `glm` maximizes a likelihood rather than solving the balance conditions, so it
   # reduces imbalance substantially but not to 0.
@@ -559,17 +623,29 @@ test_that("balance-based methods hit the full-sample target exactly", {
 
 test_that("the balance-based methods put the weights on the 1/P(C = 0 | X) scale", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
   # The intercept row of the moment condition forces sum(w) == n
-  for (m in c("ebal", "cbps", "ipt")) {
-    W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = m)
-    expect_equal(sum(W$weights), nrow(d), tolerance = eps)
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = method)
+      expect_equal(sum(W$weights), nrow(d), tolerance = eps)
+    },
+    method = c("ebal", "cbps", "ipt")
+  )
+})
+
+test_that("optweight censoring weights have a mean of 1 among the uncensored", {
+  skip_if_not_installed("optweight")
+
+  d <- make_cens_data()
 
   # optweight normalizes to a mean of 1 among the uncensored instead
-  skip_if_not_installed("optweight")
   Wo <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "optweight")
   expect_equal(mean(Wo$weights[d$C == 0L]), 1, tolerance = eps)
 })
@@ -675,17 +751,24 @@ test_that("energy with moments = 1 and tols = 0 also hits the target", {
 
 test_that("s.weights are respected", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
-  for (m in c("ebal", "cbps", "ipt")) {
-    W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = m,
-                  s.weights = d$SW)
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
 
-    # target_diff() weights the target by s.weights too
-    expect_lt(target_diff(W, d), 1e-5)
-    expect_M_parts_okay(W, tolerance = eps)
-  }
+      W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = method,
+                    s.weights = d$SW)
+
+      # target_diff() weights the target by s.weights too
+      expect_lt(target_diff(W, d), 1e-5)
+      expect_M_parts_okay(W, tolerance = eps)
+    },
+    method = c("ebal", "cbps", "ipt")
+  )
 })
 
 # ---- Balance-tuned methods use target balance, not a between-group proxy ----
@@ -714,6 +797,7 @@ augmented_balance <- function(covs, C, w, stat = "smd.mean", s.weights = NULL) {
 
 test_that("a target init equals the augmented-dataset construction", {
   skip_if_not_installed("cobalt")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
@@ -721,14 +805,27 @@ test_that("a target init equals the augmented-dataset construction", {
   w <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm")$weights
 
   # Exact for the stats that depend only on weighted moments/ECDFs
-  for (st in c("smd.mean", "smd.max", "smd.rms", "ks.mean", "ks.max",
-               "mahalanobis")) {
-    init <- cobalt::bal.init(covs, stat = st)
+  patrick::with_parameters_test_that(
+    "stat = {stat}",
+    {
+      init <- cobalt::bal.init(covs, stat = stat)
 
-    expect_equal(cobalt::bal.compute(init, weights = w),
-                 augmented_balance(covs, d$C, w, stat = st),
-                 label = sprintf("target init for stat = \"%s\"", st))
-  }
+      expect_equal(cobalt::bal.compute(init, weights = w),
+                   augmented_balance(covs, d$C, w, stat = stat),
+                   label = sprintf("target init for stat = \"%s\"", stat))
+    },
+    stat = c("smd.mean", "smd.max", "smd.rms", "ks.mean", "ks.max",
+             "mahalanobis")
+  )
+})
+
+test_that("the target-init equivalence extends to s.weights but not to ovl.mean", {
+  skip_if_not_installed("cobalt")
+
+  d <- make_cens_data()
+
+  covs <- as.matrix(d[c("X1", "X2", "X3", "X4")])
+  w <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm")$weights
 
   # And with sampling weights
   init_sw <- cobalt::bal.init(covs, stat = "smd.mean", s.weights = d$SW)
@@ -853,37 +950,65 @@ test_that("super's balance criterion is target-based for censoring", {
 
 test_that("M-estimation parts are internally consistent", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
   # `expect_M_parts_okay()` re-solves colSums(psi_treat) == 0 and checks that wfun
   # reproduces the weights, INCLUDING the zeros -- so it directly catches a wfun
   # that returns 1 rather than 0 for the censored units.
-  for (m in c("glm", "ebal", "cbps", "ipt")) {
-    W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = m)
-    expect_M_parts_okay(W, tolerance = eps)
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = method)
+      expect_M_parts_okay(W, tolerance = eps)
+    },
+    method = c("glm", "ebal", "cbps", "ipt")
+  )
 
   # glm with non-default links
-  for (lk in c("probit", "cloglog", "br.logit"[rlang::is_installed("brglm2")])) {
-    W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "glm", link = lk)
-    expect_M_parts_okay(W, tolerance = eps)
-  }
+  patrick::with_parameters_test_that(
+    "method = glm, link = {link}",
+    {
+      if (link == "br.logit") {
+        skip_if_not_installed("brglm2")
+      }
+
+      W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "glm",
+                    link = link)
+      expect_M_parts_okay(W, tolerance = eps)
+    },
+    link = c("probit", "cloglog", "br.logit")
+  )
 })
 
 test_that("methods without M-estimation return no Mparts", {
   skip_if_not_installed("osqp")
+  skip_if_not_installed("patrick")
 
   d <- make_cens_data()
 
-  for (m in c("energy", "cfd")) {
-    W <- weightit(.cens(C) ~ X1 + X2, data = d, method = m)
-    expect_null(attr(W, "Mparts", exact = TRUE))
-    expect_null(attr(W, "Mparts.list", exact = TRUE))
-  }
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
+
+      W <- weightit(.cens(C) ~ X1 + X2, data = d, method = method)
+      expect_null(attr(W, "Mparts", exact = TRUE))
+      expect_null(attr(W, "Mparts.list", exact = TRUE))
+    },
+    method = c("energy", "cfd")
+  )
+})
+
+test_that("over-identified cbps censoring weights return no Mparts", {
+  skip_if_not_installed("rootSolve")
+
+  d <- make_cens_data()
 
   # cbps with over = TRUE is over-identified, so no Mparts (as for binary)
-  skip_if_not_installed("rootSolve")
   W <- weightit(.cens(C) ~ X1 + X2, data = d, method = "cbps", over = TRUE)
   expect_null(attr(W, "Mparts", exact = TRUE))
 })
@@ -1208,20 +1333,29 @@ msm_cens_formulas <- list(A_1 ~ X1_0 + X2_0,
                           A_3 ~ X1_2 + X2_2 + A_2)
 
 test_that("an alternative marker spelling names its time point the same way", {
+  skip_if_not_installed("patrick")
+
   d <- make_msm_cens_data()
 
   W <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
 
-  for (lhs in list(quote(WeightIt::.cens(C_2)), quote(cobalt::.cens(C_2)))) {
-    other <- msm_cens_formulas
-    other[[3L]] <- rlang::new_formula(lhs, quote(X1_1 + X2_1 + A_1))
+  patrick::with_parameters_test_that(
+    "marker = {.test_name}",
+    {
+      other <- msm_cens_formulas
+      other[[3L]] <- rlang::new_formula(lhs, quote(X1_1 + X2_1 + A_1))
 
-    Wo <- weightitMSM(other, data = d, method = "glm")
+      Wo <- weightitMSM(other, data = d, method = "glm")
 
-    expect_identical(names(Wo$treat.list), c("A_1", "A_2", "C_2", "A_3"))
-    expect_identical(names(Wo$treat.list), names(W$treat.list))
-    expect_equal(Wo$weights, W$weights)
-  }
+      expect_identical(names(Wo$treat.list), c("A_1", "A_2", "C_2", "A_3"))
+      expect_identical(names(Wo$treat.list), names(W$treat.list))
+      expect_equal(Wo$weights, W$weights)
+    },
+    .cases = patrick::cases(
+      "WeightIt::.cens(C_2)" = list(lhs = quote(WeightIt::.cens(C_2))),
+      "cobalt::.cens(C_2)" = list(lhs = quote(cobalt::.cens(C_2)))
+    )
+  )
 })
 
 test_that("weightitMSM separates censoring from treatment models", {

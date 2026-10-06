@@ -154,19 +154,26 @@ test_that("weightit(): random effects in the denominator and the numerator", {
 })
 
 test_that("weightit(): stabilize is restricted to the ATE", {
+  skip_if_not_installed("patrick")
+
   #For an estimand other than the ATE the numerator is not the marginal probability
   #of the observed treatment, so dividing by it rescales the treatment groups
   #relative to each other rather than leaving the estimand alone.
-  for (estimand in c("ATT", "ATC", "ATO", "ATM")) {
-    expect_error(weightit(A ~ X1 + X2 + X3, data = test_data, method = "glm",
-                          estimand = estimand, stabilize = TRUE),
-                 'estimand = "ATE"', fixed = TRUE)
+  patrick::with_parameters_test_that(
+    "estimand = {estimand}, stabilize = {stab_name}",
+    {
+      expect_error(weightit(A ~ X1 + X2 + X3, data = test_data, method = "glm",
+                            estimand = estimand, stabilize = stab),
+                   'estimand = "ATE"', fixed = TRUE)
+    },
+    .cases = merge(patrick::cases(list(stab_name = "TRUE", stab = TRUE),
+                                  list(stab_name = "~X5", stab = ~X5)),
+                   data.frame(estimand = c("ATT", "ATC", "ATO", "ATM")),
+                   by = NULL)
+  )
+})
 
-    expect_error(weightit(A ~ X1 + X2 + X3, data = test_data, method = "glm",
-                          estimand = estimand, stabilize = ~X5),
-                 'estimand = "ATE"', fixed = TRUE)
-  }
-
+test_that("weightit(): stabilize's ATE restriction for other treatment types", {
   #Multi-category treatments too
   expect_error(weightit(Am ~ X1 + X2, data = test_data, method = "glm",
                         estimand = "ATT", focal = "T", stabilize = TRUE),

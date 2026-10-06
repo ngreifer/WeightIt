@@ -15,66 +15,50 @@ test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 # Inject 10% missingness into two numeric covariates, reproducibly
 test_data_na <- inject_missingness(test_data, c("X1", "X2"), prop = 0.1, seed = 4321)
 
-test_that("missing = 'ind' (explicit) fits with glm and covs retains original NAs", {
+test_that("missing = 'ind' (explicit) fits with each method", {
   skip_on_cran()
+  skip_if_not_installed("patrick")
 
-  expect_no_error({
-    W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data_na,
-                  method = "glm", missing = "ind")
-  })
+  # `do.call()` rather than `!!!`, which patrick would try to resolve while
+  # capturing this code, before `args` exists. Only gbm takes extra arguments and
+  # a seed.
+  patrick::with_parameters_test_that(
+    "missing = 'ind' (explicit) fits with {method} and covs retains original NAs",
+    {
+      skip_if_method_unavailable(method)
 
-  expect_s3_class(W, "weightit")
-  expect_true(all(is.finite(W$weights)))
-  expect_true(all(W$weights > 0))
+      if (!is_null(seed)) {
+        set.seed(seed)
+      }
 
-  # weightit()'s documented `covs` value: "the covariates used in the fitting
-  # ... may have been altered in the fitting process." In practice, `covs` is
-  # extracted from the original formula/data *before* any method-internal
-  # missing-data handling (median imputation, indicator columns, etc.), so it
-  # should still contain the original NAs even though the method used a
-  # median-imputed/indicator-augmented version internally to fit the model.
-  expect_true(anyNA(W$covs[, c("X1", "X2")]))
-  expect_equal(W$covs[, c("X1", "X2")], test_data_na[, c("X1", "X2")],
-              ignore_attr = TRUE)
-})
+      expect_no_error({
+        W <- do.call("weightit", c(list(A ~ X1 + X2 + X3 + X4,
+                                        data = quote(test_data_na),
+                                        method = method, missing = "ind"),
+                                   args))
+      })
 
-test_that("missing = 'ind' (explicit) fits with ebal and covs retains original NAs", {
-  skip_on_cran()
-  skip_if_not_installed("cobalt")
+      expect_s3_class(W, "weightit")
+      expect_true(all(is.finite(W$weights)))
+      expect_true(all(W$weights > 0))
 
-  expect_no_error({
-    W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data_na,
-                  method = "ebal", missing = "ind")
-  })
-
-  expect_s3_class(W, "weightit")
-  expect_true(all(is.finite(W$weights)))
-  expect_true(all(W$weights > 0))
-
-  expect_true(anyNA(W$covs[, c("X1", "X2")]))
-  expect_equal(W$covs[, c("X1", "X2")], test_data_na[, c("X1", "X2")],
-              ignore_attr = TRUE)
-})
-
-test_that("missing = 'ind' (explicit) fits with gbm and covs retains original NAs", {
-  skip_on_cran()
-  skip_if_not_installed("gbm")
-  skip_if_not_installed("cobalt")
-
-  set.seed(1)
-  expect_no_error({
-    W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data_na,
-                  method = "gbm", missing = "ind", criterion = "smd.mean",
-                  n.trees = 500)
-  })
-
-  expect_s3_class(W, "weightit")
-  expect_true(all(is.finite(W$weights)))
-  expect_true(all(W$weights > 0))
-
-  expect_true(anyNA(W$covs[, c("X1", "X2")]))
-  expect_equal(W$covs[, c("X1", "X2")], test_data_na[, c("X1", "X2")],
-              ignore_attr = TRUE)
+      # weightit()'s documented `covs` value: "the covariates used in the fitting
+      # ... may have been altered in the fitting process." In practice, `covs` is
+      # extracted from the original formula/data *before* any method-internal
+      # missing-data handling (median imputation, indicator columns, etc.), so it
+      # should still contain the original NAs even though the method used a
+      # median-imputed/indicator-augmented version internally to fit the model.
+      expect_true(anyNA(W$covs[, c("X1", "X2")]))
+      expect_equal(W$covs[, c("X1", "X2")], test_data_na[, c("X1", "X2")],
+                   ignore_attr = TRUE)
+    },
+    .cases = patrick::cases(
+      list(method = "glm", args = list()),
+      list(method = "ebal", args = list()),
+      list(method = "gbm", args = list(criterion = "smd.mean", n.trees = 500),
+           seed = 1)
+    )
+  )
 })
 
 test_that("missing unspecified (NULL) warns and defaults to the method's first allowable value", {
@@ -106,19 +90,35 @@ test_that("an explicit, disallowed missing value errors informatively", {
   }, "only.*allowed.*missing", ignore.case = TRUE)
 })
 
-test_that("missing = 'saem' with glm: binary treatment, link = 'logit' fits", {
+test_that("missing = 'saem' with glm fits for each treatment type", {
   skip_on_cran()
   skip_if_not_installed("misaem")
+  skip_if_not_installed("patrick")
 
-  expect_no_error({
-    W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data_na,
-                 method = "glm", missing = "saem", link = "logit")
-  })
+  # `do.call()` rather than `!!!`, which patrick would try to resolve while
+  # capturing this code, before `args` exists. Only the binary treatment sets
+  # `link`.
+  patrick::with_parameters_test_that(
+    "missing = 'saem' with glm: {.test_name} fits",
+    {
+      expect_no_error({
+        W <- do.call("weightit", c(list(f, data = quote(test_data_na),
+                                        method = "glm", missing = "saem"),
+                                   args))
+      })
 
-  expect_s3_class(W, "weightit")
-  expect_true(all(is.finite(W$weights)))
-  expect_true(all(W$weights > 0))
-  expect_true(anyNA(W$covs[, c("X1", "X2")]))
+      expect_s3_class(W, "weightit")
+      expect_true(all(is.finite(W$weights)))
+      expect_true(all(W$weights > 0))
+      expect_true(anyNA(W$covs[, c("X1", "X2")]))
+    },
+    .cases = patrick::cases(
+      "binary treatment, link = 'logit'" = list(f = A ~ X1 + X2 + X3 + X4,
+                                                args = list(link = "logit")),
+      "continuous treatment" = list(f = Ac ~ X1 + X2 + X3 + X4,
+                                    args = list())
+    )
+  )
 })
 
 test_that("missing = 'saem' with glm: binary treatment, non-logit link errors", {
@@ -131,21 +131,6 @@ test_that("missing = 'saem' with glm: binary treatment, non-logit link errors", 
     weightit(A ~ X1 + X2 + X3 + X4, data = test_data_na,
             method = "glm", missing = "saem", link = "probit")
   }, "only.*logit.*allowed", ignore.case = TRUE)
-})
-
-test_that("missing = 'saem' with glm: continuous treatment fits", {
-  skip_on_cran()
-  skip_if_not_installed("misaem")
-
-  expect_no_error({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4, data = test_data_na,
-                 method = "glm", missing = "saem")
-  })
-
-  expect_s3_class(W, "weightit")
-  expect_true(all(is.finite(W$weights)))
-  expect_true(all(W$weights > 0))
-  expect_true(anyNA(W$covs[, c("X1", "X2")]))
 })
 
 test_that("missing = 'saem' with glm: s.weights errors", {

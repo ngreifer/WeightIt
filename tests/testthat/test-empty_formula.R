@@ -19,16 +19,6 @@ make_data <- function(seed = 123L) {
   d
 }
 
-# The installed methods reachable with a given treatment type, named as
-# `.weightit_methods` names them
-methods_for <- function(treat.type) {
-  Filter(function(m) {
-    treat.type %in% .weightit_methods[[m]]$treat_type &&
-      all(vapply(.weightit_methods[[m]]$packages_needed, rlang::is_installed,
-                 logical(1L)))
-  }, names(.weightit_methods))
-}
-
 # Arguments some methods require, so that the only thing under test is the empty
 # formula
 extra_args <- list(gbm = list(criterion = "smd.mean"),
@@ -42,26 +32,38 @@ fit_empty <- function(f, m, data, ...) {
 # ---- Every method routes, and they all agree -------------------------------
 
 test_that("every method gives the glm weights for an empty formula", {
+  skip_if_not_installed("patrick")
+
   d <- make_data()
 
-  for (tt in c("binary", "multinomial", "continuous", "censoring")) {
-    f <- switch(tt,
-                binary = A ~ 1,
-                multinomial = Am ~ 1,
-                continuous = Ac ~ 1,
-                censoring = .cens(C) ~ 1)
+  formulas <- list(binary = A ~ 1,
+                   multinomial = Am ~ 1,
+                   continuous = Ac ~ 1,
+                   censoring = .cens(C) ~ 1)
 
-    W_glm <- weightit(f, data = d, method = "glm")
+  W_glm <- lapply(formulas, function(f) {
+    weightit(f, data = d, method = "glm")
+  })
 
-    for (m in setdiff(methods_for(tt), "glm")) {
-      W <- fit_empty(f, m, d)
+  method_cases <- lapply(names(formulas), function(tt) {
+    data.frame(tt = tt,
+               m = setdiff(methods_for(tt, installed = FALSE), "glm"))
+  })
+
+  patrick::with_parameters_test_that(
+    "{tt}, method = {m}",
+    {
+      skip_if_method_unavailable(m)
+
+      W <- fit_empty(formulas[[tt]], m, d)
 
       # The shortcut is invisible: `method` is reported as supplied
       expect_identical(as.character(W$method), m,
                        label = sprintf("reported method for %s/%s", tt, m))
-      expect_equal(unname(W$weights), unname(W_glm$weights), tolerance = eps)
-    }
-  }
+      expect_equal(unname(W$weights), unname(W_glm[[tt]]$weights), tolerance = eps)
+    },
+    .cases = do.call("rbind", method_cases)
+  )
 })
 
 test_that("the shortcut is silent", {
@@ -123,35 +125,54 @@ test_that("estimand, focal, by, and s.weights survive the routing", {
 
 test_that("M-estimation is available after routing", {
   skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
   d <- make_data()
 
   # The weights come from a glm, so the glm M-estimation parts apply even for
   # methods that supply none of their own
-  for (m in intersect(c("energy", "cfd"), methods_for("censoring"))) {
-    W <- fit_empty(.cens(C) ~ 1, m, d)
+  patrick::with_parameters_test_that(
+    "method = {m}",
+    {
+      skip_if_method_unavailable(m)
 
-    expect_false(is_null(attr(W, "Mparts", exact = TRUE)))
-    expect_M_parts_okay(W, tolerance = eps)
-  }
+      W <- fit_empty(.cens(C) ~ 1, m, d)
+
+      expect_false(is_null(attr(W, "Mparts", exact = TRUE)))
+      expect_M_parts_okay(W, tolerance = eps)
+    },
+    m = intersect(c("energy", "cfd"), methods_for("censoring", installed = FALSE))
+  )
 })
 
 test_that("an empty continuous formula gives weights of exactly 1", {
+  skip_if_not_installed("patrick")
+
   d <- make_data()
 
   # With nothing to condition on, the conditional density of the treatment is its
   # marginal density, so the weights are 1 rather than merely close to it: the
   # numeric marginalization that would otherwise compute them is approximate
-  for (m in methods_for("continuous")) {
-    W <- fit_empty(Ac ~ 1, m, d)
+  patrick::with_parameters_test_that(
+    "method = {m}",
+    {
+      skip_if_method_unavailable(m)
 
-    expect_identical(unname(W$weights), rep.int(1, nrow(d)),
-                     label = sprintf("weights for method = \"%s\"", m))
+      W <- fit_empty(Ac ~ 1, m, d)
 
-    # Nothing was estimated, so there is nothing for M-estimation to account for
-    expect_null(attr(W, "Mparts", exact = TRUE))
-    expect_null(attr(W, "Mparts.list", exact = TRUE))
-  }
+      expect_identical(unname(W$weights), rep.int(1, nrow(d)),
+                       label = sprintf("weights for method = \"%s\"", m))
+
+      # Nothing was estimated, so there is nothing for M-estimation to account for
+      expect_null(attr(W, "Mparts", exact = TRUE))
+      expect_null(attr(W, "Mparts.list", exact = TRUE))
+    },
+    m = methods_for("continuous", installed = FALSE)
+  )
+})
+
+test_that("an empty continuous formula's weights of 1 are not a failure", {
+  d <- make_data()
 
   # Constant weights of 1 are the right answer here, not a sign of failure
   expect_no_warning(weightit(Ac ~ 1, data = d, method = "glm"))

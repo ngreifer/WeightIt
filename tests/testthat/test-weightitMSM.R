@@ -53,83 +53,76 @@ test_that("msm_valid methods fit without error: glm, gbm, cbps, ipt, super, bart
   # per-time-point path: one fit object per formula
   expect_length(W_glm$obj, length(msm_formulas))
 
-  skip_if_not_installed("gbm")
-  set.seed(123)
-  expect_no_error({
-    W_gbm <- weightitMSM(msm_formulas, data = msmdata, method = "gbm",
-                         n.trees = 200, criterion = "smd.max")
-  })
-  expect_true(all(is.finite(W_gbm$weights) & W_gbm$weights > 0))
+  skip_if_not_installed("patrick")
 
-  expect_no_error({
-    W_cbps <- weightitMSM(msm_formulas, data = msmdata, method = "cbps",
-                          include.obj = TRUE)
-  })
-  expect_true(all(is.finite(W_cbps$weights) & W_cbps$weights > 0))
+  # Each method is its own case, so a missing package skips only that method and a
+  # fit that errors doesn't stop the others
+  patrick::with_parameters_test_that(
+    "method = {method}",
+    {
+      skip_if_method_unavailable(method)
 
-  # cbps used the joint-fit path by default (is.MSM.method resolves to TRUE
-  # since msm_method_available = TRUE and is.MSM.method was left unspecified):
-  # a single fit object for all 3 time points together, not a length-3 list
-  # of per-time-point fits like W_glm$obj above.
-  expect_false(is.list(W_cbps$obj) && length(W_cbps$obj) == length(msm_formulas))
+      set.seed(123)
+      # `do.call()` rather than `!!!`, which patrick would try to resolve while
+      # capturing this code, before `args` exists
+      expect_no_error({
+        W <- do.call("weightitMSM", c(list(msm_formulas, data = quote(msmdata),
+                                           method = method),
+                                      args))
+      })
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
 
-  expect_no_error({
-    W_ipt <- weightitMSM(msm_formulas, data = msmdata, method = "ipt")
-  })
-  expect_true(all(is.finite(W_ipt$weights) & W_ipt$weights > 0))
+      if (method == "cbps") {
+        # cbps used the joint-fit path by default (is.MSM.method resolves to TRUE
+        # since msm_method_available = TRUE and is.MSM.method was left unspecified):
+        # a single fit object for all 3 time points together, not a length-3 list
+        # of per-time-point fits like W_glm$obj above.
+        expect_false(is.list(W$obj) && length(W$obj) == length(msm_formulas))
+      }
 
-  skip_if_not_installed("SuperLearner")
-  set.seed(123)
-  expect_no_error({
-    # `SL.step` rather than `SL.step.interaction`: `msmdata` has 7500 rows and this fits
-    # one model per time point, so stepping over all pairwise interactions inside
-    # 10-fold CV was the single most expensive call in the suite.
-    W_super <- weightitMSM(msm_formulas, data = msmdata, method = "super",
-                           SL.library = c("SL.mean", "SL.glm", "SL.step"))
-  })
-  expect_true(all(is.finite(W_super$weights) & W_super$weights > 0))
-
-  skip_if_not_installed("dbarts")
-  set.seed(123)
-  expect_no_error({
-    W_bart <- weightitMSM(msm_formulas, data = msmdata, method = "bart",
-                          n.trees = 20L, n.threads = 1L, seed = 123)
-  })
-  expect_true(all(is.finite(W_bart$weights) & W_bart$weights > 0))
-
-  # Sanity check that these six methods don't all produce identical weights
-  wts <- list(glm = W_glm$weights, gbm = W_gbm$weights, cbps = W_cbps$weights,
-             ipt = W_ipt$weights, super = W_super$weights, bart = W_bart$weights)
-  for (nm in setdiff(names(wts), "glm")) {
-    expect_not_equal(wts[[nm]], wts[["glm"]], expected.label = "glm weights")
-  }
+      # Sanity check that these methods don't produce the same weights as glm
+      expect_not_equal(unname(W$weights), unname(W_glm$weights),
+                       expected.label = "glm weights")
+    },
+    patrick::cases(
+      gbm = list(method = "gbm",
+                 args = list(n.trees = 200, criterion = "smd.max")),
+      cbps = list(method = "cbps", args = list(include.obj = TRUE)),
+      ipt = list(method = "ipt", args = list()),
+      # `SL.step` rather than `SL.step.interaction`: `msmdata` has 7500 rows and this
+      # fits one model per time point, so stepping over all pairwise interactions
+      # inside 10-fold CV was the single most expensive call in the suite.
+      super = list(method = "super",
+                   args = list(SL.library = c("SL.mean", "SL.glm", "SL.step"))),
+      bart = list(method = "bart",
+                  args = list(n.trees = 20L, n.threads = 1L, seed = 123))
+    )
+  )
 })
 
-test_that("msm_valid = FALSE methods error without weightit.force and succeed with it: ebal", {
-  # ebal has no extra package dependency, so it can always be tested.
-  expect_error({
-    weightitMSM(msm_formulas, data = msmdata, method = "ebal")
-  }, "has not been validated")
+test_that("msm_valid = FALSE methods error without weightit.force and succeed with it: ebal, optweight", {
+  skip_if_not_installed("patrick")
 
-  expect_no_error({
-    W <- weightitMSM(msm_formulas, data = msmdata, method = "ebal",
-                     weightit.force = TRUE)
-  })
-  expect_true(all(is.finite(W$weights) & W$weights > 0))
-})
+  patrick::with_parameters_test_that(
+    "msm_valid = FALSE methods error without weightit.force and succeed with it: {method}",
+    {
+      # ebal has no extra package dependency, so it can always be tested.
+      if (method == "optweight") {
+        skip_if_not_installed("optweight")
+      }
 
-test_that("msm_valid = FALSE methods error without weightit.force and succeed with it: optweight", {
-  skip_if_not_installed("optweight")
+      expect_error({
+        weightitMSM(msm_formulas, data = msmdata, method = method)
+      }, "has not been validated")
 
-  expect_error({
-    weightitMSM(msm_formulas, data = msmdata, method = "optweight")
-  }, "has not been validated")
-
-  expect_no_error({
-    W <- weightitMSM(msm_formulas, data = msmdata, method = "optweight",
-                     weightit.force = TRUE)
-  })
-  expect_true(all(is.finite(W$weights) & W$weights > 0))
+      expect_no_error({
+        W <- weightitMSM(msm_formulas, data = msmdata, method = method,
+                         weightit.force = TRUE)
+      })
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+    },
+    method = c("ebal", "optweight")
+  )
 })
 
 test_that("stabilize = TRUE changes weights for a stabilize_ok method (glm)", {
@@ -145,29 +138,29 @@ test_that("stabilize = TRUE changes weights for a stabilize_ok method (glm)", {
   expect_false(is_null(W1$stabilization))
 })
 
-test_that("stabilize = TRUE is a no-op (with a warning) for stabilize_ok = FALSE methods: cbps", {
-  # method = "cbps" is WeightIt's own implementation and does not depend on
-  # the CBPS package (that's only needed for method = "npcbps"), so no
-  # skip_if_not_installed("CBPS") guard is needed here.
-  W0 <- weightitMSM(msm_formulas, data = msmdata, method = "cbps")
+test_that("stabilize = TRUE is a no-op (with a warning) for stabilize_ok = FALSE methods: cbps, ipt", {
+  skip_if_not_installed("patrick")
 
-  expect_warning({
-    W1 <- weightitMSM(msm_formulas, data = msmdata, method = "cbps",
-                      stabilize = TRUE)
-  }, "stabilize.*cannot be used")
+  patrick::with_parameters_test_that(
+    "stabilize = TRUE is a no-op (with a warning) for stabilize_ok = FALSE methods: {method}",
+    {
+      W0 <- weightitMSM(msm_formulas, data = msmdata, method = method)
 
-  expect_equal(W1$weights, W0$weights, tolerance = eps)
-})
+      expect_warning({
+        W1 <- weightitMSM(msm_formulas, data = msmdata, method = method,
+                          stabilize = TRUE)
+      }, "stabilize.*cannot be used")
 
-test_that("stabilize = TRUE is a no-op (with a warning) for stabilize_ok = FALSE methods: ipt", {
-  W0 <- weightitMSM(msm_formulas, data = msmdata, method = "ipt")
-
-  expect_warning({
-    W1 <- weightitMSM(msm_formulas, data = msmdata, method = "ipt",
-                      stabilize = TRUE)
-  }, "stabilize.*cannot be used")
-
-  expect_equal(W1$weights, W0$weights, tolerance = eps)
+      expect_equal(W1$weights, W0$weights, tolerance = eps)
+    },
+    method = c(
+      # method = "cbps" is WeightIt's own implementation and does not depend on
+      # the CBPS package (that's only needed for method = "npcbps"), so no
+      # skip_if_not_installed("CBPS") guard is needed here.
+      "cbps",
+      "ipt"
+    )
+  )
 })
 
 test_that("is.MSM.method = FALSE changes weights for a msm_method_available method: cbps", {
@@ -291,26 +284,43 @@ test_that("s.weights errors for a s.weights_ok = FALSE method: bart", {
   }, "sampling weights cannot be used", ignore.case = TRUE)
 })
 
-test_that("Non-binary treatment time point: continuous A_2, method = 'glm'", {
-  msmdata_cont <- msmdata
-  set.seed(123)
-  msmdata_cont$A_2 <- rnorm(nrow(msmdata_cont))
+test_that("Non-binary treatment time point: continuous A_2, method = 'glm', 'cbps'", {
+  skip_if_not_installed("patrick")
 
-  # A_2's formula must be updated for a linear/continuous treatment model;
-  # keep the same covariate/treatment-history structure.
-  formulas_cont <- list(
-    A_1 ~ X1_0 + X2_0,
-    A_2 ~ X1_1 + X2_1 + A_1,
-    A_3 ~ X1_2 + X2_2 + A_2
+  patrick::with_parameters_test_that(
+    "Non-binary treatment time point: continuous A_2, method = '{method}'",
+    {
+      msmdata_cont <- msmdata
+      set.seed(123)
+      msmdata_cont$A_2 <- rnorm(nrow(msmdata_cont))
+
+      # A_2's formula must be updated for a linear/continuous treatment model;
+      # keep the same covariate/treatment-history structure.
+      formulas_cont <- list(
+        A_1 ~ X1_0 + X2_0,
+        A_2 ~ X1_1 + X2_1 + A_1,
+        A_3 ~ X1_2 + X2_2 + A_2
+      )
+
+      expect_no_error({
+        W <- weightitMSM(formulas_cont, data = msmdata_cont, method = method)
+      })
+
+      expect_true(all(is.finite(W$weights) & W$weights > 0))
+      expect_identical(unname(vapply(W$treat.list, get_treat_type, character(1L))),
+                       c("binary", "continuous", "binary"))
+    },
+    method = c(
+      "glm",
+      # weightit2cbps.R explicitly claims: "Any combination of treatment types is
+      # supported" for longitudinal (MSM) treatments. This is a direct
+      # doc-vs-behavior check using a mixed binary/continuous/binary sequence.
+      # method = "cbps" is WeightIt's own implementation and does not depend on
+      # the CBPS package (that's only needed for method = "npcbps"), so no
+      # skip_if_not_installed("CBPS") guard is needed here.
+      "cbps"
+    )
   )
-
-  expect_no_error({
-    W <- weightitMSM(formulas_cont, data = msmdata_cont, method = "glm")
-  })
-
-  expect_true(all(is.finite(W$weights) & W$weights > 0))
-  expect_identical(unname(vapply(W$treat.list, get_treat_type, character(1L))),
-                   c("binary", "continuous", "binary"))
 })
 
 test_that("Non-binary treatment time point: multi-category A_2, method = 'glm'", {
@@ -358,30 +368,4 @@ test_that("Non-binary treatment time point: multi-category A_2, method = 'glm'",
   expect_identical(vapply(Ws$stabilization, deparse1, character(1L)),
                    c("~1", "~A_1", "~A_1 + A_2 + A_1:A_2"))
   expect_true(all(is.finite(Ws$weights) & Ws$weights > 0))
-})
-
-test_that("Non-binary treatment time point: continuous A_2, method = 'cbps'", {
-  # weightit2cbps.R explicitly claims: "Any combination of treatment types is
-  # supported" for longitudinal (MSM) treatments. This is a direct
-  # doc-vs-behavior check using a mixed binary/continuous/binary sequence.
-  # method = "cbps" is WeightIt's own implementation and does not depend on
-  # the CBPS package (that's only needed for method = "npcbps"), so no
-  # skip_if_not_installed("CBPS") guard is needed here.
-  msmdata_cont <- msmdata
-  set.seed(123)
-  msmdata_cont$A_2 <- rnorm(nrow(msmdata_cont))
-
-  formulas_cont <- list(
-    A_1 ~ X1_0 + X2_0,
-    A_2 ~ X1_1 + X2_1 + A_1,
-    A_3 ~ X1_2 + X2_2 + A_2
-  )
-
-  expect_no_error({
-    W <- weightitMSM(formulas_cont, data = msmdata_cont, method = "cbps")
-  })
-
-  expect_true(all(is.finite(W$weights) & W$weights > 0))
-  expect_identical(unname(vapply(W$treat.list, get_treat_type, character(1L))),
-                   c("binary", "continuous", "binary"))
 })

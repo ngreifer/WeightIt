@@ -11,15 +11,15 @@ test_that("No weights", {
   test_data$off <- runif(nrow(test_data))
   test_data$clus <- sample(1:50, nrow(test_data), replace = TRUE)
 
-  expect_no_condition({
-    fit0 <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                            data = test_data)
+  fit0 <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                    data = test_data)
   })
 
   #M-estimation for polr
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                           data = test_data, vcov = "HC0")
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                    data = test_data, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -38,9 +38,9 @@ test_that("No weights", {
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
                tolerance = eps)
 
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                         data = test_data)
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
+                  data = test_data)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -51,9 +51,9 @@ test_that("No weights", {
                tolerance = eps)
 
   #Offset
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                           data = test_data)
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
+                    data = test_data)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -69,10 +69,10 @@ test_that("No weights", {
   #              tolerance = eps)
 
   #Probit
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
-                         data = test_data, vcov = "HC0",
-                         link = "probit")
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
+                  data = test_data, vcov = "HC0",
+                  link = "probit")
   })
 
   suppressWarnings({
@@ -88,9 +88,9 @@ test_that("No weights", {
                tolerance = eps)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                             data = test_data)
+  fit0 <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                     data = test_data)
   })
 
   expect_equal(vcov(fit0), sandwich::sandwich(fit0),
@@ -115,23 +115,23 @@ test_that("Binary treatment", {
                   include.obj = TRUE)
   })
 
-  expect_no_condition({
-    fit0 <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                            data = test_data, weightit = W)
+  fit0 <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                    data = test_data, weightit = W)
   })
 
   #M-estimation for polr
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                           data = test_data,  weightit = W, vcov = "asympt")
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                    data = test_data,  weightit = W, vcov = "asympt")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
-                           data = test_data, weightit = W, vcov = "HC0")
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
+                    data = test_data, weightit = W, vcov = "HC0")
   })
 
   suppressWarnings({
@@ -159,9 +159,9 @@ test_that("Binary treatment", {
   # expect_equal(vcov(fit), sandwich::sandwich(fit_g),
   #              tolerance = eps)
 
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                         data = test_data, weightit = W)
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
+                  data = test_data, weightit = W)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -174,9 +174,9 @@ test_that("Binary treatment", {
   #              tolerance = eps)
 
   #Offset
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                           data = test_data, weightit = W)
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
+                    data = test_data, weightit = W)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -192,10 +192,10 @@ test_that("Binary treatment", {
                tolerance = eps)
 
   #Probit
-  expect_no_condition({
-    fit <- ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
-                         data = test_data, vcov = "HC0",
-                         link = "probit", weightit = W)
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
+                  data = test_data, vcov = "HC0",
+                  link = "probit", weightit = W)
   })
 
   suppressWarnings({
@@ -214,9 +214,9 @@ test_that("Binary treatment", {
   #              tolerance = eps)
 
   #Test using sandwich functions
-  expect_no_condition({
-    fit0 <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                             data = test_data, weightit = W)
+  fit0 <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                     data = test_data, weightit = W)
   })
 
   expect_equal(vcov(fit0),
@@ -292,21 +292,26 @@ test_that("vcov = 'const' returns the model-based variance", {
 
 test_that("Additional links", {
   skip_on_cran()
+  skip_if_not_installed("patrick")
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
   #"cloglog" and "cauchit" fit cleanly and produce valid predicted probabilities
-  for (lnk in c("cloglog", "cauchit")) {
-    expect_no_condition({
-      fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
-                              data = test_data, link = lnk)
-    })
+  patrick::with_parameters_test_that(
+    "link = {link}",
+    {
+      fit <- expect_no_condition({
+        ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
+                         data = test_data, link = link)
+      })
 
-    expect_false(anyNA(coef(fit)))
+      expect_false(anyNA(coef(fit)))
 
-    pp <- fit$fitted.values
-    expect_true(all(pp >= -sqrt(.Machine$double.eps) & pp <= 1 + sqrt(.Machine$double.eps)))
-  }
+      pp <- fit$fitted.values
+      expect_true(all(pp >= -sqrt(.Machine$double.eps) & pp <= 1 + sqrt(.Machine$double.eps)))
+    },
+    .cases = data.frame(link = c("cloglog", "cauchit"))
+  )
 })
 
 test_that("Unordered factor outcome (documents actual behavior)", {
@@ -386,6 +391,7 @@ test_that("collinear covariates give NA for the aliased coefficients", {
 test_that("br = TRUE reduces to bias-reduced GLM with two outcome categories", {
   skip_on_cran()
   skip_if_not_installed("brglm2")
+  skip_if_not_installed("patrick")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -398,22 +404,26 @@ test_that("br = TRUE reduces to bias-reduced GLM with two outcome categories", {
   #With k = 2 the cumulative link model is a GLM for the *first* category with
   #linear predictor `a - X %*% b`, so the coefficients are the negated slopes and
   #the threshold is the intercept
-  for (link in c("logit", "probit", "cloglog", "cauchit")) {
-    for (w in list(NULL, W)) {
-      expect_no_condition({
-        fit <- ordinal_weightit(Y_O2 ~ A + X1 + X2, data = test_data, link = link,
-                                weightit = w, br = TRUE, vcov = "HC0")
+  patrick::with_parameters_test_that(
+    "link = {link}, weighted = {weighted}",
+    {
+      fit <- expect_no_condition({
+        ordinal_weightit(Y_O2 ~ A + X1 + X2, data = test_data, link = link,
+                         weightit = if (weighted) W, br = TRUE, vcov = "HC0")
       })
 
       fit_g <- glm_weightit(I(Y_O2 == "0") ~ A + X1 + X2, data = test_data,
-                            family = binomial(link), weightit = w, br = TRUE,
-                            vcov = "HC0")
+                            family = binomial(link), weightit = if (weighted) W,
+                            br = TRUE, vcov = "HC0")
 
       expect_equal(unname(coef(fit)),
                    unname(c(-coef(fit_g)[-1L], coef(fit_g)[1L])),
                    tolerance = eps)
-    }
-  }
+    },
+    .cases = expand.grid(weighted = c(FALSE, TRUE),
+                         link = c("logit", "probit", "cloglog", "cauchit"),
+                         stringsAsFactors = FALSE)
+  )
 })
 
 test_that("br = TRUE matches the closed-form solution for a saturated model", {
@@ -530,30 +540,6 @@ test_that("br = TRUE works with all links, M-estimation, and bootstrapping", {
                   estimand = "ATE")
   })
 
-  for (link in c("logit", "probit", "loglog", "cloglog", "cauchit")) {
-    expect_no_condition({
-      fit <- ordinal_weightit(Y_O ~ A + X1, data = test_data, link = link,
-                              weightit = W, br = TRUE)
-    })
-
-    expect_true(fit$br)
-    expect_false(anyNA(coef(fit)))
-    expect_false(anyNA(vcov(fit)))
-
-    #The adjusted score is 0 at the solution, so the "meat" of the sandwich is a
-    #proper empirical variance of the estimating function
-    expect_equal(unname(colSums(fit$gradient)), rep.int(0, length(coef(fit))),
-                 tolerance = 1e-4)
-
-    #The bias-reduced estimates are not the ML estimates (the difference is O(1/n),
-    #so compare them directly rather than with `expect_not_equal()`, whose default
-    #tolerance is looser than the difference on some platforms)
-    fit_ml <- ordinal_weightit(Y_O ~ A + X1, data = test_data, link = link,
-                               weightit = W)
-
-    expect_true(max(abs(coef(fit) - coef(fit_ml))) > 1e-5)
-  }
-
   fit <- ordinal_weightit(Y_O ~ A + X1, data = test_data, weightit = W, br = TRUE)
 
   expect_identical(fit$vcov_type, "asympt")
@@ -578,6 +564,37 @@ test_that("br = TRUE works with all links, M-estimation, and bootstrapping", {
                                br = TRUE, vcov = "none")
 
   expect_equal(vcov(fit_none, vcov = "asympt"), vcov(fit), tolerance = eps)
+
+  #Every link; last, so that skipping without patrick leaves the checks above
+  skip_if_not_installed("patrick")
+
+  patrick::with_parameters_test_that(
+    "link = {link}",
+    {
+      fit <- expect_no_condition({
+        ordinal_weightit(Y_O ~ A + X1, data = test_data, link = link,
+                         weightit = W, br = TRUE)
+      })
+
+      expect_true(fit$br)
+      expect_false(anyNA(coef(fit)))
+      expect_false(anyNA(vcov(fit)))
+
+      #The adjusted score is 0 at the solution, so the "meat" of the sandwich is a
+      #proper empirical variance of the estimating function
+      expect_equal(unname(colSums(fit$gradient)), rep.int(0, length(coef(fit))),
+                   tolerance = 1e-4)
+
+      #The bias-reduced estimates are not the ML estimates (the difference is O(1/n),
+      #so compare them directly rather than with `expect_not_equal()`, whose default
+      #tolerance is looser than the difference on some platforms)
+      fit_ml <- ordinal_weightit(Y_O ~ A + X1, data = test_data, link = link,
+                                 weightit = W)
+
+      expect_true(max(abs(coef(fit) - coef(fit_ml))) > 1e-5)
+    },
+    .cases = data.frame(link = c("logit", "probit", "loglog", "cloglog", "cauchit"))
+  )
 })
 
 test_that("br = TRUE gives finite estimates when the ML estimates are infinite", {

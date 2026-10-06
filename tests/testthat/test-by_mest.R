@@ -44,35 +44,42 @@ expect_by_equiv <- function(method, estimand = "ATE", ..., outcome = Y_B ~ A * G
   expect_equal(unname(vcov(f_by)), unname(vcov(f_int)), tolerance = tol)
 }
 
-test_that("by-stratified M-estimation matches interacted model: glm", {
-  expect_by_equiv("glm")
-  expect_by_equiv("glm", link = "probit")
-  expect_by_equiv("glm", link = "cloglog")
-})
+test_that("by-stratified M-estimation matches interacted model", {
+  skip_if_not_installed("rootSolve")
+  skip_if_not_installed("patrick")
 
-test_that("by-stratified M-estimation matches interacted model: glm, link = 'br.logit'", {
-  skip_if_not_installed("brglm2")
-  expect_by_equiv("glm", link = "br.logit")
-  expect_by_equiv("glm", link = "br.probit")
-  expect_by_equiv("glm", link = "br.cloglog")
-})
+  # `link = NA` leaves `link` out of the call, so the method's default is used (and
+  # ebal has no `link` at all)
+  patrick::with_parameters_test_that(
+    "method = {method}, link = {link}, treat = {treat}",
+    {
+      if (!is.na(link) && startsWith(link, "br.")) {
+        skip_if_not_installed("brglm2")
+      }
 
-test_that("by-stratified M-estimation matches interacted model: ebal", {
-  # ebal supplies Mparts only for exact balance (tols == 0, the default).
-  expect_by_equiv("ebal")
-})
+      link_arg <- {
+        if (is.na(link)) list()
+        else list(link = link)
+      }
 
-test_that("by-stratified M-estimation matches interacted model: cbps", {
-  # just-identified (the default, over = FALSE) supplies Mparts.
-  expect_by_equiv("cbps")
-  expect_by_equiv("cbps", link = "probit")
-  expect_by_equiv("cbps", link = "cloglog")
-})
-
-test_that("by-stratified M-estimation matches interacted model: ipt", {
-  expect_by_equiv("ipt")
-  expect_by_equiv("ipt", link = "probit")
-  expect_by_equiv("ipt", link = "cloglog")
+      do.call("expect_by_equiv",
+              c(list(method,
+                     outcome = as.formula(sprintf("Y_B ~ %s * G", treat)),
+                     treat = treat),
+                link_arg))
+    },
+    .cases = rbind(
+      data.frame(method = "glm", treat = "A",
+                 link = c(NA, "probit", "cloglog",
+                          "br.logit", "br.probit", "br.cloglog")),
+      # ebal supplies Mparts only for exact balance (tols == 0, the default).
+      data.frame(method = "ebal", treat = "A", link = NA),
+      # just-identified (the default, over = FALSE) supplies Mparts.
+      data.frame(method = "cbps", treat = "A", link = c(NA, "probit", "cloglog")),
+      data.frame(method = "ipt", treat = "A", link = c(NA, "probit", "cloglog")),
+      data.frame(method = c("glm", "ebal", "cbps", "ipt"), treat = "Am", link = NA)
+    )
+  )
 })
 
 test_that("by-stratified M-estimation composes with stabilize (glm)", {
@@ -92,13 +99,6 @@ test_that("by-stratified M-estimation composes with stabilize (glm)", {
   expect_equal(unname(vcov(f_by)), unname(vcov(f_int)), tolerance = 1e-7)
 })
 
-test_that("by-stratified M-estimation matches interacted model: multi-category", {
-  expect_by_equiv("glm", outcome = Y_B ~ Am * G, treat = "Am")
-  expect_by_equiv("ebal", outcome = Y_B ~ Am * G, treat = "Am")
-  expect_by_equiv("cbps", outcome = Y_B ~ Am * G, treat = "Am")
-  expect_by_equiv("ipt", outcome = Y_B ~ Am * G, treat = "Am")
-})
-
 # Note: equivalence doesn't hold for continuous treatments, so not tested
 
 
@@ -109,6 +109,8 @@ test_that("by-stratified M-estimation matches interacted model: multi-category",
 # variable with all covariates at every time point.
 
 test_that("by-stratified MSM M-estimation matches interacted model", {
+  skip_if_not_installed("rootSolve")
+
   data("msmdata", package = "WeightIt", envir = environment())
   md <- msmdata
   # Baseline grouping variable; excluded from the covariate formulas since it is
@@ -148,6 +150,8 @@ test_that("by-stratified MSM M-estimation matches interacted model", {
 })
 
 test_that("by-stratified MSM M-estimation composes with stabilization (glm)", {
+  skip_if_not_installed("rootSolve")
+
   data("msmdata", package = "WeightIt", envir = environment())
   md <- msmdata
   md$G <- factor(md$X2_0, labels = c("g0", "g1"))

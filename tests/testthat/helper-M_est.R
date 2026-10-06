@@ -1,4 +1,6 @@
 expect_M_parts_okay <- function(W, tolerance = 1e-5, ...) {
+  # The estimating equations are solved with `rootSolve::multiroot()` below
+  skip_if_not_installed("rootSolve")
 
   Mparts.list <- {
     if (is_not_null(attr(W, "Mparts", exact = TRUE))) {

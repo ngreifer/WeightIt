@@ -31,67 +31,6 @@ test_that("Binary treatment", {
   # SuperLearner-based weighting does not support M-estimation
   expect_null(attr(W0, "Mparts", exact = TRUE))
 
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("Super: sw = %s, estimand = %s", sw, estimand), {
-        set.seed(123)
-        W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                      data = test_data, method = "super", estimand = estimand,
-                      s.weights = if (sw) "SW" else NULL,
-                      SL.library = SL.lib,
-                      include.obj = TRUE)
-
-        expect_true(is.numeric(W$ps))
-        expect_true(all(W$ps > 0 & W$ps < 1))
-        expect_false(is_null(W$obj))
-        expect_true(all(is.finite(W$weights) & W$weights >= 0))
-
-        # SuperLearner is a machine-learning PS method; it approximates but
-        # does not solve exactly for balance, so we check improvement over
-        # the unweighted sample rather than exact-zero SMDs.
-        expect_balance_improved(W)
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in 0:1) {
-          e <- {
-            if (estimand == "ATT" && i == 1) expect_equal
-            else if (estimand == "ATC" && i == 0) expect_equal
-            else expect_not_equal
-          }
-
-          e(unname(W$weights[W$treat == i]),
-            rep(1, sum(W$treat == i)),
-            label = sprintf("%s weights", i),
-            expected.label = "all 1s",
-            tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
-
   # `SL.library` is required (no default)
   expect_error({
     weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -187,6 +126,63 @@ test_that("Binary treatment", {
     weightit(A ~ X1 + X2 + X3, data = data_na, method = "super",
              missing = "surr", SL.library = SL.lib)
   }, "only.*allowed for.*missing", ignore.case = TRUE)
+
+  skip_if_not_installed("patrick")
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Super: sw = {sw}, estimand = {estimand}",
+    {
+      set.seed(123)
+      W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "super", estimand = estimand,
+                    s.weights = if (sw) "SW" else NULL,
+                    SL.library = SL.lib,
+                    include.obj = TRUE)
+
+      expect_true(is.numeric(W$ps))
+      expect_true(all(W$ps > 0 & W$ps < 1))
+      expect_false(is_null(W$obj))
+      expect_true(all(is.finite(W$weights) & W$weights >= 0))
+
+      # SuperLearner is a machine-learning PS method; it approximates but
+      # does not solve exactly for balance, so we check improvement over
+      # the unweighted sample rather than exact-zero SMDs.
+      expect_balance_improved(W)
+
+      if (estimand %in% c("ATT", "ATC")) {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in 0:1) {
+        e <- {
+          if (estimand == "ATT" && i == 1) expect_equal
+          else if (estimand == "ATC" && i == 0) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
 })
 
 test_that("Multi-category treatment", {
@@ -210,82 +206,7 @@ test_that("Multi-category treatment", {
   expect_true(is_null(W0$ps)) #ps not returned for multi-category super
   expect_false(is_null(W0$obj))
 
-  sw.opts <- c(FALSE, TRUE)
-  estimand.opts <- c("ATE", "ATT", "ATO", "ATM")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(estimand.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (estimand in estimand.opts) {
-      test_that(sprintf("Super: sw = %s, estimand = %s", sw, estimand), {
-        set.seed(123)
-        # `suppressWarnings()`: see note above on "non-integer #successes".
-        suppressWarnings({
-          W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
-                        data = test_data, method = "super", estimand = estimand,
-                        focal = if (estimand == "ATT") "T" else NULL,
-                        s.weights = if (sw) "SW" else NULL,
-                        SL.library = SL.lib,
-                        include.obj = TRUE)
-        })
-
-        expect_true(is_null(W$ps))
-        expect_false(is_null(W$obj))
-        expect_true(all(is.finite(W$weights) & W$weights >= 0))
-
-        # Only check pairs involving "T": by construction (see
-        # fixtures/make_test_data.R), "C1" and "C2" are randomly assigned
-        # among untreated units and share no true relationship with the
-        # covariates, so a C1-vs-C2 "balance improved" check would be
-        # comparing pure noise and can fail by chance.
-        for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
-          if ("T" %nin% tt) next
-
-          in_tt <- W$treat %in% tt
-          W_sub <- list(covs = W$covs[in_tt, , drop = FALSE],
-                        treat = factor(W$treat[in_tt]),
-                        weights = W$weights[in_tt],
-                        s.weights = W$s.weights[in_tt])
-          expect_balance_improved(W_sub,
-                                  label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")))
-        }
-
-        if (estimand == "ATT") {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in levels(W$treat)) {
-          e <- {
-            if (estimand == "ATT" && i == W$focal) expect_equal
-            else expect_not_equal
-          }
-
-          e(unname(W$weights[W$treat == i]),
-            rep(1, sum(W$treat == i)),
-            label = sprintf("%s weights", i),
-            expected.label = "all 1s",
-            tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, estimand)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
-
-  # Documented behavior noted above: ATC == ATT for multi-category treatments
+  # Documented behavior: ATC == ATT for multi-category treatments
   # with the same focal, for any method that routes through
   # `.get_w_from_ps_internal_multi()` (super, bart, glm, cbps).
   set.seed(123)
@@ -312,6 +233,79 @@ test_that("Multi-category treatment", {
              data = test_data, method = "super", estimand = "ATE",
              SL.library = SL.lib, SL.method = "method.balance")
   }, "method.balance", fixed = TRUE)
+
+  skip_if_not_installed("patrick")
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Super: sw = {sw}, estimand = {estimand}",
+    {
+      set.seed(123)
+      # No `suppressWarnings()`: with `s.weights`, the binomial learners warn
+      # "non-integer #successes in a binomial glm!", but `weightit()` muffles that
+      # warning itself, so none of these fits warns.
+      W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
+                    data = test_data, method = "super", estimand = estimand,
+                    focal = if (estimand == "ATT") "T" else NULL,
+                    s.weights = if (sw) "SW" else NULL,
+                    SL.library = SL.lib,
+                    include.obj = TRUE)
+
+      expect_true(is_null(W$ps))
+      expect_false(is_null(W$obj))
+      expect_true(all(is.finite(W$weights) & W$weights >= 0))
+
+      # Only check pairs involving "T": by construction (see
+      # fixtures/make_test_data.R), "C1" and "C2" are randomly assigned
+      # among untreated units and share no true relationship with the
+      # covariates, so a C1-vs-C2 "balance improved" check would be
+      # comparing pure noise and can fail by chance.
+      for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
+        if ("T" %nin% tt) {
+          next
+        }
+
+        in_tt <- W$treat %in% tt
+        W_sub <- list(covs = W$covs[in_tt, , drop = FALSE],
+                      treat = factor(W$treat[in_tt]),
+                      weights = W$weights[in_tt],
+                      s.weights = W$s.weights[in_tt])
+        expect_balance_improved(W_sub,
+                                label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")))
+      }
+
+      if (estimand == "ATT") {
+        expect_ATT_weights_okay(W, tolerance = eps)
+      }
+
+      for (i in levels(W$treat)) {
+        e <- {
+          if (estimand == "ATT" && i == W$focal) expect_equal
+          else expect_not_equal
+        }
+
+        e(unname(W$weights[W$treat == i]),
+          rep(1, sum(W$treat == i)),
+          label = sprintf("%s weights", i),
+          expected.label = "all 1s",
+          tolerance = eps)
+      }
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, estimand = %s", sw, estimand)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(estimand = c("ATE", "ATT", "ATO", "ATM"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
 })
 
 test_that("Continuous treatment", {
@@ -335,56 +329,6 @@ test_that("Continuous treatment", {
   expect_false(is_null(W0$obj))
   expect_true(all(is.finite(W0$weights) & W0$weights >= 0))
 
-  sw.opts <- c(FALSE, TRUE)
-  density.opts <- c("dnorm", "kernel")
-
-  weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(density.opts))
-  colnames(weight.mat) <- rep("", ncol(weight.mat))
-
-  k <- 1
-
-  for (sw in sw.opts) {
-    for (density in density.opts) {
-      test_that(sprintf("Super: sw = %s, density = %s", sw, density), {
-        set.seed(123)
-        # `suppressWarnings()`: kernel density estimation with `s.weights`
-        # produces a benign "Selecting bandwidth *not* using 'weights'"
-        # warning from `stats::density()`.
-        suppressWarnings({
-          W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                        data = test_data, method = "super",
-                        density = density,
-                        s.weights = if (sw) "SW" else NULL,
-                        SL.library = SL.lib,
-                        include.obj = TRUE)
-        })
-
-        expect_false(is_null(W$obj))
-        expect_true(all(is.finite(W$weights) & W$weights >= 0))
-
-        # ML-based GPS is approximate; check improvement in weighted
-        # treatment-covariate correlation rather than exact-zero.
-        weighted <- abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
-                                          s.weights = W$s.weights))
-        unweighted <- abs(cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                            s.weights = W$s.weights))
-        expect_true(max(weighted) < max(unweighted))
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = eps)
-        }
-
-        n <- sprintf("W_%s_%s", sw, density)
-        colnames(weight.mat)[k] <<- n
-        weight.mat[,k] <<- W$weights
-        k <<- k + 1
-      })
-    }
-  }
-
   # Non-full rank
   set.seed(123)
   expect_no_error({
@@ -395,4 +339,49 @@ test_that("Continuous treatment", {
   })
 
   expect_true(all(is.finite(W$weights) & W$weights >= 0))
+
+  skip_if_not_installed("patrick")
+
+  # Weights from the configurations already run, so each new one can be checked
+  # against all of them
+  seen <- new.env()
+
+  patrick::with_parameters_test_that(
+    "Super: sw = {sw}, density = {density}",
+    {
+      set.seed(123)
+      # No `suppressWarnings()`: kernel density estimation with `s.weights` would
+      # get a "Selecting bandwidth *not* using 'weights'" warning from
+      # `stats::density()`, but `weightit()` turns that warning off, so none of
+      # these fits warns.
+      W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = test_data, method = "super",
+                    density = density,
+                    s.weights = if (sw) "SW" else NULL,
+                    SL.library = SL.lib,
+                    include.obj = TRUE)
+
+      expect_false(is_null(W$obj))
+      expect_true(all(is.finite(W$weights) & W$weights >= 0))
+
+      # ML-based GPS is approximate; check improvement in weighted
+      # treatment-covariate correlation rather than exact-zero.
+      weighted <- abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                        s.weights = W$s.weights))
+      unweighted <- abs(cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                          s.weights = W$s.weights))
+      expect_true(max(weighted) < max(unweighted))
+
+      for (other in ls(seen)) {
+        expect_not_equal(unname(W$weights), seen[[other]],
+                         expected.label = sprintf("weights for %s", other),
+                         tolerance = eps)
+      }
+
+      seen[[sprintf("sw = %s, density = %s", sw, density)]] <- unname(W$weights)
+    },
+    .cases = expand.grid(density = c("dnorm", "kernel"),
+                         sw = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
 })
