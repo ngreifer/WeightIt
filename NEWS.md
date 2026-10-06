@@ -3,9 +3,25 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* `coxph_weightit()` gains a `br` argument, which, when set to `TRUE`, maximizes the partial likelihood penalized by the Jeffreys invariant prior as described by Heinze and Schemper (2001). This yields estimates with smaller asymptotic bias that are finite even when the likelihood is monotone and composes with M-estimation, cluster-robust standard errors, and bootstrapping. Without weights, estimates match those from `coxphf::coxphf()`.
+
+* `glm_weightit()`, `lm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` gain a `weights` argument for supplying fixed weights, which works like the `weights` argument of `glm()`. This makes it easier to use these functions outside of weighting for covariate balance (e.g., for bias reduction or robust and bootstrap standard errors) without constructing a `weightit` object. Only one of `weights` and `weightit` can be supplied, and a `weightit` object supplied to `weights` is treated as though it had been supplied to `weightit`. Previously, `weights` was ignored with a warning.
+
+* With `br = TRUE` in `glm_weightit()`, `multinom_weightit()`, and `ordinal_weightit()`, and with a `br.` link or `link = "flic"` or `"flac"` for `method = "glm"`, the weights are now scaled to have a mean of 1 among the units with a nonzero weight before fitting, following Mukhopadhyay (2020). Previously, multiplying the weights by a constant changed the estimates, and weights with a mean above 1 (e.g., ATE weights or survey weights) weakened the adjustment. Estimates change unless the weights already had a mean of 1, and they are no longer invariant to aggregating identical units into a single unit with a weight equal to their count.
+
 * Fixed a bug when using `method = "cbps"` with `estimand = "ATO"`, the logit link, and `over = TRUE`, in which the over-identified CBPS was fit instead of the equivalent just-identified one, so M-estimation was not available for outcome models.
 
 * Fixed a bug in which setting `density = "kernel"` with a continuous treatment produced a warning about an unused argument on versions of R before 4.3.0.
+
+* Fixed a bug in `coxph_weightit()` in which M-estimation-based standard errors (the default when the supplied `weightit` object supports M-estimation) were incorrect, as was the output of `sandwich::estfun()`. The derivative of the outcome score with respect to the weighting model's coefficients was computed as though each unit's contribution depended only on its own weight, but in a Cox model it also depends on the other units' weights through the risk sets. Standard errors will change, in some cases noticeably.
+
+* `sandwich::estfun()` on objects fit with `br = TRUE` now computes the derivative of the outcome score with respect to the weighting model's coefficients by numeric differentiation, as `vcov()` has since version 2.1.0. Previously the two gave slightly different results.
+
+* Fixed a bug in which `sandwich::sandwich()` and the other *sandwich* functions that use `bread()` (e.g., `sandwich::vcovCL()`) gave variances that were too small for `glm_weightit()`, `lm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` fits in which some weights were 0 (e.g., with censoring weights). `vcov()` was unaffected.
+
+* Fixed a bug in `coxph_weightit()` in which arguments to `survival::coxph.control()` supplied through `...` (e.g., `iter.max`) were ignored. Arguments supplied in a list to `control` were unaffected.
+
+* Warnings raised while refitting the model in bootstrap replicates are now issued once each after the bootstrap, along with the number of replicates that raised them, rather than once per replicate. Previously, a warning raised in many replicates led R to report only that there were 50 or more warnings. Fixed a bug in which such warnings from `coxph_weightit()`, `multinom_weightit()`, and `ordinal_weightit()` began with an empty function name, as in `(from ): `.
 
 # `WeightIt` 2.1.0
 

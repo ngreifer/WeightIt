@@ -1230,9 +1230,9 @@ test_that("coxph_weightit tolerates zero weights and NA event times", {
                ignore_attr = TRUE)
   expect_true(all(psi[cens, ] == 0))
 
-  # `.compute_vcov()` evaluates `psi` with the estimated weights set to 1 to build
-  # the cross-derivative block. The censored units must stay out of the risk sets
-  # there too, or they perturb the psi of the units that do contribute.
+  # The censored units stay out of the risk sets whatever weights `psi` is
+  # evaluated at, here with the estimated weights set to 1, which would otherwise
+  # give them nonzero weights and perturb the psi of the units that do contribute.
   psi1 <- fit$psi(coef(fit), fit$x, fit$y, W$s.weights)
 
   expect_true(all(psi1[cens, ] == 0))
@@ -1315,6 +1315,55 @@ test_that("HC0 and bootstrap variances also work", {
   set.seed(1)
   f_bs <- glm_weightit(Y ~ X1, data = d, weightit = W, vcov = "BS", R = 10)
   expect_true(all(is.finite(sqrt(diag(vcov(f_bs))))))
+})
+
+# `sandwich::sandwich()` divides by the number of rows of `estfun()`, which keeps
+# the censored units, so `bread()` must be scaled by that same number rather than
+# by `nobs()`, which leaves them out.
+test_that("sandwich functions agree with vcov() when some weights are 0", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("patrick")
+
+  d <- make_cens_data()
+
+  cutoff <- quantile(d$Y_S, .8)
+  d$event <- as.numeric(d$Y_S < cutoff)
+  d$time <- pmin(d$Y_S, cutoff)
+  is.na(d$time[d$C == 1L]) <- TRUE
+  is.na(d$event[d$C == 1L]) <- TRUE
+
+  W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
+
+  patrick::with_parameters_test_that(
+    "{fitter}",
+    {
+      if (fitter == "coxph_weightit") {
+        skip_if_not_installed("survival")
+      }
+
+      fit <- do.call(fitter, c(fit_args, list(data = quote(d), weightit = quote(W))))
+
+      # The censored units are counted by `estfun()` but not by `nobs()`
+      expect_lt(nobs(fit), NROW(sandwich::estfun(fit)))
+
+      expect_equal(sandwich::sandwich(fit), vcov(fit))
+      expect_equal(sandwich::sandwich(fit, asympt = FALSE), vcov(fit, vcov = "HC0"))
+      expect_equal(sandwich::vcovCL(fit, cluster = d$cluster, type = "HC0", asympt = FALSE),
+                   vcov(fit, vcov = "HC0", cluster = ~cluster))
+    },
+    .cases = patrick::cases(
+      list(fitter = "glm_weightit",
+           fit_args = list(quote(Y_B ~ A + X2), family = quote(binomial))),
+      list(fitter = "lm_weightit",
+           fit_args = list(quote(Y_C ~ A + X2))),
+      list(fitter = "multinom_weightit",
+           fit_args = list(quote(Y_O ~ A + X2))),
+      list(fitter = "ordinal_weightit",
+           fit_args = list(quote(Y_O ~ A + X2))),
+      list(fitter = "coxph_weightit",
+           fit_args = list(quote(survival::Surv(time, event) ~ A + X2)))
+    )
+  )
 })
 
 # ---- weightitMSM() --------------------------------------------------------

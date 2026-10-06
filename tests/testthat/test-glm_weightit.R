@@ -195,6 +195,18 @@ test_that("Binary treatment", {
   expect_equal(vcov(fit0, type = "HC0"),
                sandwich::sandwich(fit0, asympt = FALSE),
                tolerance = eps)
+
+  # The bias-reducing adjustment is not linear in the weights, so `estfun()` must
+  # differentiate it with respect to the weighting model's coefficients the same
+  # way `.compute_vcov()` does
+  skip_if_not_installed("brglm2")
+
+  fit_br <- expect_no_condition({
+    glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                 data = test_data, weightit = W, family = binomial, br = TRUE)
+  })
+
+  expect_equal(vcov(fit_br), sandwich::sandwich(fit_br))
 })
 
 test_that("Gaussian and Poisson families", {

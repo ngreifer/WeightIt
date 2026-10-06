@@ -1417,7 +1417,8 @@ check_if_call_from_fun <- function(fun) {
     fit <- eval(call, envir = envir)
   },
   warning = function(w) {
-    w <- conditionMessage(w)
+    #Trailing whitespace would come before the period `arg::wrn()` adds
+    w <- trimws(conditionMessage(w))
     wmatch <- which(startsWith(tolower(w), tolower(names(warnings))))
 
     if (is_not_null(wmatch)) {
@@ -1425,7 +1426,9 @@ check_if_call_from_fun <- function(fun) {
         arg::wrn(warnings[wmatch[1L]])
       }
     }
-    else if (is_null(from) || isFALSE(from)) {
+    #The internal fitting functions are called as function objects rather than by
+    #name, so the call can have no name to report
+    else if (is_null(from) || isFALSE(from) || is_null(rlang::call_name(call))) {
       arg::wrn("{w}")
     }
     else if (isTRUE(from)) {

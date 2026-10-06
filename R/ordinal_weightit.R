@@ -28,7 +28,8 @@
 #' containing the weights used in the model (the product of the estimated
 #' weights and the sampling weights, if any) and `(s.weights)` containing the
 #' sampling weights, which will be 1 if `s.weights` is not supplied in the
-#' original `weightit()` call.
+#' original `weightit()` call. When `weights` is supplied instead, only `(weights)`
+#' is included, containing those weights.
 #'
 #' @details
 #' `ordinal_weightit()` implements proportional odds ordinal regression using a
@@ -84,9 +85,11 @@
 #' tolerance for the adjusted score relative to the sum of the weights, default
 #' `1e-10`).
 #'
-#' Weights are treated as multinomial totals, which makes the estimates invariant
-#' to whether the data are supplied as individual units or as groups of identical
-#' units with weights equal to their counts. As for `br = TRUE` in
+#' The weights are scaled to have a mean of 1 among the units with a nonzero
+#' weight before fitting (Mukhopadhyay, 2020). The adjustment does not grow with
+#' the weights as the score does, so this makes the estimates invariant to
+#' multiplying the weights by a constant, as estimates without bias reduction are.
+#' As for `br = TRUE` in
 #' [glm_weightit()], the reported variance matrix uses the information matrix at
 #' the estimates rather than the Jacobian of the adjusted score, i.e., the
 #' adjustment is treated as fixed; the two differ by a term that vanishes
@@ -113,6 +116,9 @@
 #' Kosmidis, I. (2014). Improved estimation in cumulative link models. *Journal of
 #' the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1),
 #' 169–196. \doi{10.1111/rssb.12025}
+#'
+#' Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+#' hazards regressions for complex surveys. *Survey Methodology*, 46(2), 215–241.
 #'
 #' @examples
 #' data("lalonde", package = "cobalt")
@@ -152,20 +158,24 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
                              control = list(...),
                              x = FALSE, y = TRUE,
                              contrasts = NULL, fwb.args = list(),
-                             br = FALSE, ...) {
+                             br = FALSE, weights, ...) {
+
+  model_call <- match.call()
+
+  if (!missing(weights)) {
+    w_out <- .process_weights_arg(substitute(weights), weightit,
+                                  data = if (!missing(data)) data,
+                                  env = .formula_env(formula),
+                                  model_call = model_call)
+
+    weightit <- w_out[["weightit"]]
+    model_call <- w_out[["model_call"]]
+  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
   if (missing(cluster)) {
     cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  if (is_not_null(...get("weights"))) {
-    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
-
-    model_call[["weights"]] <- NULL
   }
 
   ###
@@ -401,6 +411,10 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   if (is_null(weights)) weights <- rep.int(1, n)
   else arg::arg_numeric(weights)
 
+  if (br) {
+    weights <- .scale_br_weights(weights)
+  }
+
   if (is_null(offset)) offset <- rep.int(0, n)
   else arg::arg_numeric(offset)
 
@@ -573,8 +587,13 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   # Psi function and gradient using natural parameterization. `.adjust` controls
   # whether the bias-reducing adjustment is included; it is excluded when computing
   # the Hessian, which should be that of the log-likelihood (i.e., minus the
-  # information matrix) even for a bias-reduced fit.
+  # information matrix) even for a bias-reduced fit. The weights of a bias-reduced
+  # fit are scaled as they were for the fit either way.
   psi <- function(B, X, y, weights, offset = NULL, .adjust = br) {
+    if (br) {
+      weights <- .scale_br_weights(weights)
+    }
+
     if (is_null(offset)) {
       offset <- rep_with(0, y)
     }

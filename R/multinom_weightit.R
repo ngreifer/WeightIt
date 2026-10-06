@@ -26,7 +26,8 @@
 #' containing the weights used in the model (the product of the estimated
 #' weights and the sampling weights, if any) and `(s.weights)` containing the
 #' sampling weights, which will be 1 if `s.weights` is not supplied in the
-#' original `weightit()` call.
+#' original `weightit()` call. When `weights` is supplied instead, only `(weights)`
+#' is included, containing those weights.
 #'
 #' @details
 #' `multinom_weightit()` implements multinomial logistic regression using a
@@ -77,9 +78,12 @@
 #' Estimation should align with that from \pkgfun{brglm2}{brmultinom} with its
 #' default `type = "AS_mean"`.
 #'
-#' Weights are treated as multinomial totals, as they are by \pkg{brglm2}, which
-#' makes the estimates invariant to whether the data are supplied as individual
-#' units or as groups of identical units with weights equal to their counts. As
+#' The weights are scaled to have a mean of 1 among the units with a nonzero
+#' weight before fitting (Mukhopadhyay, 2020). The adjustment does not grow with
+#' the weights as the score does, so this makes the estimates invariant to
+#' multiplying the weights by a constant, as estimates without bias reduction are.
+#' \pkg{brglm2} treats weights as counts instead, so its estimates agree with these
+#' only when the weights already have a mean of 1. As
 #' for `br = TRUE` in [glm_weightit()], the reported variance matrix uses the
 #' information matrix at the estimates rather than the Jacobian of the adjusted
 #' score, i.e., the adjustment is treated as fixed; the two differ by a term that
@@ -100,6 +104,9 @@
 #' Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via the
 #' Poisson log-linear model. *Biometrika*, 98(3), 755–759.
 #' \doi{10.1093/biomet/asr026}
+#'
+#' Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+#' hazards regressions for complex surveys. *Survey Methodology*, 46(2), 215–241.
 #'
 #' @examples
 #' data("lalonde", package = "cobalt")
@@ -135,20 +142,24 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
                               control = list(...),
                               x = FALSE, y = TRUE,
                               contrasts = NULL, fwb.args = list(),
-                              br = FALSE, ...) {
+                              br = FALSE, weights, ...) {
+
+  model_call <- match.call()
+
+  if (!missing(weights)) {
+    w_out <- .process_weights_arg(substitute(weights), weightit,
+                                  data = if (!missing(data)) data,
+                                  env = .formula_env(formula),
+                                  model_call = model_call)
+
+    weightit <- w_out[["weightit"]]
+    model_call <- w_out[["model_call"]]
+  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
   if (missing(cluster)) {
     cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  if (is_not_null(...get("weights"))) {
-    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
-
-    model_call[["weights"]] <- NULL
   }
 
   ###
@@ -274,6 +285,10 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   if (is_null(weights)) weights <- rep.int(1, N)
   else arg::arg_numeric(weights)
 
+  if (br) {
+    weights <- .scale_br_weights(weights)
+  }
+
   if (is_null(offset)) offset <- rep.int(0, N)
   else arg::arg_numeric(offset)
 
@@ -317,8 +332,13 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   }
 
   #Multinomial logistic regression score, with the bias-reducing adjustment to the
-  #counts added when `br = TRUE`
+  #counts added when `br = TRUE`, in which case the weights are scaled as they were
+  #for the fit
   psi <- function(B, X, y, weights, offset = NULL) {
+    if (br) {
+      weights <- .scale_br_weights(weights)
+    }
+
     pp <- get_pp(B, X, offset)
 
     cc <- {

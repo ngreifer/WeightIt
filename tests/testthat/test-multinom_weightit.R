@@ -411,7 +411,8 @@ test_that("br = TRUE matches brglm2::brmultinom()", {
   expect_equal(unname(colSums(fit$gradient)), rep.int(0, length(coef(fit))),
                tolerance = 1e-4)
 
-  #Weights are treated as multinomial totals, as in brmultinom()
+  #The weights are scaled to have a mean of 1 before fitting, which brmultinom()
+  #does not do, so it gets weights that already have a mean of 1
   W <- as.weightit(test_data$SW, treat = test_data$A, estimand = "ATE",
                    s.weights = rep.int(1, nrow(test_data)))
 
@@ -423,7 +424,8 @@ test_that("br = TRUE matches brglm2::brmultinom()", {
   #Warnings are from the non-integer counts of the Poisson model brmultinom() fits
   fit_br_w <- suppressWarnings({
     brglm2::brmultinom(Y_M ~ A + X1 + X2, data = test_data,
-                       weights = test_data$SW, type = "AS_mean")
+                       weights = test_data$SW / mean(test_data$SW),
+                       type = "AS_mean")
   })
 
   expect_equal(unname(coef(fit_w)), .coef(fit_br_w), tolerance = eps)

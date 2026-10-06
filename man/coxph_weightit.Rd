@@ -15,6 +15,8 @@ coxph_weightit(
   x = FALSE,
   y = TRUE,
   fwb.args = list(),
+  br = FALSE,
+  weights,
   ...
 )
 }
@@ -27,8 +29,8 @@ in data, the variables are taken from \code{environment(formula)}, typically the
 environment from which the function is called.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
-\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will
-be fit.}
+\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If neither \code{weightit} nor \code{weights} is
+supplied, an unweighted model will be fit.}
 
 \item{vcov}{string; the method used to compute the variance of the estimated
 parameters. Allowable options include \code{"asympt"}, which uses the
@@ -65,6 +67,22 @@ returned value.}
 \item{fwb.args}{an optional list of further arguments to supply to
 \pkgfun{fwb}{fwb} when \code{vcov = "FWB"}.}
 
+\item{br}{\code{logical}; whether to use bias reduction, i.e., to maximize the
+partial likelihood penalized by the Jeffreys invariant prior as described by
+Heinze and Schemper (2001) rather than the partial likelihood. This yields
+estimates with smaller asymptotic bias that are always finite, even when the
+maximum partial likelihood estimates are not (e.g., under a monotone
+likelihood). Default is \code{FALSE}. See Details.}
+
+\item{weights}{an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for \code{\link[=glm]{glm()}} (e.g.,
+as the unquoted name of a variable in \code{data}), as a numeric vector, or as a
+string containing the name of a variable in \code{data}. Only one of \code{weights}
+and \code{weightit} can be supplied; a \code{weightit} or \code{weightitMSM} object
+supplied to \code{weights} is treated as though it had been supplied to
+\code{weightit}. When \code{weights} is supplied, the default \code{vcov} is \code{"HC0"}, and
+bootstrapping holds the weights fixed rather than re-estimating them.}
+
 \item{\dots}{other arguments passed to \pkgfun{survival}{coxph.control}.}
 }
 \value{
@@ -81,7 +99,8 @@ will include two extra columns when \code{weightit} is supplied: \code{(weights)
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and \code{(s.weights)} containing the
 sampling weights, which will be 1 if \code{s.weights} is not supplied in the
-original \code{weightit()} call.
+original \code{weightit()} call. When \code{weights} is supplied instead, only \code{(weights)}
+is included, containing those weights.
 }
 \description{
 \code{coxph_weightit()} fits a Cox proportional hazards model with a
@@ -130,14 +149,51 @@ error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args =
 also performs the resampling-based bootstrap but
 with the additional features \pkg{fwb} provides (e.g., a progress bar and
 parallelization).
+\subsection{Bias reduction}{
+
+When \code{br = TRUE}, the coefficients maximize the partial likelihood penalized by
+the Jeffreys invariant prior, which is equivalent to solving the bias-reducing
+adjusted score equations of Firth (1993) and removes the first-order term in the
+asymptotic bias of the estimates. The estimates are finite even when the
+likelihood is monotone, i.e., when some maximum partial likelihood estimates are
+infinite, which happens most often in small samples with heavy censoring and
+strongly predictive covariates (Heinze & Schemper, 2001). Without weights,
+estimation should align with that from \pkgfun{coxphf}{coxphf}. The penalized
+likelihood is maximized by Newton-Raphson iterations using the information
+matrix, which converge more slowly than those for the unpenalized likelihood, so
+the maximum number of iterations is 100 rather than 20 unless \code{iter.max} is
+supplied.
+
+As in \code{\link[=multinom_weightit]{multinom_weightit()}} and \code{\link[=ordinal_weightit]{ordinal_weightit()}}, the weights are scaled to
+have a mean of 1 among the units with a nonzero weight before fitting
+(Mukhopadhyay, 2020), which makes the estimates invariant to multiplying the
+weights by a constant, and the reported variance matrix uses the information
+matrix at the estimates, i.e., the adjustment is treated as fixed. M-estimation
+and bootstrapping can be used with \code{br = TRUE} just as they can without it. Note
+that under a monotone likelihood, the distribution of the estimates can be far
+from normal, so Wald confidence intervals can perform poorly (Heinze & Schemper,
+2001); bootstrapping may be preferable in that case.
+}
 }
 \examples{
 # See `vignette("estimating-effects")` for an example
+}
+\references{
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+\emph{Biometrika}, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+
+Heinze, G., & Schemper, M. (2001). A solution to the problem of monotone
+likelihood in Cox regression. \emph{Biometrics}, 57(1), 114–119.
+\doi{10.1111/j.0006-341X.2001.00114.x}
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+hazards regressions for complex surveys. \emph{Survey Methodology}, 46(2), 215–241.
 }
 \seealso{
 \itemize{
 \item \pkgfun{survival}{coxph} for fitting Cox proportional hazards models without adjusting standard errors
 for estimation of the weights.
+\item \pkgfun{coxphf}{coxphf} for fitting bias-reduced Cox proportional hazards models that do not account for estimation of the weights.
 \item \code{\link[=glm_weightit]{glm_weightit()}} for fitting generalized linear models that adjust for estimation of the weights.
 \item \code{\link[=ordinal_weightit]{ordinal_weightit()}} and \code{\link[=multinom_weightit]{multinom_weightit()}} for fitting ordinal and multinomial regression models that adjust for estimation of the weights.
 }

@@ -122,6 +122,111 @@ test_that("weightit object with M-estimation parts defaults to vcov = 'asympt'",
   expect_true(all(diag(vcov(fit_asympt)) <= diag(vcov(fit_hc0))))
 })
 
+# A Cox score depends on every unit's weight through the risk sets, so the
+# analytic cross-derivative with respect to the weighting model's coefficients
+# has to evaluate the score residuals at the weights actually used, not with the
+# estimated weights set to 1. Removing `dw_dBtreat` from the M-estimation parts
+# makes `.compute_vcov()` and `estfun()` differentiate numerically instead, which
+# gives a reference that does not depend on that derivation.
+test_that("M-estimation variance matches numerical differentiation of the estimating equations", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  # Censoring weights are exactly 0 for the censored units
+  set.seed(123L)
+  test_data$C <- rbinom(nrow(test_data), 1L,
+                        prob = plogis(-0.9 + 0.8 * test_data$X1 - 0.5 * test_data$X3))
+
+  data("msmdata", package = "WeightIt", envir = environment())
+  set.seed(4L)
+  msmdata$time <- rexp(nrow(msmdata),
+                       exp(-1 + .3 * msmdata$A_1 + .2 * msmdata$A_3 + .1 * msmdata$X1_2))
+  msmdata$event <- rbinom(nrow(msmdata), 1L, .7)
+
+  # Setting `exact = TRUE` keeps `attr(W, "Mparts")` from partially matching
+  # "Mparts.list" on an object that has only that
+  drop_dw_dBtreat <- function(W) {
+    if (is_not_null(attr(W, "Mparts", exact = TRUE))) {
+      attr(W, "Mparts")[["dw_dBtreat"]] <- NULL
+    }
+    else {
+      attr(W, "Mparts.list") <- lapply(attr(W, "Mparts.list", exact = TRUE), function(m) {
+        m[["dw_dBtreat"]] <- NULL
+        m
+      })
+    }
+
+    W
+  }
+
+  patrick::with_parameters_test_that(
+    "{case}",
+    {
+      W <- do.call(fitter, wargs)
+
+      # These checks target the analytic derivative, so it must be available
+      Mparts.list <- attr(W, "Mparts.list", exact = TRUE) %or%
+        list(attr(W, "Mparts", exact = TRUE))
+      expect_true(all(vapply(Mparts.list, function(m) is_not_null(m[["dw_dBtreat"]]),
+                             logical(1L))))
+
+      W_num <- drop_dw_dBtreat(W)
+
+      fit <- do.call("coxph_weightit", c(cox_args, list(weightit = quote(W))))
+      fit_num <- do.call("coxph_weightit", c(cox_args, list(weightit = quote(W_num))))
+
+      expect_identical(fit$vcov_type, "asympt")
+      expect_identical(coef(fit), coef(fit_num))
+
+      expect_equal(vcov(fit), vcov(fit_num), tolerance = eps)
+
+      # `estfun()` forms the cross-derivative block the same way
+      expect_equal(sandwich::estfun(fit), sandwich::estfun(fit_num), tolerance = eps)
+    },
+    .cases = patrick::cases(
+      list(case = "ATE",
+           fitter = "weightit",
+           wargs = list(quote(A ~ X1 + X2 + X3 + X4), data = quote(test_data),
+                        method = "glm", estimand = "ATE"),
+           cox_args = list(quote(survival::Surv(time, event) ~ A + X1),
+                           data = quote(test_data))),
+      list(case = "ATT with s.weights",
+           fitter = "weightit",
+           wargs = list(quote(A ~ X1 + X2 + X3 + X4), data = quote(test_data),
+                        method = "glm", estimand = "ATT", s.weights = "SW"),
+           cox_args = list(quote(survival::Surv(time, event) ~ A + X1),
+                           data = quote(test_data))),
+      list(case = "by",
+           fitter = "weightit",
+           wargs = list(quote(A ~ X1 + X2 + X3), data = quote(test_data),
+                        method = "glm", by = quote(~X5), s.weights = "SW"),
+           cox_args = list(quote(survival::Surv(time, event) ~ A),
+                           data = quote(test_data))),
+      list(case = "censoring weights",
+           fitter = "weightit",
+           wargs = list(quote(.cens(C) ~ X1 + X3), data = quote(test_data),
+                        method = "glm"),
+           cox_args = list(quote(survival::Surv(time, event) ~ A + X2),
+                           data = quote(test_data))),
+      list(case = "weightitMSM",
+           fitter = "weightitMSM",
+           wargs = list(quote(list(A_1 ~ X1_0 + X2_0,
+                                   A_2 ~ X1_1 + X2_1 + A_1,
+                                   A_3 ~ X1_2 + X2_2 + A_2)),
+                        data = quote(msmdata), method = "glm"),
+           cox_args = list(quote(survival::Surv(time, event) ~ A_1 + A_2 + A_3),
+                           data = quote(msmdata)))
+    )
+  )
+})
+
 test_that("vcov = 'none' produces no variance matrix", {
   skip_on_cran()
   skip_if_not_installed("survival")
@@ -807,4 +912,254 @@ test_that("nobs() counts units, and AIC()/BIC() still use the number of events",
 
   expect_equal(AIC(fit), AIC(ref))
   expect_equal(BIC(fit), BIC(ref))
+})
+
+# ---- Bias reduction (`br = TRUE`) -------------------------------------------
+
+# A covariate whose value at every event time is the largest in the risk set gives
+# a monotone likelihood, under which the maximum likelihood estimate is infinite
+# but the penalized one is finite (Heinze & Schemper, 2001). `sep` is 1 for the
+# events up to the median event time and 0 otherwise, so no unit with `sep = 1`
+# is still at risk after those events.
+.make_monotone_data <- function(data) {
+  data <- data[1:60, ]
+  data$sep <- as.numeric(data$event == 1 &
+                           data$time <= quantile(data$time[data$event == 1], .5))
+  data
+}
+
+test_that("br = TRUE matches coxphf::coxphf() without weights", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+  skip_if_not_installed("coxphf")
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  sep_data <- .make_monotone_data(test_data)
+
+  patrick::with_parameters_test_that(
+    "{case}",
+    {
+      fit <- do.call("coxph_weightit", list(fml, data = dat, br = TRUE, vcov = "const"))
+
+      ref <- do.call(coxphf::coxphf, list(fml, data = dat, pl = FALSE))
+
+      expect_equal(unname(coef(fit)), unname(coef(ref)), tolerance = eps)
+
+      # Both use the information matrix at the penalized estimates
+      expect_equal(unname(vcov(fit)), unname(ref$var), tolerance = eps)
+    },
+    .cases = patrick::cases(
+      list(case = "regular",
+           fml = quote(survival::Surv(time, event) ~ A + X1 + X2),
+           dat = quote(test_data)),
+      list(case = "monotone likelihood",
+           fml = quote(survival::Surv(time, event) ~ A + X1 + sep),
+           dat = quote(sep_data))
+    )
+  )
+
+  # The maximum likelihood estimate diverges for the monotone likelihood case
+  expect_warning({
+    fit_ml <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + sep,
+                             data = sep_data)
+  }, "infinite")
+
+  fit_br <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + sep,
+                           data = sep_data, br = TRUE)
+
+  expect_gt(coef(fit_ml)[["sep"]], 10)
+  expect_lt(coef(fit_br)[["sep"]], 10)
+  expect_true(all(is.finite(sqrt(diag(vcov(fit_br))))))
+})
+
+test_that("br = TRUE works with M-estimation and bootstrapping", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data, method = "glm",
+                estimand = "ATE")
+
+  fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1, data = test_data,
+                        weightit = W, br = TRUE, x = TRUE)
+
+  expect_identical(fit$vcov_type, "asympt")
+  expect_true(fit$br)
+
+  # The adjusted score equations are solved at the estimates
+  psi <- fit$psi(coef(fit), fit$x, fit$y, W$weights * W$s.weights)
+  expect_equal(unname(colSums(psi)), rep.int(0, length(coef(fit))), tolerance = eps)
+
+  # In a sample this large, the adjustment barely moves the estimates or their
+  # standard errors from those of maximum likelihood
+  fit_ml <- coxph_weightit(survival::Surv(time, event) ~ A + X1, data = test_data,
+                           weightit = W)
+
+  expect_not_equal(coef(fit), coef(fit_ml), tolerance = 1e-8)
+  expect_equal(coef(fit), coef(fit_ml), tolerance = 1e-3)
+  expect_equal(vcov(fit), vcov(fit_ml), tolerance = 1e-2)
+
+  expect_not_equal(vcov(fit), vcov(fit, vcov = "HC0"))
+
+  set.seed(123)
+  fit_fwb <- coxph_weightit(survival::Surv(time, event) ~ A + X1, data = test_data,
+                            weightit = W, br = TRUE, vcov = "FWB", R = 10)
+
+  expect_identical(coef(fit_fwb), coef(fit))
+  expect_true(all(is.finite(sqrt(diag(vcov(fit_fwb))))))
+})
+
+# A unit with a weight of 0 contributes nothing to the fit, so it must not count
+# toward the number of units the weights are scaled by, either
+test_that("br = TRUE gives the same fit whether units with a weight of 0 are kept or dropped", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  set.seed(123L)
+  test_data$C <- rbinom(nrow(test_data), 1L,
+                        prob = plogis(-0.9 + 0.8 * test_data$X1 - 0.5 * test_data$X3))
+
+  W <- weightit(.cens(C) ~ X1 + X3, data = test_data, method = "glm")
+
+  keep <- W$weights > 0
+  expect_true(any(!keep))
+
+  W_kept <- as.weightit(W$weights[keep], treat = test_data$A[keep], estimand = "ATE",
+                        s.weights = rep.int(1, sum(keep)))
+
+  fit <- coxph_weightit(survival::Surv(time, event) ~ A + X2, data = test_data,
+                        weightit = W, br = TRUE, vcov = "HC0")
+
+  fit_kept <- coxph_weightit(survival::Surv(time, event) ~ A + X2,
+                             data = test_data[keep, ], weightit = W_kept,
+                             br = TRUE, vcov = "HC0")
+
+  expect_equal(coef(fit), coef(fit_kept), tolerance = eps)
+  expect_equal(vcov(fit), vcov(fit_kept), tolerance = eps)
+})
+
+test_that("br = TRUE handles collinear predictors and models with no covariates", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+  test_data$X1b <- 2 * test_data$X1
+
+  W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data, method = "glm",
+                estimand = "ATE")
+
+  fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1b,
+                        data = test_data, weightit = W, br = TRUE)
+
+  fit_red <- coxph_weightit(survival::Surv(time, event) ~ A + X1,
+                            data = test_data, weightit = W, br = TRUE)
+
+  expect_true(is.na(coef(fit)[["X1b"]]))
+  expect_equal(coef(fit)[c("A", "X1")], coef(fit_red), tolerance = eps)
+  expect_equal(vcov(fit)[c("A", "X1"), c("A", "X1")], vcov(fit_red), tolerance = eps)
+
+  # With no covariates there is nothing to adjust
+  fit_null <- coxph_weightit(survival::Surv(time, event) ~ 1,
+                             data = test_data, weightit = W, br = TRUE)
+
+  expect_length(coef(fit_null), 0L)
+})
+
+test_that("br = TRUE honors iter.max in control", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data <- .censor_Y_S(test_data)
+
+  sep_data <- .make_monotone_data(test_data)
+
+  # Under a monotone likelihood the penalized fit needs more than 2 iterations,
+  # whether `iter.max` is supplied through `...` or abbreviated in `control`
+  expect_warning({
+    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + sep,
+                          data = sep_data, br = TRUE, iter.max = 2)
+  }, "did not converge")
+
+  expect_identical(fit$iter, 2L)
+
+  expect_warning({
+    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + sep,
+                          data = sep_data, br = TRUE, control = list(iter = 2))
+  }, "did not converge")
+
+  expect_identical(fit$iter, 2L)
+
+  # The default allows enough iterations
+  expect_no_warning({
+    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + sep,
+                          data = sep_data, br = TRUE)
+  })
+
+  expect_gt(fit$iter, 2L)
+
+  # Arguments to `coxph.control()` supplied through `...` are also used without bias
+  # reduction; stopping after one iteration leaves the estimates short of the
+  # maximum likelihood estimates
+  fit_ml <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
+                           data = test_data)
+
+  fit_ml1 <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
+                            data = test_data, iter.max = 1)
+
+  expect_not_equal(coef(fit_ml1), coef(fit_ml))
+})
+
+# Only 2 of the control units have an event, so a resample drawing neither has a
+# monotone likelihood and an infinite maximum likelihood estimate, which
+# `coxph()` warns about. The bootstrap refits call the internal fitting function
+# as a function object, which has no name to report, and the warning is the same
+# in every such replicate.
+test_that("warnings from bootstrap replicates are reported once, without an empty function name", {
+  skip_on_cran()
+  skip_if_not_installed("survival")
+
+  set.seed(6)
+  n <- 200
+  X1 <- rnorm(n)
+  X2 <- rnorm(n)
+  A <- rbinom(n, 1, plogis(-.5 + .6 * X1 + .4 * X2))
+  time <- rexp(n, exp(-6.5 + 3 * A + .4 * X1))
+
+  test_data <- data.frame(A, X1, X2,
+                          time = pmin(time, 12),
+                          event = as.numeric(time <= 12))
+
+  expect_identical(sum(test_data$event[test_data$A == 0]), 2)
+
+  W <- weightit(A ~ X1 + X2, data = test_data, method = "glm", estimand = "ATE")
+
+  set.seed(123)
+  w <- capture_warnings({
+    fit <- coxph_weightit(survival::Surv(time, event) ~ A, data = test_data,
+                          weightit = W, vcov = "BS", R = 40)
+  })
+
+  expect_length(w, 1L)
+  expect_match(w, "coefficient may be infinite", fixed = TRUE)
+  expect_match(w, "raised in [0-9]+ bootstrap replicates")
+  expect_no_match(w, "(from", fixed = TRUE)
+  expect_no_match(w, ". .", fixed = TRUE)
 })

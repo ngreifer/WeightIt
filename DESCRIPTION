@@ -40,6 +40,7 @@ Suggests:
     lme4 (>= 1.1-31),
     osqp (>= 1.0.0),
     survival (>= 3.6-2),
+    coxphf,
     fwb (>= 0.2.0),
     splines,
     marginaleffects (>= 0.19.0),

@@ -127,7 +127,7 @@
 #'
 #' For binary treatments, the following additional argument can be specified:
 #' \describe{
-#'   \item{`link`}{the link used in the generalized linear model for the propensity scores. `link` can be any of those allowed by [binomial()] as well as `"loglog"` and `"clog"`. A `br.` prefix can be added (e.g., `"br.logit"`); this changes the fitting method to the bias-corrected generalized linear models implemented in the \CRANpkg{brglm2} package. `link` can also be either `"flic"` or `"flac"` to fit the corresponding Firth corrected logistic regression models implemented in the \CRANpkg{logistf} package; with these, arguments matching those of \pkgfun{logistf}{logistf.control} are passed to the fitting function as `control`, and a `modcontrol` list is passed to its `modcontrol` argument.}
+#'   \item{`link`}{the link used in the generalized linear model for the propensity scores. `link` can be any of those allowed by [binomial()] as well as `"loglog"` and `"clog"`. A `br.` prefix can be added (e.g., `"br.logit"`); this changes the fitting method to the bias-corrected generalized linear models implemented in the \CRANpkg{brglm2} package. `link` can also be either `"flic"` or `"flac"` to fit the corresponding Firth corrected logistic regression models implemented in the \CRANpkg{logistf} package; with these, arguments matching those of \pkgfun{logistf}{logistf.control} are passed to the fitting function as `control`, and a `modcontrol` list is passed to its `modcontrol` argument. With a `br.` prefix, `"flic"`, or `"flac"`, the sampling weights are scaled to have a mean of 1 among the units with a nonzero weight before fitting, so that the estimates do not depend on their scale.}
 #'   \item{`subclass`}{`integer`; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If `NULL`, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See [get_w_from_ps()] for details and references.}
 #' }
 #'
@@ -440,8 +440,10 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
       data <- data.frame(treat, covs)
       formula <- if (ncol(covs) > 0L) formula(data) else treat ~ 1
 
+      #Scaled as for the bias-reduced models, so that the estimates do not depend
+      #on the scale of the sampling weights
       fit <- do.call(fit_fun, list(formula, data = data,
-                                   weights = s.weights,
+                                   weights = .scale_br_weights(s.weights),
                                    control = control,
                                    modcontrol = modcontrol,
                                    pl = FALSE),
@@ -493,7 +495,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
       rlang::check_installed("brglm2")
 
       ctrl_fun <- brglm2::brglmControl
-      glm_method <- brglm2::brglmFit
+      glm_method <- .brglmFit
       family <- binomial(link = link)
     }
     else {

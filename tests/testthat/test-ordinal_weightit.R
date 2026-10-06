@@ -493,41 +493,6 @@ test_that("br = TRUE reproduces the published estimates of Kosmidis (2014)", {
   expect_true(all(abs(coef(fit_br)[-1L]) < abs(coef(fit_ml)[-1L])))
 })
 
-test_that("br = TRUE is invariant to the level of aggregation of the data", {
-  skip_on_cran()
-
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
-
-  #Weights enter the adjustment as multinomial totals, so fitting one row per unit
-  #and fitting one weighted row per (covariate, outcome) combination must agree
-  #(Kosmidis, 2014, Section 4.2)
-  set.seed(3)
-  n <- 120L
-  ind_data <- data.frame(x = sample(c(-1, 0, 1), n, replace = TRUE))
-  eta <- outer(-.8 * ind_data$x, c(-.5, .4, 1.4), "+")
-  P <- cbind(plogis(eta), 1) - cbind(0, plogis(eta))
-  ind_data$y <- factor(apply(P, 1L, function(p) sample(1:4, 1L, prob = p)),
-                       levels = 1:4, ordered = TRUE)
-
-  agg_data <- aggregate(list(n = rep.int(1, n)),
-                        by = list(x = ind_data$x, y = ind_data$y), FUN = sum)
-  agg_data$y <- factor(agg_data$y, levels = levels(ind_data$y), ordered = TRUE)
-
-  W <- as.weightit(as.numeric(agg_data$n), treat = agg_data$x, estimand = "ATE",
-                   s.weights = rep.int(1, nrow(agg_data)))
-
-  expect_no_condition({
-    fit_ind <- ordinal_weightit(y ~ x, data = ind_data, br = TRUE, vcov = "none")
-  })
-
-  expect_no_condition({
-    fit_agg <- ordinal_weightit(y ~ x, data = agg_data, weightit = W, br = TRUE,
-                                vcov = "none")
-  })
-
-  expect_equal(coef(fit_ind), coef(fit_agg), tolerance = eps)
-})
-
 test_that("br = TRUE works with all links, M-estimation, and bootstrapping", {
   skip_on_cran()
 

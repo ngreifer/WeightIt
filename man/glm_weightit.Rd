@@ -23,6 +23,7 @@ glm_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 
@@ -38,6 +39,7 @@ lm_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  weights,
   ...
 )
 }
@@ -55,8 +57,8 @@ a family function or the result of a call to a family function. See
 \link{family} for details of family functions.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
-\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will
-be fit.}
+\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If neither \code{weightit} nor \code{weights} is
+supplied, an unweighted model will be fit.}
 
 \item{vcov}{string; the method used to compute the variance of the estimated
 parameters. Allowable options include \code{"asympt"}, which uses the
@@ -106,7 +108,18 @@ See \code{\link[=model.matrix]{model.matrix()}}.}
 
 \item{br}{\code{logical}; whether to use bias-reduced regression as implemented by
 \pkgfun{brglm2}{brglmFit} (including Firth logistic regression). If \code{TRUE}, arguments passed to \code{control} or
-\dots will be passed to \pkgfun{brglm2}{brglmControl}.}
+\dots will be passed to \pkgfun{brglm2}{brglmControl}. The weights are scaled
+to have a mean of 1 among the units with a nonzero weight before fitting, so
+that the estimates do not depend on the scale of the weights.}
+
+\item{weights}{an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for \code{\link[=glm]{glm()}} (e.g.,
+as the unquoted name of a variable in \code{data}), as a numeric vector, or as a
+string containing the name of a variable in \code{data}. Only one of \code{weights}
+and \code{weightit} can be supplied; a \code{weightit} or \code{weightitMSM} object
+supplied to \code{weights} is treated as though it had been supplied to
+\code{weightit}. When \code{weights} is supplied, the default \code{vcov} is \code{"HC0"}, and
+bootstrapping holds the weights fixed rather than re-estimating them.}
 
 \item{\dots}{arguments to be used to form the default control argument if it
 is not supplied directly.}
@@ -125,7 +138,8 @@ will include two extra columns when \code{weightit} is supplied: \code{(weights)
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and \code{(s.weights)} containing the
 sampling weights, which will all be 1 if \code{s.weights} is not supplied in the
-original \code{weightit()} call.
+original \code{weightit()} call. When \code{weights} is supplied instead, only \code{(weights)}
+is included, containing those weights.
 }
 \description{
 \code{glm_weightit()} is used to fit generalized linear models with a

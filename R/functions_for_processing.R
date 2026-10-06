@@ -2216,13 +2216,30 @@ verbosely <- function(expr, verbose = TRUE) {
   out
 }
 
+# Evaluates `expr`, which runs the replicates of a bootstrap, and raises each
+# distinct warning it produces once afterward (or when it fails), along with the
+# number of times it was raised. A warning raised in many replicates, e.g., about
+# an infinite coefficient, would otherwise be repeated so often that R reports only
+# that there were 50 or more warnings.
 with_delayed_warnings <- function(expr) {
-  rlang::try_fetch({
-    expr
-  },
-  warning = function(w) {
-    rlang::local_options(warn = 0)
-    rlang::warn(conditionMessage(w))
+  msgs <- character(0L)
+
+  on.exit({
+    counts <- table(factor(msgs, levels = unique(msgs)))
+
+    for (m in names(counts)) {
+      if (counts[[m]] == 1L) {
+        rlang::warn(m)
+      }
+      else {
+        rlang::warn(c(m, i = sprintf("This warning was raised in %s bootstrap replicates.",
+                                     counts[[m]])))
+      }
+    }
+  }, add = TRUE)
+
+  withCallingHandlers(expr, warning = function(w) {
+    msgs <<- c(msgs, conditionMessage(w))
     tryInvokeRestart("muffleWarning")
   })
 }
@@ -2468,6 +2485,16 @@ generalized_inverse <- function(sigma, .try = TRUE) {
       V <- fam$variance(p)
 
       X * (weights * d * (y - p) / V)
+    }
+  }
+
+  #A bias-reduced fit is fit with its weights scaled (see `.brglmFit()`), whatever
+  #its `type`, so the weights its estimating functions are given must be, too
+  if (inherits(fit, "brglmFit")) {
+    psi_unscaled <- psi
+
+    psi <- function(B, X, y, weights, offset = 0) {
+      psi_unscaled(B, X, y, .scale_br_weights(weights), offset)
     }
   }
 

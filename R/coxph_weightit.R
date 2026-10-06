@@ -10,6 +10,12 @@
 #' @param formula an object of class [`formula`] (or one that can be coerced to
 #'   that class): a symbolic description of the model to be fitted. Should include a \pkgfun2{survival}{Surv}{Surv} term as the response. See \pkgfun{survival}{coxph} for how this should be specified.
 #' @param control a list of parameters for controlling the fitting process, passed to \pkgfun{survival}{coxph.control}.
+#' @param br `logical`; whether to use bias reduction, i.e., to maximize the
+#'   partial likelihood penalized by the Jeffreys invariant prior as described by
+#'   Heinze and Schemper (2001) rather than the partial likelihood. This yields
+#'   estimates with smaller asymptotic bias that are always finite, even when the
+#'   maximum partial likelihood estimates are not (e.g., under a monotone
+#'   likelihood). Default is `FALSE`. See Details.
 #' @param \dots other arguments passed to \pkgfun{survival}{coxph.control}.
 #'
 #' @returns
@@ -26,7 +32,8 @@
 #' containing the weights used in the model (the product of the estimated
 #' weights and the sampling weights, if any) and `(s.weights)` containing the
 #' sampling weights, which will be 1 if `s.weights` is not supplied in the
-#' original `weightit()` call.
+#' original `weightit()` call. When `weights` is supplied instead, only `(weights)`
+#' is included, containing those weights.
 #'
 #' @details
 #' `coxph_weightit()` is essentially a simplified version of \pkgfun{survival}{coxph} to fit weighted
@@ -69,11 +76,48 @@
 #' with the additional features \pkg{fwb} provides (e.g., a progress bar and
 #' parallelization).
 #'
+#' ## Bias reduction
+#'
+#' When `br = TRUE`, the coefficients maximize the partial likelihood penalized by
+#' the Jeffreys invariant prior, which is equivalent to solving the bias-reducing
+#' adjusted score equations of Firth (1993) and removes the first-order term in the
+#' asymptotic bias of the estimates. The estimates are finite even when the
+#' likelihood is monotone, i.e., when some maximum partial likelihood estimates are
+#' infinite, which happens most often in small samples with heavy censoring and
+#' strongly predictive covariates (Heinze & Schemper, 2001). Without weights,
+#' estimation should align with that from \pkgfun{coxphf}{coxphf}. The penalized
+#' likelihood is maximized by Newton-Raphson iterations using the information
+#' matrix, which converge more slowly than those for the unpenalized likelihood, so
+#' the maximum number of iterations is 100 rather than 20 unless `iter.max` is
+#' supplied.
+#'
+#' As in [multinom_weightit()] and [ordinal_weightit()], the weights are scaled to
+#' have a mean of 1 among the units with a nonzero weight before fitting
+#' (Mukhopadhyay, 2020), which makes the estimates invariant to multiplying the
+#' weights by a constant, and the reported variance matrix uses the information
+#' matrix at the estimates, i.e., the adjustment is treated as fixed. M-estimation
+#' and bootstrapping can be used with `br = TRUE` just as they can without it. Note
+#' that under a monotone likelihood, the distribution of the estimates can be far
+#' from normal, so Wald confidence intervals can perform poorly (Heinze & Schemper,
+#' 2001); bootstrapping may be preferable in that case.
+#'
 #' @seealso
 #' * \pkgfun{survival}{coxph} for fitting Cox proportional hazards models without adjusting standard errors
 #' for estimation of the weights.
+#' * \pkgfun{coxphf}{coxphf} for fitting bias-reduced Cox proportional hazards models that do not account for estimation of the weights.
 #' * [glm_weightit()] for fitting generalized linear models that adjust for estimation of the weights.
 #' * [ordinal_weightit()] and [multinom_weightit()] for fitting ordinal and multinomial regression models that adjust for estimation of the weights.
+#'
+#' @references
+#' Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+#' *Biometrika*, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+#'
+#' Heinze, G., & Schemper, M. (2001). A solution to the problem of monotone
+#' likelihood in Cox regression. *Biometrics*, 57(1), 114–119.
+#' \doi{10.1111/j.0006-341X.2001.00114.x}
+#'
+#' Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+#' hazards regressions for complex surveys. *Survey Methodology*, 46(2), 215–241.
 #'
 #' @examples
 #' # See `vignette("estimating-effects")` for an example
@@ -83,9 +127,21 @@ coxph_weightit <- function(formula, data, weightit = NULL,
                            vcov = NULL, cluster, R = 500L,
                            control = list(...),
                            x = FALSE, y = TRUE,
-                           fwb.args = list(), ...) {
+                           fwb.args = list(), br = FALSE, weights, ...) {
 
   rlang::check_installed("survival")
+
+  model_call <- match.call()
+
+  if (!missing(weights)) {
+    w_out <- .process_weights_arg(substitute(weights), weightit,
+                                  data = if (!missing(data)) data,
+                                  env = .formula_env(formula),
+                                  model_call = model_call)
+
+    weightit <- w_out[["weightit"]]
+    model_call <- w_out[["model_call"]]
+  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args,
                         m_est_supported = TRUE)
@@ -94,20 +150,15 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     cluster <- NULL
   }
 
-  model_call <- match.call()
-
-  if (is_not_null(...get("weights"))) {
-    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
-
-    model_call[["weights"]] <- NULL
-  }
-
   ##
+
+  arg::arg_flag(br)
 
   internal_model_call <- .build_internal_model_call(model = "coxph",
                                                     model_call = model_call,
                                                     weightit = weightit,
-                                                    vcov = vcov)
+                                                    vcov = vcov,
+                                                    br = br)
 
   fit <- .eval_fit(internal_model_call,
                    errors = c("missing values in object" = "missing values are not allowed in the model variables"),
@@ -163,9 +214,13 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
 .coxph_weightit <- function(formula, data, weights, subset, na.action,
                             control = list(), model = TRUE,
-                            x = FALSE, y = TRUE, contrasts = NULL, ...) {
+                            x = FALSE, y = TRUE, contrasts = NULL, br = FALSE, ...) {
 
   rlang::check_installed("survival")
+
+  #`base::missing()` because `rlang::is_missing()` is `FALSE` for an argument whose
+  #default has been evaluated, which `arg::when_not_null()` below does
+  control_missing <- missing(control)
 
   method <- "breslow"
 
@@ -176,6 +231,7 @@ coxph_weightit <- function(formula, data, weightit = NULL,
   arg::arg_flag(model)
   arg::arg_flag(x)
   arg::arg_flag(y)
+  arg::arg_flag(br)
 
   if (...length() > 0L) {
     controlargs <- names(formals(survival::coxph.control))
@@ -189,11 +245,25 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
   arg::when_not_null(control, arg::arg_list)
 
-  if (rlang::is_missing(control)) {
+  #Bias-reduced fits converge more slowly than unpenalized ones (see
+  #`.coxph_firth.fit()`), so they get more iterations unless `iter.max` is set.
+  #Arguments to `coxph.control()` can be abbreviated, so any prefix counts.
+  control_names <- as.character({
+    if (control_missing) ...names()
+    else names(control)
+  })
+
+  iter.max_set <- any(startsWith("iter.max", control_names[nzchar(control_names)]))
+
+  if (control_missing) {
     control <- survival::coxph.control(...)
   }
   else {
     control <- do.call(survival::coxph.control, control)
+  }
+
+  if (br && !iter.max_set) {
+    control$iter.max <- 100L
   }
 
   newform <- .removeDoubleColonSurv(formula)
@@ -291,6 +361,10 @@ coxph_weightit <- function(formula, data, weightit = NULL,
   if (is_not_null(weights)) {
     arg::arg_numeric(weights)
     arg::arg_gte(weights, 0)
+
+    if (br) {
+      weights <- .scale_br_weights(weights)
+    }
   }
 
   #`survival::coxph.fit()` rejects weights of 0, but a unit with a weight of 0
@@ -353,6 +427,11 @@ coxph_weightit <- function(formula, data, weightit = NULL,
            means = Xmeans,
            method = "breslow",
            class = "coxph")
+    }
+    else if (br && ncol(X) > 0L) {
+      .coxph_firth.fit(x = X[pos, , drop = FALSE], y = Y[pos],
+                       offset = offset[pos], weights = weights[pos],
+                       control = control, rownames = row.names(mf)[pos])
     }
     else {
       survival::coxph.fit(x = X[pos, , drop = FALSE], y = Y[pos], strata = NULL,
@@ -419,6 +498,192 @@ coxph_weightit <- function(formula, data, weightit = NULL,
   }
 
   fit$call <- cal
+  fit$br <- br
+
+  fit
+}
+
+# Sums of the rows of `M` over each unit's risk set, i.e., over the units whose
+# time is at least as late. `ranks` are the integer ranks of the times, with tied
+# times sharing a rank.
+.risk_set_sums <- function(M, ranks) {
+  M <- as.matrix(M)
+
+  agg <- rowsum(M, ranks, reorder = TRUE)
+  k <- nrow(agg)
+
+  cum <- apply(agg[k:1L, , drop = FALSE], 2L, cumsum)
+
+  if (!is.matrix(cum)) {
+    cum <- matrix(cum, nrow = k)
+  }
+
+  cum[k:1L, , drop = FALSE][ranks, , drop = FALSE]
+}
+
+# The Breslow log partial likelihood, its score, the information matrix, and
+# Firth's (1993) adjustment to the score at `B`, as used by Heinze and Schemper
+# (2001). The adjustment, half the trace of the inverse information times the
+# derivative of the information with respect to each coefficient, is a sum over
+# the events of the third central moments of the covariates in each risk set,
+# contracted with the inverse information; `adj` splits it among the events, with
+# a row of 0s for every other unit. `pen_loglik` is the log partial likelihood
+# penalized by half the log determinant of the information, whose gradient is the
+# adjusted score, and is `-Inf` where the information cannot be inverted.
+.coxph_firth_parts <- function(B, X, status, weights, offset, ranks) {
+  p <- ncol(X)
+
+  #The largest linear predictor is subtracted to prevent overflow; it cancels out
+  #of every quantity below
+  eta <- drop(X %*% B) + offset
+  eta <- eta - max(eta)
+  r <- weights * exp(eta)
+
+  XX <- X[, rep(seq_len(p), times = p), drop = FALSE] *
+    X[, rep(seq_len(p), each = p), drop = FALSE]
+
+  ev <- which(status > 0 & weights > 0)
+
+  S <- .risk_set_sums(cbind(r, r * X, r * XX), ranks)[ev, , drop = FALSE]
+
+  S0 <- S[, 1L]
+  m <- S[, 1L + seq_len(p), drop = FALSE] / S0
+  E2 <- S[, 1L + p + seq_len(p^2), drop = FALSE] / S0
+
+  d <- weights[ev]
+
+  loglik <- sum(d * (eta[ev] - log(S0)))
+  score <- colSums(d * (X[ev, , drop = FALSE] - m))
+  info <- matrix(colSums(d * E2), p, p) - crossprod(m, d * m)
+
+  A <- try(solve(info), silent = TRUE)
+
+  if (null_or_error(A)) {
+    return(list(loglik = loglik, score = score, info = info,
+                pen_loglik = -Inf))
+  }
+
+  #With q = x'Ax, the contracted third central moment for event i is
+  #E[qx] - mE[q] - 2E[xx']Am + 2m(m'Am), where m is the mean of the covariates in
+  #its risk set and the expectations are over that risk set
+  q <- rowSums((X %*% A) * X)
+  Q <- .risk_set_sums(cbind(r * q, r * q * X), ranks)[ev, , drop = FALSE] / S0
+
+  Am <- m %*% A
+
+  E2Am <- matrix(vapply(seq_len(p), function(j) {
+    rowSums(E2[, (seq_len(p) - 1L) * p + j, drop = FALSE] * Am)
+  }, numeric(length(ev))), nrow = length(ev))
+
+  adj <- matrix(0, nrow = nrow(X), ncol = p)
+  adj[ev, ] <- .5 * d * (Q[, -1L, drop = FALSE] - m * Q[, 1L] - 2 * E2Am +
+                           2 * m * rowSums(Am * m))
+
+  list(loglik = loglik,
+       score = score,
+       info = info,
+       adj = adj,
+       adj_score = score + colSums(adj),
+       pen_loglik = loglik + .5 * as.numeric(determinant(info, logarithm = TRUE)$modulus))
+}
+
+# Fits a Cox model by maximizing the Breslow partial likelihood penalized by the
+# Jeffreys invariant prior (Heinze & Schemper, 2001), returning the same
+# components as `survival::coxph.fit()`. The penalized estimates are found by
+# Newton-Raphson using the information matrix in place of the Hessian of the
+# penalized log-likelihood, which, because the adjustment is evaluated afresh at
+# each step, converges linearly rather than quadratically; the step is halved
+# until the penalized log-likelihood does not decrease. Everything else is then
+# computed by `coxph.fit()` itself, evaluated at those estimates without
+# iterating, so that the residuals, linear predictors, and variance are exactly
+# what an unpenalized fit with the same coefficients would have.
+.coxph_firth.fit <- function(x, y, offset, weights, control, rownames) {
+  if (is_null(weights)) {
+    weights <- rep.int(1, nrow(x))
+  }
+
+  #Columns collinear with each other or with the baseline hazard are dropped, as
+  #`coxph.fit()` drops them
+  aliased <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = TRUE))
+
+  if (all(aliased)) {
+    return(survival::coxph.fit(x = x, y = y, strata = NULL, offset = offset,
+                               init = NULL, control = control, weights = weights,
+                               method = "breslow", rownames = rownames,
+                               nocenter = c(-1, 0, 1)))
+  }
+
+  x_ <- x[, !aliased, drop = FALSE]
+
+  status <- y[, "status"]
+
+  ranks <- rank(y[, "time"]) |>
+    factor() |>
+    unclass()
+
+  parts <- function(B) {
+    .coxph_firth_parts(B, x_, status, weights, offset, ranks)
+  }
+
+  B <- rep.int(0, ncol(x_))
+  pt <- parts(B)
+
+  if (!is.finite(pt[["pen_loglik"]])) {
+    .solve_info(pt[["info"]])
+  }
+
+  loglik0 <- pt[["loglik"]]
+
+  converged <- FALSE
+  iter <- 0L
+
+  for (iter in seq_len(control$iter.max)) {
+    step <- drop(solve(pt[["info"]], pt[["adj_score"]]))
+
+    for (h in 0:30) {
+      pt_new <- parts(B + step)
+
+      if (pt_new[["pen_loglik"]] >= pt[["pen_loglik"]] - 1e-10 * (1 + abs(pt[["pen_loglik"]]))) {
+        break
+      }
+
+      step <- step / 2
+    }
+
+    B <- B + step
+    pt <- pt_new
+
+    if (max(abs(step)) < control$eps) {
+      converged <- TRUE
+      break
+    }
+  }
+
+  if (!converged) {
+    arg::wrn("the penalized partial likelihood did not converge in {control$iter.max} iteration{?s}; estimates should not be trusted. Try increasing {.code iter.max} in {.arg control}")
+  }
+
+  control$iter.max <- 0L
+
+  fit <- survival::coxph.fit(x = x_, y = y, strata = NULL, offset = offset,
+                             init = B, control = control, weights = weights,
+                             method = "breslow", rownames = rownames,
+                             nocenter = c(-1, 0, 1))
+
+  coefs <- setNames(rep.int(NA_real_, ncol(x)), colnames(x))
+  coefs[!aliased] <- fit$coefficients
+
+  V <- sq_matrix(0, n = ncol(x))
+  V[!aliased, !aliased] <- fit$var
+
+  means <- setNames(rep.int(0, ncol(x)), colnames(x))
+  means[!aliased] <- fit$means
+
+  fit$coefficients <- coefs
+  fit$var <- V
+  fit$means <- means
+  fit$loglik[1L] <- loglik0
+  fit$iter <- iter
 
   fit
 }
@@ -440,11 +705,12 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
   #Units with a weight of 0 in the fit are excluded from the estimating equation
   #entirely: their own contribution is 0 and they are absent from every risk set.
-  #The mask must come from the fit's weights rather than from the `weights`
-  #argument because `.compute_vcov()` evaluates `psi` at `weights = s.weights`
-  #(i.e., with the estimated weights set to 1) to form the cross-derivative block,
-  #which would otherwise return those units to the risk sets and perturb the psi
-  #of the units that do contribute.
+  #The mask comes from the fit's weights rather than from the `weights` argument
+  #so that `psi` describes the fitted estimating equation at whatever weights it
+  #is evaluated, e.g., when the weights are perturbed to differentiate with
+  #respect to the coefficients of the weighting model; a unit given a nonzero
+  #weight there would otherwise return to the risk sets and perturb the psi of
+  #the units that do contribute.
   .w <- fit[["weights"]]
 
   pos <- {
@@ -452,8 +718,16 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     else .w > 0
   }
 
+  #For a bias-reduced fit, the weights are scaled as they were for the fit, and
+  #each event's share of the adjustment to the score is added to its contribution
+  br <- isTRUE(fit[["br"]])
+
   psi <- function(B, X, y, weights, offset = 0) {
     weights <- weights * pos
+
+    if (br) {
+      weights <- .scale_br_weights(weights)
+    }
 
     time <- y[, "time"]
     status <- y[, "status"]
@@ -492,7 +766,17 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
     M <- M - p * term1 * X + p * term2
 
-    weights * M
+    if (!br) {
+      return(weights * M)
+    }
+
+    pt <- .coxph_firth_parts(B, X, status, weights, offset, ranks)
+
+    if (is_null(pt[["adj"]])) {
+      .solve_info(pt[["info"]])
+    }
+
+    weights * M + pt[["adj"]]
   }
 }
 

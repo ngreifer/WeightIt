@@ -20,6 +20,7 @@ ordinal_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 }
@@ -34,8 +35,8 @@ environment from which the function is called.}
 \item{link}{a string corresponding to the desired link function. Allowable options include \code{"logit"}, \code{"probit"}, \code{"loglog"}, \code{"cloglog"}, and \code{"cauchit"}. Default is \code{"logit"} for ordinal logistic regression.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
-\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will
-be fit.}
+\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If neither \code{weightit} nor \code{weights} is
+supplied, an unweighted model will be fit.}
 
 \item{vcov}{string; the method used to compute the variance of the estimated
 parameters. Allowable options include \code{"asympt"}, which uses the
@@ -86,6 +87,15 @@ score equations. This yields estimates with smaller asymptotic bias that are
 always finite, even when the maximum likelihood estimates are not (e.g., when
 an end category is unobserved). Default is \code{FALSE}. See Details.}
 
+\item{weights}{an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for \code{\link[=glm]{glm()}} (e.g.,
+as the unquoted name of a variable in \code{data}), as a numeric vector, or as a
+string containing the name of a variable in \code{data}. Only one of \code{weights}
+and \code{weightit} can be supplied; a \code{weightit} or \code{weightitMSM} object
+supplied to \code{weights} is treated as though it had been supplied to
+\code{weightit}. When \code{weights} is supplied, the default \code{vcov} is \code{"HC0"}, and
+bootstrapping holds the weights fixed rather than re-estimating them.}
+
 \item{...}{arguments to be used to form the default control argument if it
 is not supplied directly.}
 }
@@ -103,7 +113,8 @@ will include two extra columns when \code{weightit} is supplied: \code{(weights)
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and \code{(s.weights)} containing the
 sampling weights, which will be 1 if \code{s.weights} is not supplied in the
-original \code{weightit()} call.
+original \code{weightit()} call. When \code{weights} is supplied instead, only \code{(weights)}
+is included, containing those weights.
 }
 \description{
 \code{ordinal_weightit()} fits an ordinal regression model with a
@@ -164,9 +175,11 @@ maximum likelihood estimates. Two components of \code{control} govern this: \cod
 tolerance for the adjusted score relative to the sum of the weights, default
 \code{1e-10}).
 
-Weights are treated as multinomial totals, which makes the estimates invariant
-to whether the data are supplied as individual units or as groups of identical
-units with weights equal to their counts. As for \code{br = TRUE} in
+The weights are scaled to have a mean of 1 among the units with a nonzero
+weight before fitting (Mukhopadhyay, 2020). The adjustment does not grow with
+the weights as the score does, so this makes the estimates invariant to
+multiplying the weights by a constant, as estimates without bias reduction are.
+As for \code{br = TRUE} in
 \code{\link[=glm_weightit]{glm_weightit()}}, the reported variance matrix uses the information matrix at
 the estimates rather than the Jacobian of the adjusted score, i.e., the
 adjustment is treated as fixed; the two differ by a term that vanishes
@@ -219,6 +232,9 @@ Firth, D. (1993). Bias reduction of maximum likelihood estimates.
 Kosmidis, I. (2014). Improved estimation in cumulative link models. \emph{Journal of
 the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1),
 169–196. \doi{10.1111/rssb.12025}
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+hazards regressions for complex surveys. \emph{Survey Methodology}, 46(2), 215–241.
 }
 \seealso{
 \itemize{

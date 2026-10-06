@@ -135,8 +135,9 @@ data. That is, calling \code{update(obj, data = d)} is equivalent to calling
 \code{weightit} object was supplied to the model fitting function. Similarly,
 supplying \code{s.weights} or \code{weights} passes the argument through to
 \code{weightit()} to be refit. When \code{s.weights} or \code{weights} are supplied and no
-\code{weightit} object is present, a fake one containing just the supplied weights
-will be created.
+\code{weightit} object is present, they are supplied to the \code{weights} argument of
+the model fitting function, which treats them as fixed. Supplying \code{weightit}
+replaces any \code{weights} supplied to the original call.
 
 \code{estfun()} extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with \code{bread()}, is used by \code{\link[sandwich:sandwich]{sandwich::sandwich()}} to compute the robust covariance matrix of the estimated coefficients. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vcov()} above for more details.
 }

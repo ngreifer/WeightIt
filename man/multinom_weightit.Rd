@@ -20,6 +20,7 @@ multinom_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  weights,
   ...
 )
 }
@@ -35,8 +36,8 @@ environment from which the function is called.}
 \code{"logit"} is allowed.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
-\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will
-be fit.}
+\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If neither \code{weightit} nor \code{weights} is
+supplied, an unweighted model will be fit.}
 
 \item{vcov}{string; the method used to compute the variance of the estimated
 parameters. Allowable options include \code{"asympt"}, which uses the
@@ -87,6 +88,15 @@ equations. This yields estimates with smaller asymptotic bias that are always
 finite, even when the maximum likelihood estimates are not (e.g., under
 separation). Default is \code{FALSE}. See Details.}
 
+\item{weights}{an optional vector of weights to be used in the fitting
+process, which are treated as fixed. Can be supplied as for \code{\link[=glm]{glm()}} (e.g.,
+as the unquoted name of a variable in \code{data}), as a numeric vector, or as a
+string containing the name of a variable in \code{data}. Only one of \code{weights}
+and \code{weightit} can be supplied; a \code{weightit} or \code{weightitMSM} object
+supplied to \code{weights} is treated as though it had been supplied to
+\code{weightit}. When \code{weights} is supplied, the default \code{vcov} is \code{"HC0"}, and
+bootstrapping holds the weights fixed rather than re-estimating them.}
+
 \item{...}{arguments to be used to form the default control argument if it
 is not supplied directly.}
 }
@@ -104,7 +114,8 @@ will include two extra columns when \code{weightit} is supplied: \code{(weights)
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and \code{(s.weights)} containing the
 sampling weights, which will be 1 if \code{s.weights} is not supplied in the
-original \code{weightit()} call.
+original \code{weightit()} call. When \code{weights} is supplied instead, only \code{(weights)}
+is included, containing those weights.
 }
 \description{
 \code{multinom_weightit()} fits a multinomial logistic regression model with a covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance matrix using the estimating equations for the weighting model and the outcome model when available.
@@ -157,9 +168,12 @@ always finite and correspond to the maximum of a penalized likelihood.
 Estimation should align with that from \pkgfun{brglm2}{brmultinom} with its
 default \code{type = "AS_mean"}.
 
-Weights are treated as multinomial totals, as they are by \pkg{brglm2}, which
-makes the estimates invariant to whether the data are supplied as individual
-units or as groups of identical units with weights equal to their counts. As
+The weights are scaled to have a mean of 1 among the units with a nonzero
+weight before fitting (Mukhopadhyay, 2020). The adjustment does not grow with
+the weights as the score does, so this makes the estimates invariant to
+multiplying the weights by a constant, as estimates without bias reduction are.
+\pkg{brglm2} treats weights as counts instead, so its estimates agree with these
+only when the weights already have a mean of 1. As
 for \code{br = TRUE} in \code{\link[=glm_weightit]{glm_weightit()}}, the reported variance matrix uses the
 information matrix at the estimates rather than the Jacobian of the adjusted
 score, i.e., the adjustment is treated as fixed; the two differ by a term that
@@ -201,6 +215,9 @@ Firth, D. (1993). Bias reduction of maximum likelihood estimates.
 Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via the
 Poisson log-linear model. \emph{Biometrika}, 98(3), 755–759.
 \doi{10.1093/biomet/asr026}
+
+Mukhopadhyay, P. K. (2020). Firth's penalized likelihood for proportional
+hazards regressions for complex surveys. \emph{Survey Methodology}, 46(2), 215–241.
 }
 \seealso{
 \itemize{

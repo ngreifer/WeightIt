@@ -148,6 +148,10 @@
     }, numeric(1L))
   }
 
+  #Fixed weights supplied to `weights` are held fixed in the bootstrap rather than
+  #re-estimated
+  refit_weights <- is_not_null(weightit) && !inherits(weightit, "fake_weightit")
+
   if (vcov == "FWB") {
     R <- .attr(vcov, "R")
     fwb.args <- .attr(vcov, "fwb.args")
@@ -156,7 +160,7 @@
     internal_model_call$y <- FALSE
     internal_model_call$model <- FALSE
 
-    if (is_not_null(weightit)) {
+    if (refit_weights) {
       if (!came_from_weightit(weightit)) {
         arg::err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
@@ -189,7 +193,7 @@
     genv <- environment(fit[["formula"]])
 
     fwbfun <- function(data, w) {
-      if (is_not_null(weightit)) {
+      if (refit_weights) {
         wcall$s.weights <- SW * w
 
         suppressMessages({
@@ -246,7 +250,7 @@
 
     genv <- environment(fit[["formula"]])
 
-    if (is_not_null(weightit)) {
+    if (refit_weights) {
       if (!came_from_weightit(weightit)) {
         arg::err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
@@ -289,7 +293,7 @@
     }
 
     bootfun <- function(data, ind) {
-      if (is_not_null(weightit)) {
+      if (refit_weights) {
         wcall$data <- data[ind, ]
         wcall$s.weights <- SW[ind]
 
@@ -395,10 +399,11 @@
       }
 
       H_out_treat <- {
-        #The shortcut requires the outcome score to be linear in the weights, which
-        #the bias-reducing adjustment is not
+        #The shortcut requires the derivative of the outcome score with respect to
+        #each weight in closed form (see `.dpsi_out_dw()`), which the bias-reducing
+        #adjustment does not have
         if (is_not_null(dw_dBtreat) && !isTRUE(fit[["br"]])) {
-          crossprod(psi_out(bout, 1, Y, Xout, SW, offset),
+          crossprod(.dpsi_out_dw(fit, bout, W, Y, Xout, SW, offset),
                     dw_dBtreat(btreat, Xtreat, A, SW))
         }
         else {
@@ -449,8 +454,9 @@
         }
       }
 
-      #The shortcut requires the outcome score to be linear in the weights, which the
-      #bias-reducing adjustment is not
+      #The shortcut requires the derivative of the outcome score with respect to each
+      #weight in closed form (see `.dpsi_out_dw()`), which the bias-reducing
+      #adjustment does not have
       if (all(lengths(dw_dBtreat.list) > 0L) && !isTRUE(fit[["br"]])) {
         w.list <- c(lapply(seq_along(btreat.list), function(i) {
           wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
@@ -461,7 +467,8 @@
             Reduce("*", w.list[-i])
         }))
 
-        H_out_treat <- crossprod(psi_out(bout, 1, Y, Xout, SW, offset), dw_dBtreat)
+        H_out_treat <- crossprod(.dpsi_out_dw(fit, bout, W, Y, Xout, SW, offset),
+                                 dw_dBtreat)
       }
       else {
         H_out_treat <- .gradient(function(Btreat) {
@@ -500,6 +507,32 @@
   colnames(V) <- rownames(V) <- names(aliased)[!aliased]
 
   .modify_vcov_info(V, vcov_type = vcov, cluster = cluster)
+}
+
+# Derivative of the summed outcome estimating function with respect to each unit's
+# estimated weight (one row per unit), which `.compute_vcov()` and `estfun()`
+# multiply by `dw_dBtreat` to form the cross-derivative block of the M-estimation
+# Jacobian. For most models, a unit's contribution is its weight times a function
+# of its own data alone, so the derivative is that contribution at an estimated
+# weight of 1. Cox score contributions also depend on the other units' weights
+# through the risk sets, and differentiating their sum with respect to one unit's
+# weight gives that unit's score residual at the weights actually used, i.e., its
+# contribution divided by its estimated weight; setting the estimated weights to 1
+# instead would recompute every risk set. Tested on "coxph", not
+# "coxph_weightit", because the class is assigned after `.compute_vcov()` is
+# called from `coxph_weightit()`.
+.dpsi_out_dw <- function(fit, bout, W, Y, Xout, SW, offset) {
+  if (!inherits(fit, "coxph")) {
+    return(fit$psi(bout, Xout, Y, SW, offset = offset))
+  }
+
+  out <- fit$psi(bout, Xout, Y, W * SW, offset = offset) / W
+
+  # A unit with an estimated weight of 0 is excluded from the Cox estimating
+  # equation entirely (see `.get_coxph_psi()`), so it contributes 0 rather than 0/0
+  out[W == 0, ] <- 0
+
+  out
 }
 
 # Makes a phrase from vcov_type to be printed by print() and summary()
@@ -560,7 +593,7 @@
 
   vcov <- arg::match_arg(vcov, allowable_vcov)
 
-  if (is_not_null(weightit) && vcov == "const") {
+  if (is_not_null(weightit) && !inherits(weightit, "fake_weightit") && vcov == "const") {
     arg::wrn('{.code vcov = "{vcov}"} should not be used when {.arg weightit} is supplied; the resulting standard errors are invalid and should not be interpreted')
   }
 
@@ -1017,6 +1050,74 @@
   object
 }
 
+# The environment in which variables not found in `data` are looked up, as in
+# `model.frame()`: that of the formula, or, when the formula has none (e.g., it was
+# supplied as a string), that of the caller of the model fitting function
+.formula_env <- function(formula) {
+  env <- environment(formula)
+
+  if (is.environment(env)) {
+    return(env)
+  }
+
+  parent.frame(2L)
+}
+
+# Processes the `weights` argument of a model fitting function, given as the
+# unevaluated expression. It is evaluated as `glm()` evaluates its `weights`
+# argument, i.e., in `data` and then in `env` (the environment of the formula),
+# and may also be the name of a variable in `data`. A `weightit` or `weightitMSM`
+# object is treated as though it had been supplied to `weightit`, and the stored
+# call is changed to match. Any other weights are fixed, so they are stored as the
+# sampling weights of a placeholder `weightit` object with estimated weights of 1
+# and no M-estimation components, which the variance computations and the
+# bootstrap already treat as fixed. Returns the `weightit` object to use and the
+# call to store.
+.process_weights_arg <- function(weights, weightit, data, env, model_call) {
+  w <- eval(weights, data, env)
+
+  if (is_null(w)) {
+    model_call[["weights"]] <- NULL
+
+    return(list(weightit = weightit, model_call = model_call))
+  }
+
+  if (is_not_null(weightit)) {
+    arg::err("only one of {.arg weights} and {.arg weightit} can be supplied")
+  }
+
+  if (inherits(w, c("weightit", "weightitMSM"))) {
+    model_call[["weightit"]] <- model_call[["weights"]]
+    model_call[["weights"]] <- NULL
+
+    return(list(weightit = w, model_call = model_call))
+  }
+
+  if (rlang::is_string(w)) {
+    if (is_null(data) || !utils::hasName(data, w)) {
+      arg::err("when supplied as a string, {.arg weights} must be the name of a variable in {.arg data}")
+    }
+
+    w <- data[[w]]
+  }
+
+  arg::arg_numeric(w, .arg = "weights")
+  arg::arg_no_NA(w, .arg = "weights")
+  arg::arg_gte(w, 0, .arg = "weights")
+
+  if (is_not_null(data) && length(w) != nrow(data)) {
+    arg::err("{.arg weights} must have the same length as the number of rows in {.arg data}")
+  }
+
+  weightit <- list(s.weights = as.vector(w),
+                   weights = rep_with(1, w),
+                   method = NULL)
+
+  class(weightit) <- c("weightit", "fake_weightit")
+
+  list(weightit = weightit, model_call = model_call)
+}
+
 # Constructs a model call, used in .compute_vcov() to compute variance
 .build_internal_model_call <- function(object = NULL, model = "glm", model_call,
                                        weightit = NULL, vcov = NULL, br = FALSE) {
@@ -1074,7 +1175,8 @@
 
     if (br) {
       rlang::check_installed("brglm2")
-      model_call$method <- quote(brglm2::brglmFit)
+      #The function itself rather than its name, for the same reason as `na.action`
+      model_call$method <- .brglmFit
       ctrl <- brglm2::brglmControl
     }
     else {
@@ -1137,6 +1239,8 @@
     model_call$br <- br
   }
   else if (model == "coxph") {
+    arg::arg_flag(br)
+
     model_call[[1L]] <- .coxph_weightit
     model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(.coxph_weightit),
                                             rlang::fn_fmls_names(survival::coxph.control)))] <- NULL
@@ -1149,6 +1253,7 @@
     model_call$y <- TRUE
     model_call$model <- TRUE
     model_call$na.action <- .na_zero_weight
+    model_call$br <- br
   }
 
   model_call
@@ -1169,7 +1274,12 @@
   }
 
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
-    fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
+    #Weights supplied to `weights` are not sampling weights, though they are stored
+    #as such in the placeholder `weightit` object
+    if (!inherits(weightit, "fake_weightit")) {
+      fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
+    }
+
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
   }
 
@@ -1231,6 +1341,35 @@
   else if (max(abs(colSums(gradient))) > tol * max(1, sum(weights))) {
     arg::wrn("the optimization stopped at a point that does not solve the estimating equations, so the estimates and their standard errors should not be trusted. If {.arg start} was supplied, try omitting it or supplying values closer to 0")
   }
+}
+
+# Scales weights to have a mean of 1 among the units with a nonzero weight, as is
+# done before every bias-reduced fit (Mukhopadhyay, 2020). The score grows with the
+# weights but the bias-reducing adjustment does not, so without this, multiplying
+# the weights by a constant would change the estimates. Units with a weight of 0
+# are left out of the count so that the estimates also don't depend on whether
+# such units are present. Scaling weights that already have a mean of 1 leaves them
+# unchanged, so estimating functions can scale whatever weights they are given.
+.scale_br_weights <- function(weights) {
+  pos <- weights > 0
+
+  if (!any(pos)) {
+    return(weights)
+  }
+
+  weights * (sum(pos) / sum(weights))
+}
+
+# `brglm2::brglmFit()` with the weights scaled by `.scale_br_weights()`, for use as
+# the `method` of `glm()`
+.brglmFit <- function(x, y, weights = NULL, ...) {
+  rlang::check_installed("brglm2")
+
+  if (is_null(weights)) {
+    weights <- rep.int(1, NROW(y))
+  }
+
+  brglm2::brglmFit(x = x, y = y, weights = .scale_br_weights(weights), ...)
 }
 
 # Inverts the expected information matrix used by the bias-reducing adjustment in

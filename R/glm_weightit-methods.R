@@ -88,8 +88,9 @@
 #' `weightit` object was supplied to the model fitting function. Similarly,
 #' supplying `s.weights` or `weights` passes the argument through to
 #' `weightit()` to be refit. When `s.weights` or `weights` are supplied and no
-#' `weightit` object is present, a fake one containing just the supplied weights
-#' will be created.
+#' `weightit` object is present, they are supplied to the `weights` argument of
+#' the model fitting function, which treats them as fixed. Supplying `weightit`
+#' replaces any `weights` supplied to the original call.
 #'
 #' `estfun()` extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with `bread()`, is used by [sandwich::sandwich()] to compute the robust covariance matrix of the estimated coefficients. See [glm_weightit()] and `vcov()` above for more details.
 #'
@@ -701,8 +702,11 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
     }
 
     H_out_treat <- {
-      if (is_not_null(dw_dBtreat)) {
-        crossprod(psi_out(bout, 1, Y, Xout, SW, offset),
+      #The shortcut requires the derivative of the outcome score with respect to
+      #each weight in closed form (see `.dpsi_out_dw()`), which the bias-reducing
+      #adjustment does not have
+      if (is_not_null(dw_dBtreat) && !isTRUE(x[["br"]])) {
+        crossprod(.dpsi_out_dw(x, bout, W, Y, Xout, SW, offset),
                   dw_dBtreat(btreat, Xtreat, A, SW))
       }
       else {
@@ -753,7 +757,10 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
       }
     }
 
-    if (all(lengths(dw_dBtreat.list) > 0L)) {
+    #The shortcut requires the derivative of the outcome score with respect to each
+    #weight in closed form (see `.dpsi_out_dw()`), which the bias-reducing
+    #adjustment does not have
+    if (all(lengths(dw_dBtreat.list) > 0L) && !isTRUE(x[["br"]])) {
       w.list <- c(lapply(seq_along(btreat.list), function(i) {
         wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
       }), list(rep_with(1, A.list[[1L]])))
@@ -763,7 +770,8 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
           Reduce("*", w.list[-i])
       }))
 
-      H_out_treat <- crossprod(psi_out(bout, 1, Y, Xout, SW, offset), dw_dBtreat)
+      H_out_treat <- crossprod(.dpsi_out_dw(x, bout, W, Y, Xout, SW, offset),
+                               dw_dBtreat)
     }
     else {
       H_out_treat <- .gradient(function(Btreat) {
@@ -799,6 +807,8 @@ bread.glm_weightit <- function(x, ...) {
   bout <- x[["coefficients"]]
   aliased <- is.na(bout)
 
+  Y <- x[["y"]] %or% model.response(model.frame(x))
+
   H <- NULL
 
   if (is_not_null(x[["hessian"]])) {
@@ -819,7 +829,6 @@ bread.glm_weightit <- function(x, ...) {
 
   if (is_null(H)) {
     Xout <- x[["x"]] %or% model.matrix(x)
-    Y <- x[["y"]] %or% model.response(model.frame(x))
 
     if (is_not_null(x[["weightit"]])) {
       W <- x[["weightit"]][["weights"]]
@@ -854,7 +863,11 @@ bread.glm_weightit <- function(x, ...) {
     }, .x = bout)
   }
 
-  A1 <- -nobs(x) * .solve_hessian(H)
+  # Scaled by the number of rows `estfun()` returns, which `sandwich::sandwich()`
+  # divides by, rather than by `nobs()`, which omits units with a weight of 0;
+  # those contribute nothing to the Hessian or the meat, so the variance does not
+  # depend on whether they are counted, as long as both parts count them the same
+  A1 <- -NROW(Y) * .solve_hessian(H)
 
   colnames(A1) <- rownames(A1) <- names(aliased)[!aliased]
 
@@ -1035,33 +1048,27 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
         orig_weightit <- wucall
       }
       else if (utils::hasName(extras, "s.weights")) {
-        #Construct a fake weightit object with just the new components
-        data <- {
-          if (utils::hasName(extras, "data")) eval.parent(extras[["data"]])
-          else object[["data"]]
-        }
+        #With no `weightit` object to refit, the new weights are supplied to
+        #`weights`, which treats them as fixed (and `NULL` removes them). This also
+        #replaces a placeholder `weightit` object put in the call by an earlier
+        #version of `update()`.
+        extras["weights"] <- extras["s.weights"]
 
-        s.weights <- eval.parent(extras[["s.weights"]]) |>
-          .process.s.weights(data)
-
-        if (is_not_null(s.weights)) {
-          extras[["weightit"]] <- list(s.weights = s.weights,
-                                       weights = rep_with(1, s.weights),
-                                       method = NULL)
-
-          class(extras[["weightit"]]) <- c("weightit", "fake_weightit")
-
-          orig_weightit <- str2lang("(fake_weightit)")
-        }
-        else if (is_not_null(object[["weightit"]])) {
+        if (utils::hasName(obj_call, "weightit")) {
           obj_call[["weightit"]] <- NULL
-          object[["weightit"]] <- NULL
         }
       }
 
       if (utils::hasName(extras, "s.weights")) {
         extras[["s.weights"]] <- NULL
       }
+    }
+
+    #Only one of `weights` and `weightit` can be supplied, so a new `weightit`
+    #replaces `weights`
+    if (utils::hasName(extras, "weightit") && !utils::hasName(extras, "weights") &&
+        utils::hasName(obj_call, "weights")) {
+      obj_call[["weights"]] <- NULL
     }
 
     existing <- names(extras) %in% names(obj_call)
@@ -1087,7 +1094,8 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
 
   if (is_not_null(object[["weightit"]]) &&
       inherits(object[["weightit"]], "fake_weightit") &&
-      utils::hasName(obj_call, "weightit")) {
+      utils::hasName(obj_call, "weightit") &&
+      !utils::hasName(extras, "weightit")) {
     obj_call[["weightit"]] <- object[["weightit"]]
     orig_weightit <- as.name("<fake_weightit>")
   }

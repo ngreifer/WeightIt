@@ -19,8 +19,16 @@
 #'   a family function or the result of a call to a family function. See
 #'   [family] for details of family functions.
 #' @param weightit a `weightit` or `weightitMSM` object; the output of a call to
-#'   [weightit()] or [weightitMSM()]. If not supplied, an unweighted model will
-#'   be fit.
+#'   [weightit()] or [weightitMSM()]. If neither `weightit` nor `weights` is
+#'   supplied, an unweighted model will be fit.
+#' @param weights an optional vector of weights to be used in the fitting
+#'   process, which are treated as fixed. Can be supplied as for [glm()] (e.g.,
+#'   as the unquoted name of a variable in `data`), as a numeric vector, or as a
+#'   string containing the name of a variable in `data`. Only one of `weights`
+#'   and `weightit` can be supplied; a `weightit` or `weightitMSM` object
+#'   supplied to `weights` is treated as though it had been supplied to
+#'   `weightit`. When `weights` is supplied, the default `vcov` is `"HC0"`, and
+#'   bootstrapping holds the weights fixed rather than re-estimating them.
 #' @param vcov string; the method used to compute the variance of the estimated
 #'   parameters. Allowable options include `"asympt"`, which uses the
 #'   asymptotically correct M-estimation-based method that accounts for
@@ -59,7 +67,9 @@
 #'   \pkgfun{fwb}{fwb} when `vcov = "FWB"`.
 #' @param br `logical`; whether to use bias-reduced regression as implemented by
 #'   \pkgfun{brglm2}{brglmFit} (including Firth logistic regression). If `TRUE`, arguments passed to `control` or
-#'   \dots will be passed to \pkgfun{brglm2}{brglmControl}.
+#'   \dots will be passed to \pkgfun{brglm2}{brglmControl}. The weights are scaled
+#'   to have a mean of 1 among the units with a nonzero weight before fitting, so
+#'   that the estimates do not depend on the scale of the weights.
 #' @param \dots arguments to be used to form the default control argument if it
 #'   is not supplied directly.
 #'
@@ -77,7 +87,8 @@
 #' containing the weights used in the model (the product of the estimated
 #' weights and the sampling weights, if any) and `(s.weights)` containing the
 #' sampling weights, which will all be 1 if `s.weights` is not supplied in the
-#' original `weightit()` call.
+#' original `weightit()` call. When `weights` is supplied instead, only `(weights)`
+#' is included, containing those weights.
 #'
 #' @details
 #' [glm_weightit()] is essentially a wrapper for [glm()] that
@@ -176,20 +187,24 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
                          control = list(...),
                          x = FALSE, y = TRUE,
                          contrasts = NULL, fwb.args = list(),
-                         br = FALSE, ...) {
+                         br = FALSE, weights, ...) {
+
+  model_call <- match.call()
+
+  if (!missing(weights)) {
+    w_out <- .process_weights_arg(substitute(weights), weightit,
+                                  data = if (!missing(data)) data,
+                                  env = .formula_env(formula),
+                                  model_call = model_call)
+
+    weightit <- w_out[["weightit"]]
+    model_call <- w_out[["model_call"]]
+  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
   if (missing(cluster)) {
     cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  if (is_not_null(...get("weights"))) {
-    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
-
-    model_call[["weights"]] <- NULL
   }
 
   if (identical(family, "multinomial")) {
@@ -234,20 +249,24 @@ lm_weightit <- function(formula, data, weightit = NULL,
                         offset,
                         x = FALSE, y = TRUE,
                         contrasts = NULL, fwb.args = list(),
-                        ...) {
+                        weights, ...) {
+
+  model_call <- match.call()
+
+  if (!missing(weights)) {
+    w_out <- .process_weights_arg(substitute(weights), weightit,
+                                  data = if (!missing(data)) data,
+                                  env = .formula_env(formula),
+                                  model_call = model_call)
+
+    weightit <- w_out[["weightit"]]
+    model_call <- w_out[["model_call"]]
+  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
   if (missing(cluster)) {
     cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  if (is_not_null(...get("weights"))) {
-    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
-
-    model_call[["weights"]] <- NULL
   }
 
   ###
