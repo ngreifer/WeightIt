@@ -1,7 +1,7 @@
 ## To Do
 * Create function for estimating treatment effects to remove marginaleffects as dependency (possibly in a new package)
 * Implement RieszBoost for GBM weighting
-* Drop `"cobalt.treat"` from `.treat_classes` in `R/treat.R`, once *cobalt* registers its `[` method on `treat` rather than on `cobalt.treat`. It is on `cobalt.treat` only because *WeightIt* 2.0.0 registered a competing `[.treat`; *cobalt* cannot move it while that version is the one on CRAN. See `cobalt/_dev/cens-transition.md`.
+* Drop `"cobalt.treat"` from `.treat_classes` in `R/treat.R` and require that version in `Imports:`, once the *cobalt* that registers `[` on `treat` is **on CRAN**. That registration is in *cobalt* 5.0.0.9000 but not in 5.0.0, and against 5.0.0 a treatment classed only `treat` finds no `[` method at all and loses every attribute on the first subset, so this is blocked on the release rather than on the commit. *cobalt* drops its own `cobalt.treat` alias a release after that. See `cobalt/_dev/cens-transition.md` for the ordering and why the alias cannot go first.
 
 ## Larger future directions
 

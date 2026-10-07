@@ -5,11 +5,13 @@
 #subsetting: cobalt registers it and WeightIt does not, so there is one method for one
 #class and no chance of the two packages overwriting each other's.
 #
-#`cobalt.treat` is the class the method is currently registered on, and `treat` is the
-#shared contract. Both are set, so the object is indistinguishable from one cobalt
-#processed itself and dispatch finds the method whichever of the two names cobalt
-#registers it under. It goes first because a multi-category treatment is a factor
-#underneath, and `[.factor` would otherwise win and drop every attribute.
+#`treat` is the shared contract and `cobalt.treat` a transitional alias, which cobalt
+#introduced because WeightIt 2.0.0 registered a competing `[.treat`. Both are set, so the
+#object is indistinguishable from one cobalt processed itself and dispatch finds the
+#method under whichever name a given cobalt registers it: 5.0.0 has only the alias, later
+#versions have both. The alias can go once a cobalt registering `[.treat` is the minimum
+#in `Imports:`. It goes first because a multi-category treatment is a factor underneath,
+#and `[.factor` would otherwise win and drop every attribute.
 .treat_classes <- c("cobalt.treat", "treat")
 
 .set_treat_class <- function(x) {
