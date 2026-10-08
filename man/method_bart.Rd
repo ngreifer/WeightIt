@@ -254,4 +254,6 @@ more generally.
 
 \code{\link{method_super}} for stacking predictions from several machine learning
 methods, including BART.
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

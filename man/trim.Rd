@@ -122,4 +122,6 @@ Thoemmes, F., & Ong, A. D. (2016). A Primer on Inverse Probability of Treatment 
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
+
+\code{vignette("weighting-methods")} for how trimming relates to other ways of trading balance for precision.
 }

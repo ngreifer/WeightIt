@@ -44,4 +44,7 @@ known data-generating mechanism, consider using the \pkg{simcausal} package.
 data("msmdata")
 
 }
+\seealso{
+\code{\link[=weightitMSM]{weightitMSM()}}; \code{vignette("longitudinal-treatments")} for an analysis of this dataset.
+}
 \keyword{datasets}

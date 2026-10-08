@@ -187,6 +187,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' ## Binary treatments
 #'

@@ -134,4 +134,6 @@ political advertisements. \emph{The Annals of Applied Statistics}, 12(1), 156–
 \code{\link{method_optweight}}, which can also be used to perform npCBPS by setting \code{norm = "log"}. In general, this \code{"optweight"} implementation is more stable and flexible.
 
 \pkgfun{CBPS}{npCBPS} for the fitting function
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

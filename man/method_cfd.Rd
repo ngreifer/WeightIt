@@ -202,4 +202,6 @@ Santra, D., Chen, G., & Park, C. (2026). Distributional Balancing for Causal Inf
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

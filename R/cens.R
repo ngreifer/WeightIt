@@ -74,6 +74,8 @@
 #' @seealso
 #' [weightit()] and [weightitMSM()] for estimating censoring weights; [`.weightit_methods`] for which methods support them; [cobalt::.cens()] for the function itself and `cobalt::class-bal.tab.cens` for the balance output.
 #'
+#' `vignette("longitudinal-treatments")` for a worked example of censoring weights in a longitudinal analysis.
+#'
 #' @examples
 #' data("msmdata")
 #'

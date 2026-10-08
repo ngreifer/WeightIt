@@ -58,6 +58,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
+#' `vignette("weighting-methods")` for how trimming relates to other ways of trading balance for precision.
+#'
 #' @references
 #' Cole, S. R., & Hernán, M. Á. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 #'

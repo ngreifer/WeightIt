@@ -99,7 +99,7 @@
 #' into separate procedures for each time period based on the formulas provided.
 #' For each formula, `weightitMSM()` simply applies `weightit()` to that formula,
 #' collects the weights for each time period, and multiplies them together to
-#' arrive at longitudinal balancing weights.
+#' arrive at longitudinal balancing weights. See `vignette("longitudinal-treatments")` for an explanation of the estimand and assumptions involved and a worked example, including censoring weights.
 #'
 #' Each formula should contain all the covariates to be balanced on. For
 #' example, the formula corresponding to the second time period should contain
@@ -164,6 +164,8 @@
 #' [weightit()] for information on the allowable methods
 #'
 #' [summary.weightitMSM()] for summarizing the weights
+#'
+#' `vignette("longitudinal-treatments")` for a guide to weighting for longitudinal treatments, including censoring weights; `vignette("weighting-methods")` for descriptions of the weighting methods
 #'
 #' @references
 #' Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}

@@ -191,6 +191,8 @@
 #' [`method_super`] for stacking predictions from several machine learning
 #' methods, including BART.
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With
 #' Propensity Score Strategies in a High-Dimensional Setting and a Potential

@@ -100,4 +100,6 @@ all.equal(get_w_from_ps(Wc$ps, treat = C),
 }
 \seealso{
 \code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for estimating censoring weights; \code{\link{.weightit_methods}} for which methods support them; \code{\link[cobalt:.cens]{cobalt::.cens()}} for the function itself and \code{cobalt::class-bal.tab.cens} for the balance output.
+
+\code{vignette("longitudinal-treatments")} for a worked example of censoring weights in a longitudinal analysis.
 }

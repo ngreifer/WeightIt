@@ -216,6 +216,8 @@
 #'
 #' \pkgfun{gbm}{gbm.fit} for the fitting function.
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' ## Binary treatments
 #'

@@ -30,7 +30,7 @@
 #' A named list with one component per weighting method, named for the method's canonical name (the value accepted by `method`). Each component is itself a named list of the components described in Details.
 #'
 #' @seealso
-#' [weightit()] and [weightitMSM()] for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used.
+#' [weightit()] and [weightitMSM()] for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used, and `vignette("weighting-methods")` for descriptions of the methods and guidance on choosing among them.
 #'
 #' @examples
 #' # Get all acceptable names

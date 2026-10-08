@@ -329,4 +329,6 @@ joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 10690
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, \code{\link[=get_w_from_ps]{get_w_from_ps()}}
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

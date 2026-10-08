@@ -3,6 +3,10 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* Added a new vignette, `vignette("weighting-methods")`, which describes the weighting methods available in *WeightIt* and offers guidance on choosing among them.
+
+* Added a new vignette, `vignette("longitudinal-treatments")`, which explains the estimand and assumptions for longitudinal treatments and demonstrates estimating weights with `weightitMSM()`, assessing balance, estimating effects with a marginal structural model, and accounting for loss to follow-up with censoring weights.
+
 * `coxph_weightit()` gains a `br` argument, which, when set to `TRUE`, maximizes the partial likelihood penalized by the Jeffreys invariant prior as described by Heinze and Schemper (2001). This yields estimates with smaller asymptotic bias that are finite even when the likelihood is monotone and composes with M-estimation, cluster-robust standard errors, and bootstrapping. Without weights, estimates match those from `coxphf::coxphf()`.
 
 * `glm_weightit()`, `lm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` gain a `weights` argument for supplying fixed weights, which works like the `weights` argument of `glm()`. This makes it easier to use these functions outside of weighting for covariate balance (e.g., for bias reduction or robust and bootstrap standard errors) without constructing a `weightit` object. Only one of `weights` and `weightit` can be supplied, and a `weightit` object supplied to `weights` is treated as though it had been supplied to `weightit`. Previously, `weights` was ignored with a warning.
@@ -478,7 +482,7 @@ Several new features have been added, described in more detail below. In particu
 
 # `WeightIt` 0.14.0
 
-* Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2023)](https://doi.org/10.1080/01621459.2023.2213485). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
+* Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2024)](https://doi.org/10.1080/01621459.2023.2213485). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
 
 * Added a new vignette on estimating effects after weighting, accessible using `vignette("estimating-effects", package = "WeightIt")`. The new workflow relies on the `marginaleffects` package. The main vignette (`vignette("WeightIt")`) has been modernized as well.
 

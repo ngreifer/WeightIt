@@ -328,4 +328,6 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 
 \pkgfun{gbm}{gbm.fit} for the fitting function.
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

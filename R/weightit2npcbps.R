@@ -92,6 +92,8 @@
 #'
 #' \pkgfun{CBPS}{npCBPS} for the fitting function
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing
 #' propensity score for a continuous treatment: Application to the efficacy of

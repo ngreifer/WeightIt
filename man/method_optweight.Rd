@@ -205,4 +205,6 @@ Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments
 \code{\link{method_ebal}} for entropy balancing, which is a special case of stable balancing weights.
 
 \code{\link{method_npcbps}} for npCBPS weighting, which is also a special case of stable balancing weights.
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

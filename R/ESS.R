@@ -15,6 +15,8 @@
 #'
 #' @seealso [summary.weightit()]
 #'
+#' `vignette("weighting-methods")` for the role of the effective sample size in choosing a weighting specification.
+#'
 #' @references
 #' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004).
 #' Propensity Score Estimation With Boosted Regression for Evaluating Causal

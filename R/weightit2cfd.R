@@ -153,6 +153,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' Santra, D., Chen, G., & Park, C. (2026). Distributional Balancing for Causal Inference: A Unified Framework via Characteristic Function Distance (arXiv:2601.15449). arXiv. \doi{10.48550/arXiv.2601.15449}
 #'

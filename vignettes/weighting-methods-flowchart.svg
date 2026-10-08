@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 790 720" width="790" height="720" role="img" aria-labelledby="fc-title fc-desc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#212529">
+  <title id="fc-title">Choosing a weighting method by assessing balance and effective sample size</title>
+  <desc id="fc-desc">Choose the estimand and identify the treatment type, then estimate weights with a simple method such as method = "glm". Assess balance with cobalt::bal.tab(). If balance is inadequate, target balance more directly by adding moments or interactions, using ebal, ipt, or cbps for exact mean balance, energy or cfd for the whole covariate distribution, or gbm, bart, or super for a flexible propensity score, and reassess balance. If balance is adequate, check the effective sample size with summary(). If the ESS is unacceptable, reduce the variability of the weights by allowing approximate balance with tols, penalizing large weights with lambda or trim(), using optweight to maximize the ESS directly, or changing the estimand, and reassess balance. Once balance and ESS are acceptable, settle on the specification and estimate the effect.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6c757d"/>
+    </marker>
+  </defs>
+
+  <!-- Main column boxes -->
+  <rect x="120" y="20" width="360" height="50" rx="6" fill="#eef2f5" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="40" text-anchor="middle">Choose the estimand and</text>
+  <text x="300" y="58" text-anchor="middle">identify the treatment type</text>
+
+  <line x1="300" y1="70" x2="300" y2="108" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="120" y="110" width="360" height="50" rx="6" fill="#eef2f5" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="130" text-anchor="middle">Estimate weights with a simple method</text>
+  <text x="300" y="148" text-anchor="middle">(e.g., <tspan font-family="Menlo, Consolas, monospace" font-size="12">method = "glm"</tspan>)</text>
+
+  <line x1="300" y1="160" x2="300" y2="198" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="120" y="200" width="360" height="50" rx="6" fill="#eef2f5" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="230" text-anchor="middle">Assess balance with <tspan font-family="Menlo, Consolas, monospace" font-size="12">cobalt::bal.tab()</tspan></text>
+
+  <line x1="300" y1="250" x2="300" y2="288" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision 1 -->
+  <polygon points="300,290 400,335 300,380 200,335" fill="#e7f0e9" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="340" text-anchor="middle">Balance adequate?</text>
+
+  <!-- No branch 1 -->
+  <line x1="400" y1="335" x2="518" y2="335" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="458" y="328" text-anchor="middle" font-size="12" fill="#6c757d">No</text>
+
+  <rect x="520" y="265" width="220" height="140" rx="6" fill="#fff7e6" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="530" y="285" font-size="12">Target balance more directly:</text>
+  <text x="530" y="302" font-size="12">• add <tspan font-family="Menlo, Consolas, monospace" font-size="11">moments</tspan> or <tspan font-family="Menlo, Consolas, monospace" font-size="11">int</tspan></text>
+  <text x="530" y="319" font-size="12">• <tspan font-family="Menlo, Consolas, monospace" font-size="11">"ebal"</tspan>, <tspan font-family="Menlo, Consolas, monospace" font-size="11">"ipt"</tspan>, or <tspan font-family="Menlo, Consolas, monospace" font-size="11">"cbps"</tspan> for</text>
+  <text x="530" y="336" font-size="12">   exact mean balance</text>
+  <text x="530" y="353" font-size="12">• <tspan font-family="Menlo, Consolas, monospace" font-size="11">"energy"</tspan> or <tspan font-family="Menlo, Consolas, monospace" font-size="11">"cfd"</tspan> for the</text>
+  <text x="530" y="370" font-size="12">   whole covariate distribution</text>
+  <text x="530" y="387" font-size="12">• <tspan font-family="Menlo, Consolas, monospace" font-size="11">"gbm"</tspan>, <tspan font-family="Menlo, Consolas, monospace" font-size="11">"bart"</tspan>, or <tspan font-family="Menlo, Consolas, monospace" font-size="11">"super"</tspan> for</text>
+  <text x="530" y="404" font-size="12" dy="-1">   a flexible propensity score</text>
+
+  <!-- Loop 1 back to balance assessment -->
+  <path d="M 630 265 V 213 H 482" fill="none" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Yes branch 1 -->
+  <line x1="300" y1="380" x2="300" y2="418" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="312" y="404" font-size="12" fill="#6c757d">Yes</text>
+
+  <rect x="120" y="420" width="360" height="50" rx="6" fill="#eef2f5" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="440" text-anchor="middle">Check the effective sample size (ESS)</text>
+  <text x="300" y="458" text-anchor="middle">with <tspan font-family="Menlo, Consolas, monospace" font-size="12">summary()</tspan></text>
+
+  <line x1="300" y1="470" x2="300" y2="508" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision 2 -->
+  <polygon points="300,510 400,555 300,600 200,555" fill="#e7f0e9" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="560" text-anchor="middle">ESS acceptable?</text>
+
+  <!-- No branch 2 -->
+  <line x1="400" y1="555" x2="518" y2="555" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="458" y="548" text-anchor="middle" font-size="12" fill="#6c757d">No</text>
+
+  <rect x="520" y="480" width="220" height="150" rx="6" fill="#fff7e6" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="530" y="500" font-size="12">Reduce the variability of</text>
+  <text x="530" y="517" font-size="12">the weights:</text>
+  <text x="530" y="534" font-size="12">• allow approximate balance</text>
+  <text x="530" y="551" font-size="12">   with <tspan font-family="Menlo, Consolas, monospace" font-size="11">tols</tspan></text>
+  <text x="530" y="568" font-size="12">• penalize large weights with</text>
+  <text x="530" y="585" font-size="12">   <tspan font-family="Menlo, Consolas, monospace" font-size="11">lambda</tspan> or <tspan font-family="Menlo, Consolas, monospace" font-size="11">trim()</tspan></text>
+  <text x="530" y="602" font-size="12">• <tspan font-family="Menlo, Consolas, monospace" font-size="11">"optweight"</tspan> to maximize the ESS</text>
+  <text x="530" y="619" font-size="12">• change the estimand (e.g., ATO)</text>
+
+  <!-- Loop 2 back to balance assessment -->
+  <path d="M 740 555 H 765 V 237 H 482" fill="none" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Yes branch 2 -->
+  <line x1="300" y1="600" x2="300" y2="638" stroke="#6c757d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="312" y="624" font-size="12" fill="#6c757d">Yes</text>
+
+  <rect x="120" y="640" width="360" height="60" rx="6" fill="#eef2f5" stroke="#6c757d" stroke-width="1.5"/>
+  <text x="300" y="663" text-anchor="middle">Settle on the specification and estimate</text>
+  <text x="300" y="682" text-anchor="middle">the effect (see <tspan font-family="Menlo, Consolas, monospace" font-size="12">vignette("estimating-effects")</tspan>)</text>
+</svg>

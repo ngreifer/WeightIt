@@ -282,4 +282,6 @@ Some of the code was inspired by the source code of the \pkg{CBPS} package.
 
 \link{method_ebal} and \link{method_ipt} for entropy balancing and inverse probability
 tilting, which work similarly.
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

@@ -25,7 +25,7 @@ set.seed(1000)
 
 ## Introduction
 
-*WeightIt* contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see @austinIntroductionPropensityScore2011, @austinMovingBestPractice2015, @robinsMarginalStructuralModels2000, or @thoemmesPrimerInverseProbability2016.
+*WeightIt* contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see @austinIntroductionPropensityScore2011, @austinMovingBestPractice2015, @robinsMarginalStructuralModels2000, or @thoemmesPrimerInverseProbability2016. For descriptions of the weighting methods available in *WeightIt* and guidance on choosing among them, see `vignette("weighting-methods")`.
 
 Typically, the analysis of an observational study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. In addition, we will demonstrate the use of *WeightIt* to estimate censoring weights in the case of informative censoring. This is not meant to be a definitive guide, but rather an introduction to the relevant issues and demonstration of *WeightIt*'s capabilities.
 
@@ -76,7 +76,7 @@ bal.tab(W.out, stats = c("m", "v"),
         thresholds = c(m = .05))
 ```
 
-For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the negative entropy (a measure of dispersion) of the weights.
+For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the negative entropy (a measure of dispersion) of the weights. The other weighting methods are described in `vignette("weighting-methods")`.
 
 ```{r}
 W.out <- weightit(treat ~ age + educ + race + married + nodegree +
@@ -116,7 +116,7 @@ Our confidence interval for `treat` contains 0, so there isn't evidence that `tr
 
 ## Balancing Weights for a Longitudinal Treatment
 
-*WeightIt* can estimate weights for marginal structural models with longitudinal treatments as well. This time, we'll use the sample data set `msmdata` to estimate our weights. Data must be in "wide" format, with one row per unit.
+*WeightIt* can estimate weights for marginal structural models with longitudinal treatments as well. This time, we'll use the sample data set `msmdata` to estimate our weights. Data must be in "wide" format, with one row per unit. For an explanation of the estimand and assumptions involved and a fuller analysis, see `vignette("longitudinal-treatments")`.
 
 ```{r}
 data("msmdata")
@@ -247,6 +247,6 @@ fitc <- glm_weightit(Y_B ~ A_1 + A_2 + A_3,
 summary(fitc)
 ```
 
-Balance for a censoring model is assessed against the full at-risk sample rather than against another treatment group, and `bal.tab()` does this directly for an object like `Wc`. See `?.cens` for more.
+Balance for a censoring model is assessed against the full at-risk sample rather than against another treatment group, and `bal.tab()` does this directly for an object like `Wc`. See `?.cens` and `vignette("longitudinal-treatments")` for more.
 
 ## References

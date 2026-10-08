@@ -132,6 +132,8 @@
 #'
 #' [`method_npcbps`] for npCBPS weighting, which is also a special case of stable balancing weights.
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' ## Binary treatments
 #'

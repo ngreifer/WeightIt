@@ -57,5 +57,5 @@ supp <- sapply(.weightit_methods, `[[`, "ps")
 names(.weightit_methods)[supp]
 }
 \seealso{
-\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used.
+\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used, and \code{vignette("weighting-methods")} for descriptions of the methods and guidance on choosing among them.
 }

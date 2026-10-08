@@ -32,6 +32,7 @@
 #' \item{`A_3`}{a binary indicator of treatment status at the third time point}
 #' \item{`Y_B`}{a binary indicator of the outcome event (e.g., death)}
 #' }
+#' @seealso [weightitMSM()]; `vignette("longitudinal-treatments")` for an analysis of this dataset.
 #' @keywords datasets
 #' @examples
 #'

@@ -46,4 +46,6 @@ observational studies of point exposure effects. \emph{Biometrics}, biom.13405.
 }
 \seealso{
 \code{\link[=summary.weightit]{summary.weightit()}}
+
+\code{vignette("weighting-methods")} for the role of the effective sample size in choosing a weighting specification.
 }

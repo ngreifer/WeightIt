@@ -116,6 +116,8 @@
 #'
 #' @seealso [`method_glm`]
 #'
+#' `vignette("weighting-methods")` for a discussion of the estimands and the target populations they correspond to.
+#'
 #' @references
 #' ## Binary treatments
 #'

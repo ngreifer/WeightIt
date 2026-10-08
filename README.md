@@ -23,7 +23,13 @@ unified interface to basic and advanced weighting methods.
 
 For a complete vignette, see the
 [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
-for *WeightIt* or `vignette("WeightIt")`.
+for *WeightIt* or `vignette("WeightIt")`. Other vignettes describe the
+weighting methods and how to choose among them
+(`vignette("weighting-methods")`), how to estimate effects after
+weighting (`vignette("estimating-effects")`), how to weight for
+longitudinal treatments with censoring
+(`vignette("longitudinal-treatments")`), and how to install the packages
+some methods require (`vignette("installing-packages")`).
 
 To install and load *WeightIt*, use the code below:
 
@@ -153,7 +159,8 @@ The table below contains the available methods in *WeightIt* for
 estimating weights, and which treatment types each supports. Some of
 these methods require installing other packages to use; see
 `vignette("installing-packages")` for information on how to install
-them.
+them, and `vignette("weighting-methods")` for descriptions of the
+methods and guidance on choosing among them.
 
 | Method | `method` | Binary | Multi-category | Continuous | Censoring |
 |:---|:--:|:--:|:--:|:--:|:--:|
@@ -177,10 +184,12 @@ In addition, *WeightIt* implements the subgroup balancing propensity
 score using the function `sbps()`. Inverse probability of censoring
 weights, which account for units dropping out before the outcome is
 measured, are requested by wrapping a censoring indicator in `.cens()`
-on the left side of a model formula. Several other tools and utilities
-are available, including `trim()` to trim or truncate weights,
-`calibrate()` to calibrate propensity scores, and `get_w_from_ps()` to
-compute weights from propensity scores.
+on the left side of a model formula. Weights for longitudinal treatments
+are estimated with `weightitMSM()`; see
+`vignette("longitudinal-treatments")` for a guide. Several other tools
+and utilities are available, including `trim()` to trim or truncate
+weights, `calibrate()` to calibrate propensity scores, and
+`get_w_from_ps()` to compute weights from propensity scores.
 
 *WeightIt* provides functions to fit weighted models that account for
 the uncertainty in estimating the weights. These include

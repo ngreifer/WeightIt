@@ -41,3 +41,12 @@ reference:
 - title: Datasets
 - contents: msmdata
 
+
+articles:
+- title: ~
+  navbar: ~
+  contents:
+  - weighting-methods
+  - estimating-effects
+  - longitudinal-treatments
+  - installing-packages

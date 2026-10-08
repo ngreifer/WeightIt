@@ -158,7 +158,7 @@ In general, \code{weightitMSM()} works by separating the estimation of weights
 into separate procedures for each time period based on the formulas provided.
 For each formula, \code{weightitMSM()} simply applies \code{weightit()} to that formula,
 collects the weights for each time period, and multiplies them together to
-arrive at longitudinal balancing weights.
+arrive at longitudinal balancing weights. See \code{vignette("longitudinal-treatments")} for an explanation of the estimand and assumptions involved and a worked example, including censoring weights.
 
 Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should contain
@@ -264,4 +264,6 @@ Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights f
 \code{\link[=weightit]{weightit()}} for information on the allowable methods
 
 \code{\link[=summary.weightitMSM]{summary.weightitMSM()}} for summarizing the weights
+
+\code{vignette("longitudinal-treatments")} for a guide to weighting for longitudinal treatments, including censoring weights; \code{vignette("weighting-methods")} for descriptions of the weighting methods
 }

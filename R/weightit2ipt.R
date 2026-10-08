@@ -107,6 +107,8 @@
 #' [method_ebal] and [method_cbps] for entropy balancing and CBPS, which work
 #' similarly.
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' ## `estimand = "ATE"`
 #'

@@ -121,6 +121,8 @@
 #' [method_ipt] and [method_cbps] for inverse probability tilting and CBPS,
 #' which work similarly. [method_optweight] for another implementation of entropy balancing (by setting `norm = "entropy"`).
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #'
 #' ## Binary Treatments

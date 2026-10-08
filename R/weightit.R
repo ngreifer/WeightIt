@@ -138,6 +138,8 @@
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
+#' See `vignette("weighting-methods")` for a description of each method, the estimands they support, and guidance on choosing among them.
+#'
 #' ## Empty model formulas
 #'
 #' The right hand side of `formula` may be empty, as in `A ~ 1`, requesting a
@@ -240,6 +242,12 @@
 #' are known. In general, `weightit()` should be used.
 #'
 #' [summary.weightit()] for summarizing the distribution of the weights.
+#'
+#' - `vignette("WeightIt")` for an introduction to weighting with \pkg{WeightIt}
+#' - `vignette("weighting-methods")` for descriptions of the weighting methods and estimands available and guidance on choosing among them
+#' - `vignette("estimating-effects")` for instructions on how to estimate treatment effects after weighting
+#' - `vignette("longitudinal-treatments")` for a guide to weighting for longitudinal treatments, including censoring weights
+#' - `vignette("installing-packages")` for instructions on installing the packages some methods require
 #'
 #' @examples
 #' library("cobalt")

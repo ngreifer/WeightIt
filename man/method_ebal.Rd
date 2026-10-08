@@ -201,4 +201,6 @@ Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., Robbins, M. W., &
 
 \link{method_ipt} and \link{method_cbps} for inverse probability tilting and CBPS,
 which work similarly. \link{method_optweight} for another implementation of entropy balancing (by setting \code{norm = "entropy"}).
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

@@ -262,4 +262,6 @@ nonexperimental data. \emph{Psychological Methods}, 17(1), 44–60.
 }
 \seealso{
 \code{\link{method_glm}}
+
+\code{vignette("weighting-methods")} for a discussion of the estimands and the target populations they correspond to.
 }

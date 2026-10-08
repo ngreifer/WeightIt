@@ -172,6 +172,8 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
 
 \code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
 for instructions and examples. Setting \code{method = NULL} computes unit weights.
+
+See \code{vignette("weighting-methods")} for a description of each method, the estimands they support, and guidance on choosing among them.
 \subsection{Empty model formulas}{
 
 The right hand side of \code{formula} may be empty, as in \code{A ~ 1}, requesting a
@@ -304,4 +306,11 @@ be useful for speeding up simulation studies for which the correct arguments
 are known. In general, \code{weightit()} should be used.
 
 \code{\link[=summary.weightit]{summary.weightit()}} for summarizing the distribution of the weights.
+\itemize{
+\item \code{vignette("WeightIt")} for an introduction to weighting with \pkg{WeightIt}
+\item \code{vignette("weighting-methods")} for descriptions of the weighting methods and estimands available and guidance on choosing among them
+\item \code{vignette("estimating-effects")} for instructions on how to estimate treatment effects after weighting
+\item \code{vignette("longitudinal-treatments")} for a guide to weighting for longitudinal treatments, including censoring weights
+\item \code{vignette("installing-packages")} for instructions on installing the packages some methods require
+}
 }

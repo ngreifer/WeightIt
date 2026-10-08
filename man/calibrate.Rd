@@ -77,4 +77,6 @@ arXiv. \url{https://arxiv.org/abs/2411.06342}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
+
+\code{vignette("weighting-methods")} for the role of calibration with machine learning methods.
 }

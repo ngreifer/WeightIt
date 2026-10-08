@@ -32,6 +32,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
+#' `vignette("weighting-methods")` for the role of calibration with machine learning methods.
+#'
 #' @references
 #' Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse
 #' Probability Weighting by Post-calibrating Its Propensity Scores.

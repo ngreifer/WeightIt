@@ -153,4 +153,6 @@ Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences 
 
 \link{method_ebal} and \link{method_cbps} for entropy balancing and CBPS, which work
 similarly.
+
+\code{vignette("weighting-methods")} for descriptions of all the weighting methods and guidance on choosing among them.
 }

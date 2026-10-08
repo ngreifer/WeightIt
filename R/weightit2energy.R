@@ -34,7 +34,7 @@
 #' ## Continuous Treatments
 #'
 #' For continuous treatments, this method estimates the weights using `osqp()`
-#' using formulas described by Huling, Greifer, and Chen (2023).
+#' using formulas described by Huling, Greifer, and Chen (2024).
 #'
 #' ## Censoring Weights
 #'
@@ -73,7 +73,7 @@
 #'
 #' \describe{
 #'   \item{`dist.mat`}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include `"scaled_euclidean"` for the Euclidean (L2) distance on the scaled covariates (the default), `"mahalanobis"` for the Mahalanobis distance, and `"euclidean"` for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to [dist()].}
-#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
+#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2024). Default is .0001, which is essentially 0.}
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 #'   \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
 #'   \item{`tols`}{when `moments` is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when `moments = 0`.}
@@ -94,7 +94,7 @@
 #'       The number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting `d.moments = 3` ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. `d.moments` should be greater than or equal to `moments` and will be automatically set accordingly if not (or if not specified).
 #'     }
 #'     \item{`dimension.adj`}{
-#'       `logical`; whether to include the dimensionality adjustment described by Huling et al. (2023). If `TRUE`, the default, the energy distance for the covariates is weighted \eqn{\sqrt{p}} times as much as the energy distance for the treatment, where \eqn{p} is the number of covariates. If `FALSE`, the two energy distances are given equal weights. Default is `TRUE`.
+#'       `logical`; whether to include the dimensionality adjustment described by Huling et al. (2024). If `TRUE`, the default, the energy distance for the covariates is weighted \eqn{\sqrt{p}} times as much as the energy distance for the treatment, where \eqn{p} is the number of covariates. If `FALSE`, the two energy distances are given equal weights. Default is `TRUE`.
 #'     }
 #'     \item{`treat.dist.mat`}{
 #'       the numeric distance matrix of the treatment, playing the same role for the treatment that `dist.mat` plays for the covariates. If unspecified, the Euclidean distance on the treatment scaled by its weighted standard deviation is used. Must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit; can also be supplied as the output of a call to [dist()]. As with `dist.mat`, some user-supplied matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution.
@@ -104,7 +104,7 @@
 #' The `moments` argument functions differently for `method = "energy"` from
 #' how it does with other methods. When unspecified or set to zero, energy
 #' balancing weights are estimated as described by Huling and Mak (2024) for
-#' binary and multi-category treatments or by Huling et al. (2023) for
+#' binary and multi-category treatments or by Huling et al. (2024) for
 #' continuous treatments. When `moments` is set to an integer larger than 0,
 #' additional balance constraints on the requested moments of the covariates
 #' are also included, guaranteeing exact moment balance on these covariates
@@ -187,6 +187,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
+#' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
+#'
 #' @references
 #' ## Binary and multi-category treatments
 #'
@@ -194,7 +196,7 @@
 #'
 #' ## Continuous treatments
 #'
-#' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. *Journal of the American Statistical Association*, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+#' Huling, J. D., Greifer, N., & Chen, G. (2024). Independence weights for causal inference with continuous treatments. *Journal of the American Statistical Association*, 119(546), 1657–1670. \doi{10.1080/01621459.2023.2213485}
 #'
 #' @examplesIf rlang::is_installed("osqp")
 #' data("lalonde", package = "cobalt")
