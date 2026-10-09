@@ -1090,15 +1090,12 @@ For more information on all of the capabilities of *adrftools*, see its
 For longitudinal treatments, estimation proceeds as usual, except that
 we estimate weights using
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
-and fit a weighted outcome model that includes treatment at all time
-periods (and, optionally, any covariates measured prior to the first
-treatment). It is important not to include any covariates possibly
-caused by any of the treatments to avoid any bias; this is the whole
-point of using weighting to estimate the marginal structural model in
-the first place. See
-[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
-for an explanation of the estimand and assumptions involved and a fuller
-analysis, including censoring weights.
+and fit a weighted outcome model (i.e., a marginal structural model)
+that includes treatment at all time periods (and, optionally, any
+covariates measured prior to the first treatment). It is important not
+to include any covariates possibly caused by any of the treatments to
+avoid any bias; this is the whole point of using weighting to estimate
+the marginal structural model in the first place.
 
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 makes it easy to incorporate the weights and account for their
@@ -1107,88 +1104,23 @@ with other methods, when the components required for M-estimation are
 included in the
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 output, they will be used to estimate standard errors that adjust for
-estimation of the weights. Otherwise, the weights can be treated as
-fixed or the whole estimation can be done through bootstrapping.
+estimation of the weights, including the estimation of the stabilization
+factor, if any. Otherwise, the weights can be treated as fixed or the
+whole estimation can be done through bootstrapping. The average expected
+potential outcomes under each treatment regime can then be computed
+using
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
+and compared using
+[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html),
+as with multi-category treatments.
 
-Below, we demonstrate using the usual inverse probability weights for a
-marginal structural model. Because these weights are computed from
-propensity scores estimated with logistic regression, we can use
-M-estimation to adjust for their estimation in computing the parameter
-covariance matrix. This also includes estimation of the stabilization
-factor, if any. We’ll use the toy dataset `msmdata` that comes with
-*WeightIt*.
-
-``` r
-
-data("msmdata")
-
-Wmsm <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
-                             A_2 ~ X1_1 + X2_1 +
-                               A_1 + X1_0 + X2_0,
-                             A_3 ~ X1_2 + X2_2 +
-                               A_2 + X1_1 + X2_1 +
-                               A_1 + X1_0 + X2_0),
-                        data = msmdata, method = "glm",
-                        stabilize = TRUE)
-```
-
-Next we’ll fit the outcome model using
-[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-which includes the baseline covariates (i.e., only those measured prior
-to the first treatment).
-
-``` r
-
-fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
-                    data = msmdata, weightit = Wmsm,
-                    family = binomial)
-```
-
-Then, we compute the average expected potential outcomes under each
-treatment regime using
-[`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html):
-
-``` r
-
-p <- avg_predictions(fit,
-                     variables = c("A_1", "A_2", "A_3"))
-
-p
-```
-
-    ## 
-    ##  A_1 A_2 A_3 Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
-    ##    0   0   0    0.687     0.0166 41.4   <0.001   Inf 0.654  0.719
-    ##    0   0   1    0.521     0.0379 13.7   <0.001 140.3 0.447  0.595
-    ##    0   1   0    0.491     0.0213 23.1   <0.001 389.1 0.449  0.532
-    ##    0   1   1    0.438     0.0295 14.8   <0.001 163.2 0.380  0.496
-    ##    1   0   0    0.602     0.0211 28.5   <0.001 590.8 0.561  0.644
-    ##    1   0   1    0.544     0.0314 17.3   <0.001 221.0 0.482  0.605
-    ##    1   1   0    0.378     0.0163 23.2   <0.001 393.1 0.346  0.410
-    ##    1   1   1    0.422     0.0261 16.1   <0.001 192.3 0.371  0.473
-    ## 
-    ## Type: probs
-
-We can compare individual predictions using
-[`marginaleffects::hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html).
-For example, to compare all treatment histories to just the first
-treatment history (i.e., in which all units are untreated for all time
-periods), we can run the following:
-
-``` r
-
-hypotheses(p, ~reference)
-```
-
-    ## 
-    ##   Hypothesis Estimate Std. Error      z Pr(>|z|)     S  2.5 %  97.5 %
-    ##  (b2) - (b1)  -0.1658     0.0414  -4.00  < 0.001  14.0 -0.247 -0.0846
-    ##  (b3) - (b1)  -0.1960     0.0269  -7.29  < 0.001  41.5 -0.249 -0.1433
-    ##  (b4) - (b1)  -0.2488     0.0337  -7.38  < 0.001  42.6 -0.315 -0.1828
-    ##  (b5) - (b1)  -0.0842     0.0270  -3.12  0.00179   9.1 -0.137 -0.0314
-    ##  (b6) - (b1)  -0.1428     0.0356  -4.02  < 0.001  14.0 -0.212 -0.0731
-    ##  (b7) - (b1)  -0.3083     0.0232 -13.30  < 0.001 131.6 -0.354 -0.2629
-    ##  (b8) - (b1)  -0.2647     0.0308  -8.61  < 0.001  56.9 -0.325 -0.2044
+See
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for an explanation of the estimand and assumptions involved and a full
+worked example that goes through estimating the weights, assessing
+balance, fitting the marginal structural model, and estimating and
+comparing the expected potential outcomes under each treatment regime,
+including with censoring weights.
 
 ### Moderation Analysis
 

@@ -163,15 +163,17 @@ covariate history, with <span class="math inline">\(\bar{A} =
 regime</em> <span class="math inline">\(\bar{a} = (a_1, \ldots,
 a_K)\)</span> is a particular sequence of treatment values, and <span class="math inline">\(Y(\bar{a})\)</span> is the potential outcome a
 unit would have had under regime <span class="math inline">\(\bar{a}\)</span>. With a binary treatment and
-three time points, there are eight regimes, from never treated, <span class="math inline">\((0, 0, 0)\)</span>, to always treated, <span class="math inline">\((1, 1, 1)\)</span>.</p>
+three time points, there are eight regimes, including never treated,
+<span class="math inline">\((0, 0, 0)\)</span>, and always treated,
+<span class="math inline">\((1, 1, 1)\)</span>.</p>
 <p>The estimands of interest are the expected potential outcomes under
 each regime, <span class="math inline">\(E[Y(\bar{a})]\)</span>, and
 contrasts between them. The contrast between always treated and never
 treated, <span class="math inline">\(E[Y(1, 1, 1)] - E[Y(0, 0,
-0)]\)</span>, is the most common, but any pair of regimes can be
-compared, and the pattern across regimes answers questions about timing
-and duration, such as whether treatment at the last time point matters
-more than treatment at the first <span class="citation">(<a href="#ref-stallworthyInvestigatingCausalQuestions2026">Stallworthy et
+0)]\)</span>, is a common one, but any pair of regimes can be compared,
+and the pattern across regimes answers questions about timing and
+duration, such as whether treatment at the last time point matters more
+than treatment at the first <span class="citation">(<a href="#ref-stallworthyInvestigatingCausalQuestions2026">Stallworthy et
 al. 2026</a>)</span>. These are <em>joint</em> effects of the entire
 regime, not the effect of any one treatment holding the others fixed,
 and they are defined for the population from which the sample was drawn,
@@ -182,21 +184,24 @@ not apply.</p>
 <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins et al. 2000</a>;
 <a href="#ref-robinsMarginalStructuralModels2000a">Robins
 2000</a>)</span>. It is <em>marginal</em> because it concerns the
-marginal distribution of the potential outcomes, averaged over the
-covariates, and <em>structural</em> because it describes potential
+marginal—rather than joint—distribution of the potential outcomes <span class="citation">(<a href="#ref-breskinExploringSubtletiesInverse2018">Breskin et al.
+2018</a>)</span>, and <em>structural</em> because it describes potential
 rather than observed outcomes. For a binary outcome and three time
-points, a <em>saturated</em> MSM has a parameter for every regime, <span class="math display">\[\text{logit}\, E[Y(a_1, a_2, a_3)] = \beta_0 +
-\beta_1 a_1 + \beta_2 a_2 + \beta_3 a_3 + \beta_4 a_1 a_2 + \beta_5 a_1
-a_3 + \beta_6 a_2 a_3 + \beta_7 a_1 a_2 a_3,\]</span> and imposes no
-assumptions about how the regimes relate to each other. A parsimonious
-MSM, such as one with only the main effects of the three treatments or
-one in which the outcome depends only on the number of time points
-treated, has fewer parameters and is more precise, but it is a modeling
-assumption that can be wrong. With few time points, the saturated model
-is preferable, and the simpler summaries a parsimonious model would
-provide, such as the average effect of treatment at one time point, can
-be recovered from it afterward, as we show below; with many time points,
-a parsimonious model is a practical necessity.</p>
+points, a <em>saturated</em> MSM has a parameter for every regime,</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{logit}\, E[Y(a_1, a_2, a_3)] &amp;= \beta_0 + \beta_1 a_1 +
+\beta_2 a_2 + \beta_3 a_3 \\
+&amp;\quad + \beta_4 a_1 a_2 + \beta_5 a_1 a_3 + \beta_6 a_2 a_3 +
+\beta_7 a_1 a_2 a_3
+\end{aligned}
+\]</span> and imposes no assumptions about how the regimes relate to
+each other. A parsimonious MSM, such as one with only the main effects
+of the three treatments or one in which the outcome depends only on the
+number of time points treated, has fewer parameters and is more precise,
+but it is a modeling assumption that can be wrong. With few time points,
+the saturated model is preferable; with many time points, a parsimonious
+model may be a practical necessity.</p>
 </div>
 <div class="section level3">
 <h3 id="time-varying-confounding">Time-Varying Confounding<a class="anchor" aria-label="anchor" href="#time-varying-confounding"></a>
@@ -294,19 +299,16 @@ treatments, which are the methods that estimate a propensity score
 optimization-based methods, which do not, cannot be used this way. The
 covariate balancing propensity score can alternatively estimate all the
 time points’ models at once so that the product of the weights balances
-the covariates at every time point, which is requested with
-<code>is.MSM.method = TRUE</code> <span class="citation">(see <a href="#ref-imaiRobustEstimationInverse2015">Imai and Ratkovic 2015</a>
-for a related approach)</span>.</p>
+the covariates at every time point <span class="citation">(<a href="#ref-huffmanCovariateBalancingInverse2018"><span class="nocase">Huffman and van Gameren</span> 2018</a>)</span>.</p>
 <p>The product of many inverse probabilities can be very variable, and
 the weights for a longitudinal treatment are often much more extreme
-than for a point treatment. <em>Stabilized</em> weights replace the
-numerator of each factor with the probability of the observed treatment
-given the treatment history alone: <span class="math display">\[sw_i =
-\prod_{k=1}^{K} \frac{P(A_k = A_{ik} \mid \bar{A}_{k-1} =
-\bar{A}_{i,k-1})}{P(A_k = A_{ik} \mid \bar{A}_{k-1} = \bar{A}_{i,k-1},
-\bar{L}_k = \bar{L}_{ik})}.\]</span> Stabilized weights have a mean of
-1, are far less variable than unstabilized weights, and yield more
-precise estimates <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins et al. 2000</a>;
+than those for a point treatment. <em>Stabilized</em> weights replace
+the numerator of each factor with the probability of the observed
+treatment given the treatment history alone: <span class="math display">\[sw_i = \prod_{k=1}^{K} \frac{P(A_k = A_{ik} \mid
+\bar{A}_{k-1} = \bar{A}_{i,k-1})}{P(A_k = A_{ik} \mid \bar{A}_{k-1} =
+\bar{A}_{i,k-1}, \bar{L}_k = \bar{L}_{ik})}.\]</span> Stabilized weights
+have a mean of 1 (when correctly specified), are far less variable than
+unstabilized weights, and yield more precise estimates <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins et al. 2000</a>;
 <a href="#ref-coleConstructingInverseProbability2008">Cole and Hernán
 2008</a>)</span>. They are requested with <code>stabilize = TRUE</code>,
 which fits a saturated model of each treatment on the prior treatments
@@ -341,6 +343,8 @@ for an alternative set of diagnostics.</p>
 <div class="section level2">
 <h2 id="estimating-weights-for-a-longitudinal-treatment">Estimating Weights for a Longitudinal Treatment<a class="anchor" aria-label="anchor" href="#estimating-weights-for-a-longitudinal-treatment"></a>
 </h2>
+<p>Below, we demonstrate estimating weights and the treatment effect for
+a longitudinal treatment using <em>WeightIt</em>.</p>
 <div class="section level3">
 <h3 id="the-data">The Data<a class="anchor" aria-label="anchor" href="#the-data"></a>
 </h3>
@@ -456,7 +460,8 @@ with unstabilized weights.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W_un</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
 <span>                         <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
-<span>                         <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
+<span>                         <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
+<span>                           <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                    data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">W_un</span></span></code></pre></div>
@@ -573,7 +578,8 @@ treatments.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
 <span>                      <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
-<span>                      <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
+<span>                      <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
+<span>                        <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                 data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>                 stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
@@ -811,17 +817,15 @@ with one panel per time point.</p>
 would try another specification, as for a point treatment: adding
 squared terms or interactions to the treatment models, changing the
 method, or both. One option specific to longitudinal treatments is the
-covariate balancing propensity score with
-<code>is.MSM.method = TRUE</code>, which estimates all the treatment
+covariate balancing propensity score, which estimates all the treatment
 models at once so that the product of the weights exactly balances the
-covariate means at every time point <span class="citation">(<a href="#ref-imaiCovariateBalancingPropensity2014">Imai and Ratkovic
-2014</a>, <a href="#ref-imaiRobustEstimationInverse2015">2015</a>)</span>.</p>
+covariate means at every time point <span class="citation">(<a href="#ref-huffmanCovariateBalancingInverse2018"><span class="nocase">Huffman and van Gameren</span> 2018</a>)</span>.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W_cbps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
 <span>                           <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
-<span>                           <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
-<span>                      data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"cbps"</span>,</span>
-<span>                      is.MSM.method <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>                           <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
+<span>                             <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
+<span>                      data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"cbps"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W_cbps</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
@@ -927,18 +931,18 @@ never-treated regime.</p>
 <span><span class="co">##  (b8) - (b1)  -0.2647     0.0308  -8.61  &lt; 0.001  56.9 -0.325 -0.2044</span></span></code></pre>
 <p>A specific contrast is requested by naming the rows. The joint effect
 of always being treated relative to never being treated is the
-difference between the eighth and first rows, and the corresponding risk
-ratio is their quotient.</p>
+difference between the eighth and first rows, and the corresponding log
+risk ratio is the log of their quotient.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
 <span><span class="co">##     b8-b1=0   -0.265     0.0308 -8.61   &lt;0.001 56.9 -0.325 -0.204</span></span></code></pre>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 / b1 = 0"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"log(b8 / b1) = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Hypothesis Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
-<span><span class="co">##     b8/b1=0    0.615     0.0407 15.1   &lt;0.001 169.0 0.535  0.694</span></span></code></pre>
+<span><span class="co">##    Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
+<span><span class="co">##  log(b8/b1)=0   -0.487     0.0662 -7.36   &lt;0.001 42.3 -0.617 -0.357</span></span></code></pre>
 <p>Being treated at all three time points rather than none reduces the
 risk of the adverse event by 26.5 percentage points, with a 95%
 confidence interval from 20.4 to 32.5 points, which corresponds to a
@@ -947,40 +951,11 @@ of the weights and the stabilization factors; because they were computed
 with M-estimation, no bootstrapping was needed, though bootstrapping
 remains an option by setting <code>vcov = "FWB"</code> or
 <code>vcov = "BS"</code> in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>.</p>
-<p>Summaries that a parsimonious MSM would provide can be recovered from
-the saturated model rather than by fitting a second, more restrictive
-model. For example, the average effect of treatment at each time point,
-averaging over the treatments the units received at the other time
-points, is computed by <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, which for each
-time point sets that treatment to 1 and then to 0 for every unit,
-leaving the other treatments at their observed values, and averages the
-difference.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term Estimate Std. Error      z Pr(&gt;|z|)     S   2.5 %  97.5 %</span></span>
-<span><span class="co">##   A_1  -0.0677     0.0171  -3.95   &lt;0.001  13.7 -0.1012 -0.0341</span></span>
-<span><span class="co">##   A_2  -0.1783     0.0153 -11.64   &lt;0.001 101.7 -0.2083 -0.1483</span></span>
-<span><span class="co">##   A_3  -0.0597     0.0167  -3.58   &lt;0.001  11.5 -0.0923 -0.0270</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type: probs</span></span>
-<span><span class="co">## Comparison: 1 - 0</span></span></code></pre>
-<p>These are the quantities a main-effects MSM would approximate, but
-they are estimated without assuming that the effects of the treatments
-are additive, and the saturated predictions above show that they are
-not: treatment at the third time point has a smaller effect among units
-treated at the second than among units not treated at the second. Any
-other summary of the regime-specific means, such as the effect of the
-number of time points treated, can be requested in the same way through
-<code><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses()</a></code> on the predictions.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="accounting-for-loss-to-follow-up">Accounting for Loss to Follow-Up<a class="anchor" aria-label="anchor" href="#accounting-for-loss-to-follow-up"></a>
 </h2>
-<div class="section level3">
-<h3 id="the-estimand-with-censoring">The Estimand with Censoring<a class="anchor" aria-label="anchor" href="#the-estimand-with-censoring"></a>
-</h3>
 <p>In most longitudinal studies, some units stop being observed before
 the end of the study, so their later treatments and their outcome are
 unknown. If the units who drop out differ from those who remain in ways
@@ -1000,6 +975,9 @@ Finkelstein 2000</a>; <a href="#ref-hernanMarginalStructuralModels2000">Hernán 
 <a href="#ref-coleConstructingInverseProbability2008">Cole and Hernán
 2008</a>; <a href="#ref-seamanReviewInverseProbability2013">Seaman and
 White 2013</a>)</span>.</p>
+<div class="section level3">
+<h3 id="the-estimand-with-censoring">The Estimand with Censoring<a class="anchor" aria-label="anchor" href="#the-estimand-with-censoring"></a>
+</h3>
 <p>With censoring, the potential outcome is <span class="math inline">\(Y(\bar{a}, \bar{c} = 0)\)</span>, the outcome
 under regime <span class="math inline">\(\bar{a}\)</span> had the unit
 also remained under observation throughout, and the estimand is the
@@ -1040,7 +1018,7 @@ units with higher values of <code>X1_2</code> and for units treated at
 the second period. Units who drop out have no third treatment and no
 outcome, so we set those variables to missing for them, as they would be
 in real data.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">msmdata</span><span class="op">$</span><span class="va">C_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">msmdata</span><span class="op">)</span>, <span class="fl">1</span>,</span>
@@ -1063,11 +1041,13 @@ treatment model and before the third, and it includes the same history
 as the treatment model that follows it, since anything that affects both
 dropout and the outcome must be included. We request stabilized weights
 as before.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Wc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
 <span>                       <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
-<span>                       <span class="fu"><a href="../reference/dot-cens.html">.cens</a></span><span class="op">(</span><span class="va">C_2</span><span class="op">)</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
-<span>                       <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
+<span>                       <span class="fu"><a href="../reference/dot-cens.html">.cens</a></span><span class="op">(</span><span class="va">C_2</span><span class="op">)</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
+<span>                         <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
+<span>                       <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
+<span>                         <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">msmdata</span>, method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>                  stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
@@ -1098,7 +1078,7 @@ four models’ weights, and the censored units have weights of exactly 0,
 which <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports in its <code># Zeros</code> column;
 we display the summary for the censoring model and the final treatment
 model only.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Wc</span>, which.time <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
@@ -1175,7 +1155,7 @@ censoring model, the comparison is between the weighted units who
 remained under observation and the full sample at risk, rather than
 between two treatment groups; the weights are designed to make the first
 resemble the second.</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">Wc</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span>, which.time <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance by Time Point</span></span></span>
 <span><span class="co">## </span></span>
@@ -1234,11 +1214,11 @@ weight of 0 and a missing outcome, and <code><a href="../reference/glm_weightit.
 tolerates missing values in the outcome and treatments for units whose
 weight is 0, so they are dropped from the fit without any change to the
 call.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A_1</span> <span class="op">*</span> <span class="va">A_2</span> <span class="op">*</span> <span class="va">A_3</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                      data <span class="op">=</span> <span class="va">msmdata</span>, weightit <span class="op">=</span> <span class="va">Wc</span>,</span>
 <span>                      family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit_c</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p_c</span></span></code></pre></div>
@@ -1254,7 +1234,7 @@ call.</p>
 <span><span class="co">##    1   1   1    0.422     0.0325 13.0   &lt;0.001 125.4 0.358  0.486</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Type: probs</span></span></code></pre>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p_c</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
@@ -1274,13 +1254,13 @@ among those units would not remove. The censoring weights restore the
 composition of the original sample and break that association. How large
 the bias from ignoring censoring would be in real data is unknown, which
 is why censoring should be modeled whenever it is plausibly related to
-the covariates or treatments. Note that because the censoring weights
-multiply the treatment weights, the final weights can be more variable
-than either set alone, and balance at the time points after the
-censoring should be examined with particular care. When dropout depends
-strongly on the history, the censoring weights themselves become
-extreme, and weighting can perform poorly even when the censoring model
-is correct <span class="citation">(<a href="#ref-howeLimitationInverseProbabilityofcensoring2011">Howe et al.
+the covariates or treatments.</p>
+<p>Note that because the censoring weights multiply the treatment
+weights, the final weights can be more variable than either set alone,
+and balance at the time points after the censoring should be examined
+with particular care. When dropout depends strongly on the history, the
+censoring weights themselves become extreme, and weighting can perform
+poorly even when the censoring model is correct <span class="citation">(<a href="#ref-howeLimitationInverseProbabilityofcensoring2011">Howe et al.
 2011</a>)</span>.</p>
 </div>
 </div>
@@ -1320,6 +1300,12 @@ for reporting the effect estimates.</p>
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-breskinExploringSubtletiesInverse2018" class="csl-entry">
+Breskin, Alexander, Stephen R. Cole, and Daniel Westreich. 2018.
+<span>“Exploring the Subtleties of Inverse Probability Weighting and
+Marginal Structural Models.”</span> <em>Epidemiology</em> 29 (3):
+352–55. <a href="https://doi.org/10.1097/EDE.0000000000000813" class="external-link">https://doi.org/10.1097/EDE.0000000000000813</a>.
+</div>
 <div id="ref-coleConstructingInverseProbability2008" class="csl-entry">
 Cole, Stephen R., and Miguel A Hernán. 2008. <span>“Constructing
 <span>Inverse Probability Weights</span> for <span>Marginal Structural
@@ -1354,16 +1340,11 @@ Howe, Chanelle J., Stephen R. Cole, Joan S. Chmiel, and Alvaro Muñoz.
 Estimating Survival in the Presence of Strong Selection Bias.”</span>
 <em>American Journal of Epidemiology</em> 173 (5): 569–77. <a href="https://doi.org/10.1093/aje/kwq385" class="external-link">https://doi.org/10.1093/aje/kwq385</a>.
 </div>
-<div id="ref-imaiCovariateBalancingPropensity2014" class="csl-entry">
-Imai, Kosuke, and Marc Ratkovic. 2014. <span>“Covariate Balancing
-Propensity Score.”</span> <em>Journal of the Royal Statistical Society:
-Series B (Statistical Methodology)</em> 76 (1): 243–63. <a href="https://doi.org/10.1111/rssb.12027" class="external-link">https://doi.org/10.1111/rssb.12027</a>.
-</div>
-<div id="ref-imaiRobustEstimationInverse2015" class="csl-entry">
-Imai, Kosuke, and Marc Ratkovic. 2015. <span>“Robust
-<span>Estimation</span> of <span>Inverse Probability Weights</span> for
-<span>Marginal Structural Models</span>.”</span> <em>Journal of the
-American Statistical Association</em> 110 (511): 1013–23. <a href="https://doi.org/10.1080/01621459.2014.956872" class="external-link">https://doi.org/10.1080/01621459.2014.956872</a>.
+<div id="ref-huffmanCovariateBalancingInverse2018" class="csl-entry">
+<span class="nocase">Huffman, Curtis, and Edwin van Gameren</span>.
+2018. <span>“Covariate Balancing Inverse Probability Weights for
+Time-Varying Continuous Interventions.”</span> <em>Journal of Causal
+Inference</em> 6 (2). <a href="https://doi.org/10.1515/jci-2017-0002" class="external-link">https://doi.org/10.1515/jci-2017-0002</a>.
 </div>
 <div id="ref-jacksonDiagnosticsConfoundingTimevarying2016" class="csl-entry">
 Jackson, John W. 2016. <span>“Diagnostics for <span>Confounding</span>

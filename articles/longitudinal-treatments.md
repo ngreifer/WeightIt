@@ -65,13 +65,14 @@ L_k)\\ for the covariate history, with \\\bar{A} = \bar{A}\_K\\ the full
 treatment history. A *treatment regime* \\\bar{a} = (a_1, \ldots, a_K)\\
 is a particular sequence of treatment values, and \\Y(\bar{a})\\ is the
 potential outcome a unit would have had under regime \\\bar{a}\\. With a
-binary treatment and three time points, there are eight regimes, from
-never treated, \\(0, 0, 0)\\, to always treated, \\(1, 1, 1)\\.
+binary treatment and three time points, there are eight regimes,
+including never treated, \\(0, 0, 0)\\, and always treated, \\(1, 1,
+1)\\.
 
 The estimands of interest are the expected potential outcomes under each
 regime, \\E\[Y(\bar{a})\]\\, and contrasts between them. The contrast
 between always treated and never treated, \\E\[Y(1, 1, 1)\] - E\[Y(0, 0,
-0)\]\\, is the most common, but any pair of regimes can be compared, and
+0)\]\\, is a common one, but any pair of regimes can be compared, and
 the pattern across regimes answers questions about timing and duration,
 such as whether treatment at the last time point matters more than
 treatment at the first ([Stallworthy et al.
@@ -86,22 +87,23 @@ A marginal structural model is a model for \\E\[Y(\bar{a})\]\\ as a
 function of the regime ([Robins et al.
 2000](#ref-robinsMarginalStructuralModels2000); [Robins
 2000](#ref-robinsMarginalStructuralModels2000a)). It is *marginal*
-because it concerns the marginal distribution of the potential outcomes,
-averaged over the covariates, and *structural* because it describes
-potential rather than observed outcomes. For a binary outcome and three
-time points, a *saturated* MSM has a parameter for every regime,
-\\\text{logit}\\ E\[Y(a_1, a_2, a_3)\] = \beta_0 + \beta_1 a_1 + \beta_2
-a_2 + \beta_3 a_3 + \beta_4 a_1 a_2 + \beta_5 a_1 a_3 + \beta_6 a_2
-a_3 + \beta_7 a_1 a_2 a_3,\\ and imposes no assumptions about how the
-regimes relate to each other. A parsimonious MSM, such as one with only
-the main effects of the three treatments or one in which the outcome
-depends only on the number of time points treated, has fewer parameters
-and is more precise, but it is a modeling assumption that can be wrong.
-With few time points, the saturated model is preferable, and the simpler
-summaries a parsimonious model would provide, such as the average effect
-of treatment at one time point, can be recovered from it afterward, as
-we show below; with many time points, a parsimonious model is a
-practical necessity.
+because it concerns the marginal—rather than joint—distribution of the
+potential outcomes ([Breskin et al.
+2018](#ref-breskinExploringSubtletiesInverse2018)), and *structural*
+because it describes potential rather than observed outcomes. For a
+binary outcome and three time points, a *saturated* MSM has a parameter
+for every regime,
+
+\\ \begin{aligned} \text{logit}\\ E\[Y(a_1, a_2, a_3)\] &= \beta_0 +
+\beta_1 a_1 + \beta_2 a_2 + \beta_3 a_3 \\ &\quad + \beta_4 a_1 a_2 +
+\beta_5 a_1 a_3 + \beta_6 a_2 a_3 + \beta_7 a_1 a_2 a_3 \end{aligned} \\
+and imposes no assumptions about how the regimes relate to each other. A
+parsimonious MSM, such as one with only the main effects of the three
+treatments or one in which the outcome depends only on the number of
+time points treated, has fewer parameters and is more precise, but it is
+a modeling assumption that can be wrong. With few time points, the
+saturated model is preferable; with many time points, a parsimonious
+model may be a practical necessity.
 
 ### Time-Varying Confounding
 
@@ -196,19 +198,20 @@ estimate a propensity score (`"glm"`, `"gbm"`, `"super"`, `"bart"`,
 `"cbps"`, and `"ipt"`); the optimization-based methods, which do not,
 cannot be used this way. The covariate balancing propensity score can
 alternatively estimate all the time points’ models at once so that the
-product of the weights balances the covariates at every time point,
-which is requested with `is.MSM.method = TRUE` (see [Imai and Ratkovic
-2015](#ref-imaiRobustEstimationInverse2015) for a related approach).
+product of the weights balances the covariates at every time point
+([Huffman and van Gameren
+2018](#ref-huffmanCovariateBalancingInverse2018)).
 
 The product of many inverse probabilities can be very variable, and the
 weights for a longitudinal treatment are often much more extreme than
-for a point treatment. *Stabilized* weights replace the numerator of
-each factor with the probability of the observed treatment given the
+those for a point treatment. *Stabilized* weights replace the numerator
+of each factor with the probability of the observed treatment given the
 treatment history alone: \\sw_i = \prod\_{k=1}^{K} \frac{P(A_k = A\_{ik}
 \mid \bar{A}\_{k-1} = \bar{A}\_{i,k-1})}{P(A_k = A\_{ik} \mid
 \bar{A}\_{k-1} = \bar{A}\_{i,k-1}, \bar{L}\_k = \bar{L}\_{ik})}.\\
-Stabilized weights have a mean of 1, are far less variable than
-unstabilized weights, and yield more precise estimates ([Robins et al.
+Stabilized weights have a mean of 1 (when correctly specified), are far
+less variable than unstabilized weights, and yield more precise
+estimates ([Robins et al.
 2000](#ref-robinsMarginalStructuralModels2000); [Cole and Hernán
 2008](#ref-coleConstructingInverseProbability2008)). They are requested
 with `stabilize = TRUE`, which fits a saturated model of each treatment
@@ -243,6 +246,9 @@ for the tools and Jackson
 alternative set of diagnostics.
 
 ## Estimating Weights for a Longitudinal Treatment
+
+Below, we demonstrate estimating weights and the treatment effect for a
+longitudinal treatment using *WeightIt*.
 
 ### The Data
 
@@ -368,7 +374,8 @@ unstabilized weights.
 
 W_un <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                          A_2 ~ X1_1 + X2_1 + A_1 + X1_0 + X2_0,
-                         A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 + A_1 + X1_0 + X2_0),
+                         A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 +
+                           A_1 + X1_0 + X2_0),
                     data = msmdata, method = "glm")
 
 W_un
@@ -495,7 +502,8 @@ probability of the observed treatment given the prior treatments.
 
 W <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                       A_2 ~ X1_1 + X2_1 + A_1 + X1_0 + X2_0,
-                      A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 + A_1 + X1_0 + X2_0),
+                      A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 +
+                        A_1 + X1_0 + X2_0),
                  data = msmdata, method = "glm",
                  stabilize = TRUE)
 
@@ -757,19 +765,18 @@ at the third time point. Had this been larger, we would try another
 specification, as for a point treatment: adding squared terms or
 interactions to the treatment models, changing the method, or both. One
 option specific to longitudinal treatments is the covariate balancing
-propensity score with `is.MSM.method = TRUE`, which estimates all the
-treatment models at once so that the product of the weights exactly
-balances the covariate means at every time point ([Imai and Ratkovic
-2014](#ref-imaiCovariateBalancingPropensity2014),
-[2015](#ref-imaiRobustEstimationInverse2015)).
+propensity score, which estimates all the treatment models at once so
+that the product of the weights exactly balances the covariate means at
+every time point ([Huffman and van Gameren
+2018](#ref-huffmanCovariateBalancingInverse2018)).
 
 ``` r
 
 W_cbps <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                            A_2 ~ X1_1 + X2_1 + A_1 + X1_0 + X2_0,
-                           A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 + A_1 + X1_0 + X2_0),
-                      data = msmdata, method = "cbps",
-                      is.MSM.method = TRUE)
+                           A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 +
+                             A_1 + X1_0 + X2_0),
+                      data = msmdata, method = "cbps")
 
 bal.tab(W_cbps, stats = c("m", "ks"))
 ```
@@ -895,8 +902,8 @@ hypotheses(p, ~reference)
 
 A specific contrast is requested by naming the rows. The joint effect of
 always being treated relative to never being treated is the difference
-between the eighth and first rows, and the corresponding risk ratio is
-their quotient.
+between the eighth and first rows, and the corresponding log risk ratio
+is the log of their quotient.
 
 ``` r
 
@@ -909,12 +916,12 @@ hypotheses(p, "b8 - b1 = 0")
 
 ``` r
 
-hypotheses(p, "b8 / b1 = 0")
+hypotheses(p, "log(b8 / b1) = 0")
 ```
 
     ## 
-    ##  Hypothesis Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
-    ##     b8/b1=0    0.615     0.0407 15.1   <0.001 169.0 0.535  0.694
+    ##    Hypothesis Estimate Std. Error     z Pr(>|z|)    S  2.5 % 97.5 %
+    ##  log(b8/b1)=0   -0.487     0.0662 -7.36   <0.001 42.3 -0.617 -0.357
 
 Being treated at all three time points rather than none reduces the risk
 of the adverse event by 26.5 percentage points, with a 95% confidence
@@ -925,43 +932,7 @@ M-estimation, no bootstrapping was needed, though bootstrapping remains
 an option by setting `vcov = "FWB"` or `vcov = "BS"` in
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
 
-Summaries that a parsimonious MSM would provide can be recovered from
-the saturated model rather than by fitting a second, more restrictive
-model. For example, the average effect of treatment at each time point,
-averaging over the treatments the units received at the other time
-points, is computed by
-[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
-which for each time point sets that treatment to 1 and then to 0 for
-every unit, leaving the other treatments at their observed values, and
-averages the difference.
-
-``` r
-
-avg_comparisons(fit, variables = c("A_1", "A_2", "A_3"))
-```
-
-    ## 
-    ##  Term Estimate Std. Error      z Pr(>|z|)     S   2.5 %  97.5 %
-    ##   A_1  -0.0677     0.0171  -3.95   <0.001  13.7 -0.1012 -0.0341
-    ##   A_2  -0.1783     0.0153 -11.64   <0.001 101.7 -0.2083 -0.1483
-    ##   A_3  -0.0597     0.0167  -3.58   <0.001  11.5 -0.0923 -0.0270
-    ## 
-    ## Type: probs
-    ## Comparison: 1 - 0
-
-These are the quantities a main-effects MSM would approximate, but they
-are estimated without assuming that the effects of the treatments are
-additive, and the saturated predictions above show that they are not:
-treatment at the third time point has a smaller effect among units
-treated at the second than among units not treated at the second. Any
-other summary of the regime-specific means, such as the effect of the
-number of time points treated, can be requested in the same way through
-[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html)
-on the predictions.
-
 ## Accounting for Loss to Follow-Up
-
-### The Estimand with Censoring
 
 In most longitudinal studies, some units stop being observed before the
 end of the study, so their later treatments and their outcome are
@@ -982,6 +953,8 @@ of dropping out, using inverse probability of censoring weights (IPCW)
 2000](#ref-hernanMarginalStructuralModels2000); [Cole and Hernán
 2008](#ref-coleConstructingInverseProbability2008); [Seaman and White
 2013](#ref-seamanReviewInverseProbability2013)).
+
+### The Estimand with Censoring
 
 With censoring, the potential outcome is \\Y(\bar{a}, \bar{c} = 0)\\,
 the outcome under regime \\\bar{a}\\ had the unit also remained under
@@ -1058,8 +1031,10 @@ as before.
 
 Wc <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                        A_2 ~ X1_1 + X2_1 + A_1 + X1_0 + X2_0,
-                       .cens(C_2) ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 + A_1 + X1_0 + X2_0,
-                       A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 + A_1 + X1_0 + X2_0),
+                       .cens(C_2) ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 +
+                         A_1 + X1_0 + X2_0,
+                       A_3 ~ X1_2 + X2_2 + A_2 + X1_1 + X2_1 +
+                         A_1 + X1_0 + X2_0),
                   data = msmdata, method = "glm",
                   stabilize = TRUE)
 
@@ -1288,13 +1263,14 @@ weights estimated among those units would not remove. The censoring
 weights restore the composition of the original sample and break that
 association. How large the bias from ignoring censoring would be in real
 data is unknown, which is why censoring should be modeled whenever it is
-plausibly related to the covariates or treatments. Note that because the
-censoring weights multiply the treatment weights, the final weights can
-be more variable than either set alone, and balance at the time points
-after the censoring should be examined with particular care. When
-dropout depends strongly on the history, the censoring weights
-themselves become extreme, and weighting can perform poorly even when
-the censoring model is correct ([Howe et al.
+plausibly related to the covariates or treatments.
+
+Note that because the censoring weights multiply the treatment weights,
+the final weights can be more variable than either set alone, and
+balance at the time points after the censoring should be examined with
+particular care. When dropout depends strongly on the history, the
+censoring weights themselves become extreme, and weighting can perform
+poorly even when the censoring model is correct ([Howe et al.
 2011](#ref-howeLimitationInverseProbabilityofcensoring2011)).
 
 ## Other Considerations
@@ -1337,6 +1313,11 @@ for reporting the effect estimates.
 
 ## References
 
+Breskin, Alexander, Stephen R. Cole, and Daniel Westreich. 2018.
+“Exploring the Subtleties of Inverse Probability Weighting and Marginal
+Structural Models.” *Epidemiology* 29 (3): 352–55.
+<https://doi.org/10.1097/EDE.0000000000000813>.
+
 Cole, Stephen R., and Miguel A Hernán. 2008. “Constructing Inverse
 Probability Weights for Marginal Structural Models.” *American Journal
 of Epidemiology* 168 (6): 656–64. <https://doi.org/10.1093/aje/kwn164>.
@@ -1364,14 +1345,10 @@ Estimating Survival in the Presence of Strong Selection Bias.” *American
 Journal of Epidemiology* 173 (5): 569–77.
 <https://doi.org/10.1093/aje/kwq385>.
 
-Imai, Kosuke, and Marc Ratkovic. 2014. “Covariate Balancing Propensity
-Score.” *Journal of the Royal Statistical Society: Series B (Statistical
-Methodology)* 76 (1): 243–63. <https://doi.org/10.1111/rssb.12027>.
-
-Imai, Kosuke, and Marc Ratkovic. 2015. “Robust Estimation of Inverse
-Probability Weights for Marginal Structural Models.” *Journal of the
-American Statistical Association* 110 (511): 1013–23.
-<https://doi.org/10.1080/01621459.2014.956872>.
+Huffman, Curtis, and Edwin van Gameren. 2018. “Covariate Balancing
+Inverse Probability Weights for Time-Varying Continuous Interventions.”
+*Journal of Causal Inference* 6 (2).
+<https://doi.org/10.1515/jci-2017-0002>.
 
 Jackson, John W. 2016. “Diagnostics for Confounding of Time-Varying and
 Other Joint Exposures:” *Epidemiology* 27 (6): 859–69.
