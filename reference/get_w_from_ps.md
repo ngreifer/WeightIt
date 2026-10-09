@@ -251,6 +251,10 @@ with nonexperimental data. *Psychological Methods*, 17(1), 44–60.
 
 [`method_glm`](https://ngreifer.github.io/WeightIt/reference/method_glm.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for a discussion of the estimands and the target populations they
+correspond to.
+
 ## Examples
 
 ``` r

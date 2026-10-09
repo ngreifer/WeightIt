@@ -45,7 +45,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+<li><a class="dropdown-item" href="../articles/weighting-methods.html">Weighting Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+    <li><a class="dropdown-item" href="../articles/longitudinal-treatments.html">Longitudinal Treatments</a></li>
     <li><a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a></li>
   </ul>
 </li>
@@ -80,7 +82,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-10-06</h4>
+            <h4 data-toc-skip class="date">2026-10-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/installing-packages.Rmd" class="external-link"><code>vignettes/installing-packages.Rmd</code></a></small>
       <div class="d-none name"><code>installing-packages.Rmd</code></div>
@@ -110,7 +112,9 @@ install the required packages either from CRAN or otherwise when the
 CRAN version is not available. In many cases, this involves installing
 the package from the author’s GitHub repository, which requires the
 <em>pak</em> package, which contains the function
-<code>pkg_install()</code>.</p>
+<code>pkg_install()</code>. For descriptions of the methods themselves
+and guidance on choosing among them, see
+<code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>.</p>
 <div class="section level2">
 <h2 id="propensity-score-weighting-using-glms-method-glm">Propensity score weighting using GLMs
 (<code>method = "glm"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-glms-method-glm"></a>

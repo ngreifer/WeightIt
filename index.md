@@ -22,6 +22,15 @@ For a complete vignette, see the
 [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
 for *WeightIt* or
 [`vignette("WeightIt")`](https://ngreifer.github.io/WeightIt/articles/WeightIt.md).
+Other vignettes describe the weighting methods and how to choose among
+them
+([`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)),
+how to estimate effects after weighting
+([`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)),
+how to weight for longitudinal treatments with censoring
+([`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)),
+and how to install the packages some methods require
+([`vignette("installing-packages")`](https://ngreifer.github.io/WeightIt/articles/installing-packages.md)).
 
 To install and load *WeightIt*, use the code below:
 
@@ -167,7 +176,9 @@ The table below contains the available methods in *WeightIt* for
 estimating weights, and which treatment types each supports. Some of
 these methods require installing other packages to use; see
 [`vignette("installing-packages")`](https://ngreifer.github.io/WeightIt/articles/installing-packages.md)
-for information on how to install them.
+for information on how to install them, and
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of the methods and guidance on choosing among them.
 
 | Method | `method` | Binary | Multi-category | Continuous | Censoring |
 |:---|:--:|:--:|:--:|:--:|:--:|
@@ -194,8 +205,12 @@ Inverse probability of censoring weights, which account for units
 dropping out before the outcome is measured, are requested by wrapping a
 censoring indicator in
 [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
-on the left side of a model formula. Several other tools and utilities
-are available, including
+on the left side of a model formula. Weights for longitudinal treatments
+are estimated with
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md);
+see
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for a guide. Several other tools and utilities are available, including
 [`trim()`](https://ngreifer.github.io/WeightIt/reference/trim.md) to
 trim or truncate weights,
 [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)

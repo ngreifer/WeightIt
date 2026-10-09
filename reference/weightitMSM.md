@@ -258,6 +258,10 @@ formulas provided. For each formula, `weightitMSM()` simply applies
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 to that formula, collects the weights for each time period, and
 multiplies them together to arrive at longitudinal balancing weights.
+See
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for an explanation of the estimand and assumptions involved and a worked
+example, including censoring weights.
 
 Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should
@@ -341,6 +345,12 @@ for information on the allowable methods
 
 [`summary.weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
 for summarizing the weights
+
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for a guide to weighting for longitudinal treatments, including
+censoring weights;
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of the weighting methods
 
 ## Examples
 

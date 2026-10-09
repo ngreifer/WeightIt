@@ -76,6 +76,9 @@ Inverse Probability Weighting via Isotonic Calibration. arXiv.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for the role of calibration with machine learning methods.
+
 ## Examples
 
 ``` r

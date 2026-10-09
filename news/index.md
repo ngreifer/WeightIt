@@ -2,6 +2,19 @@
 
 ## `WeightIt` (development version)
 
+- Added a new vignette,
+  [`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md),
+  which describes the weighting methods available in *WeightIt* and
+  offers guidance on choosing among them.
+
+- Added a new vignette,
+  [`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md),
+  which explains the estimand and assumptions for longitudinal
+  treatments and demonstrates estimating weights with
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  assessing balance, estimating effects with a marginal structural
+  model, and accounting for loss to follow-up with censoring weights.
+
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   gains a `br` argument, which, when set to `TRUE`, maximizes the
   partial likelihood penalized by the Jeffreys invariant prior as
@@ -1522,7 +1535,7 @@ CRAN release: 2023-04-12
 
 - Added energy balancing for continuous treatments, requested using
   `method = "energy"`, as described in [Huling et
-  al. (2023)](https://doi.org/10.1080/01621459.2023.2213485). These
+  al. (2024)](https://doi.org/10.1080/01621459.2023.2213485). These
   weights minimize the distance covariance between the treatment and
   covariates while maintaining representativeness. This method supports
   exact balance constraints, distributional balance constraints, and

@@ -143,7 +143,9 @@ Each component is itself a list containing the following components:
 and
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 for how the methods are used. Also see the individual methods pages for
-information on whether and how each option can be used.
+information on whether and how each option can be used, and
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of the methods and guidance on choosing among them.
 
 ## Examples
 

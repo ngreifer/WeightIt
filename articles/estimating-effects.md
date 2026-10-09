@@ -10,7 +10,10 @@ effects, estimating the uncertainty of the effects is critical in
 communicating them and assessing whether the observed effect is
 compatible with there being no effect in the population. This guide
 explains how to estimate effects after weighting for point and
-longitudinal treatments and with various outcome types.
+longitudinal treatments and with various outcome types. For descriptions
+of the weighting methods and guidance on choosing a weighting
+specification, see
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md).
 
 This guide is structured as follows: first, information on the concepts
 related to effect and standard error (SE) estimation is presented below.
@@ -38,8 +41,10 @@ population from which the sample is a random sample. Other common
 estimands include the average treatment effect in the treated (ATT), the
 average treatment effect in the control (ATC), and the average treatment
 effect in the overlap (ATO). These are defined and explained in Greifer
-and Stuart ([2021](#ref-greiferChoosingEstimandWhen2021)). The estimand
-for weighting is controlled by the `estimand` argument in the call to
+and Stuart ([2021](#ref-greiferChoosingEstimandWhen2021)) and in
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md).
+The estimand for weighting is controlled by the `estimand` argument in
+the call to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 Other allowable estimands for some weighting methods include the average
 treatment effect in the matched sample (ATM) and the average treatment
@@ -1090,7 +1095,10 @@ periods (and, optionally, any covariates measured prior to the first
 treatment). It is important not to include any covariates possibly
 caused by any of the treatments to avoid any bias; this is the whole
 point of using weighting to estimate the marginal structural model in
-the first place.
+the first place. See
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for an explanation of the estimand and assumptions involved and a fuller
+analysis, including censoring weights.
 
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 makes it easy to incorporate the weights and account for their

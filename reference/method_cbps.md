@@ -334,6 +334,10 @@ and
 for entropy balancing and inverse probability tilting, which work
 similarly.
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r

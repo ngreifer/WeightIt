@@ -318,6 +318,10 @@ for additional references.
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r

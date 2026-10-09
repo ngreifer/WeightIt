@@ -183,6 +183,10 @@ and
 [method_cbps](https://ngreifer.github.io/WeightIt/reference/method_cbps.md)
 for entropy balancing and CBPS, which work similarly.
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r

@@ -429,6 +429,10 @@ Estimating Generalized Propensity Scores with Continuous Treatments.
 [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
 for the fitting function.
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r

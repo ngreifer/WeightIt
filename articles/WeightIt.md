@@ -10,7 +10,10 @@ introductory articles, see Austin
 ([2011](#ref-austinIntroductionPropensityScore2011)), Austin and Stuart
 ([2015](#ref-austinMovingBestPractice2015)), Robins et al.
 ([2000](#ref-robinsMarginalStructuralModels2000)), or Thoemmes and Ong
-([2016](#ref-thoemmesPrimerInverseProbability2016)).
+([2016](#ref-thoemmesPrimerInverseProbability2016)). For descriptions of
+the weighting methods available in *WeightIt* and guidance on choosing
+among them, see
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md).
 
 Typically, the analysis of an observational study might proceed as
 follows: identify the covariates for which balance is required; assess
@@ -212,7 +215,8 @@ can do better. We’ll choose a different method: entropy balancing
 ([Hainmueller 2012](#ref-hainmuellerEntropyBalancingCausal2012)), which
 guarantees perfect balance on specified moments of the covariates while
 minimizing the negative entropy (a measure of dispersion) of the
-weights.
+weights. The other weighting methods are described in
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md).
 
 ``` r
 
@@ -268,7 +272,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary       -0 Balanced, <0.05           .
+    ## nodegree     Binary        0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -340,7 +344,9 @@ These are described in detail at
 *WeightIt* can estimate weights for marginal structural models with
 longitudinal treatments as well. This time, we’ll use the sample data
 set `msmdata` to estimate our weights. Data must be in “wide” format,
-with one row per unit.
+with one row per unit. For an explanation of the estimand and
+assumptions involved and a fuller analysis, see
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md).
 
 ``` r
 
@@ -803,6 +809,8 @@ sample rather than against another treatment group, and
 [`bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
 does this directly for an object like `Wc`. See
 [`?.cens`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+and
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
 for more.
 
 ## References

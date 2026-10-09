@@ -37,7 +37,7 @@ following estimands are allowed: ATE and ATT.
 ### Continuous Treatments
 
 For continuous treatments, this method estimates the weights using
-`osqp()` using formulas described by Huling, Greifer, and Chen (2023).
+`osqp()` using formulas described by Huling, Greifer, and Chen (2024).
 
 ### Censoring Weights
 
@@ -182,7 +182,7 @@ The following additional arguments can be specified:
   favor weights with less variability. Note this is distinct from the
   lambda value described in Huling and Mak (2024), which penalizes the
   complexity of individual treatment rules rather than the weights, but
-  does correspond to lambda from Huling et al. (2023). Default is .0001,
+  does correspond to lambda from Huling et al. (2024). Default is .0001,
   which is essentially 0.
 
 - `moments`:
@@ -252,7 +252,7 @@ specified:
 - `dimension.adj`:
 
   `logical`; whether to include the dimensionality adjustment described
-  by Huling et al. (2023). If `TRUE`, the default, the energy distance
+  by Huling et al. (2024). If `TRUE`, the default, the energy distance
   for the covariates is weighted \\\sqrt{p}\\ times as much as the
   energy distance for the treatment, where \\p\\ is the number of
   covariates. If `FALSE`, the two energy distances are given equal
@@ -274,7 +274,7 @@ The `moments` argument functions differently for `method = "energy"`
 from how it does with other methods. When unspecified or set to zero,
 energy balancing weights are estimated as described by Huling and Mak
 (2024) for binary and multi-category treatments or by Huling et al.
-(2023) for continuous treatments. When `moments` is set to an integer
+(2024) for continuous treatments. When `moments` is set to an integer
 larger than 0, additional balance constraints on the requested moments
 of the covariates are also included, guaranteeing exact moment balance
 on these covariates while minimizing the energy distance of the weighted
@@ -307,15 +307,19 @@ distributions. *Journal of Causal Inference*, 12(1).
 
 ### Continuous treatments
 
-Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
+Huling, J. D., Greifer, N., & Chen, G. (2024). Independence weights for
 causal inference with continuous treatments. *Journal of the American
-Statistical Association*, 0(ja), 1–25.
+Statistical Association*, 119(546), 1657–1670.
 [doi:10.1080/01621459.2023.2213485](https://doi.org/10.1080/01621459.2023.2213485)
 
 ## See also
 
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
 
 ## Author
 

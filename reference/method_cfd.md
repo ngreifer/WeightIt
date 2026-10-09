@@ -270,6 +270,10 @@ Distance (arXiv:2601.15449). arXiv.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r
@@ -356,7 +360,7 @@ summary(W1b)
 #>            185    44   181    82    184
 #>  Treated 6.959 7.514 7.831 8.376 11.198
 #>            303   222   511   600    608
-#>  Control 5.627  5.73  5.74 5.919  8.343
+#>  Control 5.626  5.73  5.74 5.919  8.343
 #> 
 #> ─ Weight statistics:
 #> 

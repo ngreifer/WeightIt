@@ -118,6 +118,9 @@ Adulthood*, 4(1), 40–59.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for how trimming relates to other ways of trading balance for precision.
+
 ## Examples
 
 ``` r

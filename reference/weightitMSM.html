@@ -33,7 +33,9 @@ calls; these packages must be installed to use the desired method."><meta proper
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/weighting-methods.html">Weighting Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+    <li><a class="dropdown-item" href="../articles/longitudinal-treatments.html">Longitudinal Treatments</a></li>
     <li><a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -266,7 +268,7 @@ single-model MSM version of CBPS.)</p>
 into separate procedures for each time period based on the formulas provided.
 For each formula, <code>weightitMSM()</code> simply applies <code><a href="weightit.html">weightit()</a></code> to that formula,
 collects the weights for each time period, and multiplies them together to
-arrive at longitudinal balancing weights.</p>
+arrive at longitudinal balancing weights. See <code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code> for an explanation of the estimand and assumptions involved and a worked example, including censoring weights.</p>
 <p>Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should contain
 all the baseline covariates, the treatment variable at the first time period,
@@ -328,7 +330,8 @@ with no covariates instead contributes only its intercept balance condition.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code> for information on the allowable methods</p>
-<p><code><a href="summary.weightit.html">summary.weightitMSM()</a></code> for summarizing the weights</p></div>
+<p><code><a href="summary.weightit.html">summary.weightitMSM()</a></code> for summarizing the weights</p>
+<p><code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code> for a guide to weighting for longitudinal treatments, including censoring weights; <code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code> for descriptions of the weighting methods</p></div>
     </div>
 
     <div class="section level2">

@@ -45,7 +45,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+<li><a class="dropdown-item" href="../articles/weighting-methods.html">Weighting Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+    <li><a class="dropdown-item" href="../articles/longitudinal-treatments.html">Longitudinal Treatments</a></li>
     <li><a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a></li>
   </ul>
 </li>
@@ -80,7 +82,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-10-06</h4>
+            <h4 data-toc-skip class="date">2026-10-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -108,7 +110,9 @@ effects, estimating the uncertainty of the effects is critical in
 communicating them and assessing whether the observed effect is
 compatible with there being no effect in the population. This guide
 explains how to estimate effects after weighting for point and
-longitudinal treatments and with various outcome types.</p>
+longitudinal treatments and with various outcome types. For descriptions
+of the weighting methods and guidance on choosing a weighting
+specification, see <code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>.</p>
 <p>This guide is structured as follows: first, information on the
 concepts related to effect and standard error (SE) estimation is
 presented below. Then, instructions for how to estimate effects and SEs
@@ -134,13 +138,13 @@ treatment for the population from which the sample is a random sample.
 Other common estimands include the average treatment effect in the
 treated (ATT), the average treatment effect in the control (ATC), and
 the average treatment effect in the overlap (ATO). These are defined and
-explained in <span class="citation">Greifer and Stuart (<a href="#ref-greiferChoosingEstimandWhen2021">2021</a>)</span>. The
-estimand for weighting is controlled by the <code>estimand</code>
-argument in the call to <code><a href="../reference/weightit.html">weightit()</a></code>. Other allowable
-estimands for some weighting methods include the average treatment
-effect in the matched sample (ATM) and the average treatment effect in
-the optimal subset (ATOS). These are treated just like the ATO and will
-not be differentiated further.</p>
+explained in <span class="citation">Greifer and Stuart (<a href="#ref-greiferChoosingEstimandWhen2021">2021</a>)</span> and in
+<code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>. The estimand for weighting
+is controlled by the <code>estimand</code> argument in the call to
+<code><a href="../reference/weightit.html">weightit()</a></code>. Other allowable estimands for some weighting
+methods include the average treatment effect in the matched sample (ATM)
+and the average treatment effect in the optimal subset (ATOS). These are
+treated just like the ATO and will not be differentiated further.</p>
 <p><strong>Marginal and conditional effects.</strong> A marginal effect
 is a comparison between the expected potential outcome under treatment
 and the expected potential outcome under control. This is the same
@@ -1019,7 +1023,10 @@ weighted outcome model that includes treatment at all time periods (and,
 optionally, any covariates measured prior to the first treatment). It is
 important not to include any covariates possibly caused by any of the
 treatments to avoid any bias; this is the whole point of using weighting
-to estimate the marginal structural model in the first place.</p>
+to estimate the marginal structural model in the first place. See
+<code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code> for an explanation of
+the estimand and assumptions involved and a fuller analysis, including
+censoring weights.</p>
 <p><code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> makes it easy to incorporate the weights
 and account for their estimation in computing the parameter variance
 matrix, if desired. As with other methods, when the components required

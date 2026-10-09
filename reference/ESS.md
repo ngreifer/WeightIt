@@ -43,6 +43,10 @@ biom.13405. [doi:10.1111/biom.13405](https://doi.org/10.1111/biom.13405)
 
 [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for the role of the effective sample size in choosing a weighting
+specification.
+
 ## Examples
 
 ``` r

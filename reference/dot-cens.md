@@ -160,6 +160,9 @@ for which methods support them;
 for the function itself and `cobalt::class-bal.tab.cens` for the balance
 output.
 
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for a worked example of censoring weights in a longitudinal analysis.
+
 ## Examples
 
 ``` r

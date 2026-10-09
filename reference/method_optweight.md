@@ -259,6 +259,10 @@ weights.
 for npCBPS weighting, which is also a special case of stable balancing
 weights.
 
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for descriptions of all the weighting methods and guidance on choosing
+among them.
+
 ## Examples
 
 ``` r

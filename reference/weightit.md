@@ -266,6 +266,11 @@ estimands are allowed, and whether sampling weights are allowed.
 for instructions and examples. Setting `method = NULL` computes unit
 weights.
 
+See
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+for a description of each method, the estimands they support, and
+guidance on choosing among them.
+
 ### Empty model formulas
 
 The right hand side of `formula` may be empty, as in `A ~ 1`, requesting
@@ -407,6 +412,23 @@ arguments are known. In general, `weightit()` should be used.
 
 [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
 for summarizing the distribution of the weights.
+
+- [`vignette("WeightIt")`](https://ngreifer.github.io/WeightIt/articles/WeightIt.md)
+  for an introduction to weighting with WeightIt
+
+- [`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md)
+  for descriptions of the weighting methods and estimands available and
+  guidance on choosing among them
+
+- [`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)
+  for instructions on how to estimate treatment effects after weighting
+
+- [`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+  for a guide to weighting for longitudinal treatments, including
+  censoring weights
+
+- [`vignette("installing-packages")`](https://ngreifer.github.io/WeightIt/articles/installing-packages.md)
+  for instructions on installing the packages some methods require
 
 ## Examples
 

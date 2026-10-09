@@ -71,6 +71,12 @@ A data frame with 7500 observations on the following 10 variables.
 
   a binary indicator of the outcome event (e.g., death)
 
+## See also
+
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md);
+[`vignette("longitudinal-treatments")`](https://ngreifer.github.io/WeightIt/articles/longitudinal-treatments.md)
+for an analysis of this dataset.
+
 ## Examples
 
 ``` r

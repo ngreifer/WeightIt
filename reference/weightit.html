@@ -33,7 +33,9 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/weighting-methods.html">Weighting Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+    <li><a class="dropdown-item" href="../articles/longitudinal-treatments.html">Longitudinal Treatments</a></li>
     <li><a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -267,7 +269,8 @@ that perform the estimation of balancing weights using the requested
 information about them, including additional arguments and outputs (e.g.,
 when <code>include.obj = TRUE</code>), how missing values are treated, which estimands
 are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code>method</code></td><td>Name</td></tr><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Nonparametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Stable balancing weights</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr><tr><td><code><a href="method_cfd.html">"cfd"</a></code></td><td>Characteristic function distance balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see <code><a href="method_user.html">method_user</a></code>
-for instructions and examples. Setting <code>method = NULL</code> computes unit weights.</p><div class="section">
+for instructions and examples. Setting <code>method = NULL</code> computes unit weights.</p>
+<p>See <code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code> for a description of each method, the estimands they support, and guidance on choosing among them.</p><div class="section">
 <h3 id="empty-model-formulas">Empty model formulas<a class="anchor" aria-label="anchor" href="#empty-model-formulas"></a></h3>
 
 
@@ -370,7 +373,12 @@ matrix of covariates and a vector of treatment statuses rather than a formula
 and data frame and performs minimal argument checking and processing. It may
 be useful for speeding up simulation studies for which the correct arguments
 are known. In general, <code>weightit()</code> should be used.</p>
-<p><code><a href="summary.weightit.html">summary.weightit()</a></code> for summarizing the distribution of the weights.</p></div>
+<p><code><a href="summary.weightit.html">summary.weightit()</a></code> for summarizing the distribution of the weights.</p><ul><li><p><code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code> for an introduction to weighting with <span class="pkg">WeightIt</span></p></li>
+<li><p><code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code> for descriptions of the weighting methods and estimands available and guidance on choosing among them</p></li>
+<li><p><code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code> for instructions on how to estimate treatment effects after weighting</p></li>
+<li><p><code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code> for a guide to weighting for longitudinal treatments, including censoring weights</p></li>
+<li><p><code><a href="../articles/installing-packages.html">vignette("installing-packages")</a></code> for instructions on installing the packages some methods require</p></li>
+</ul></div>
     </div>
 
     <div class="section level2">

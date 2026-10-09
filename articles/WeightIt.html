@@ -45,7 +45,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+<li><a class="dropdown-item" href="../articles/weighting-methods.html">Weighting Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a></li>
+    <li><a class="dropdown-item" href="../articles/longitudinal-treatments.html">Longitudinal Treatments</a></li>
     <li><a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a></li>
   </ul>
 </li>
@@ -80,7 +82,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-10-06</h4>
+            <h4 data-toc-skip class="date">2026-10-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -97,7 +99,10 @@ be used to estimate the causal parameters of marginal structural models.
 I will not go into the basics of causal inference methods here. For good
 introductory articles, see <span class="citation">Austin (<a href="#ref-austinIntroductionPropensityScore2011">2011</a>)</span>,
 <span class="citation">Austin and Stuart (<a href="#ref-austinMovingBestPractice2015">2015</a>)</span>, <span class="citation">Robins et al. (<a href="#ref-robinsMarginalStructuralModels2000">2000</a>)</span>, or
-<span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016">2016</a>)</span>.</p>
+<span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016">2016</a>)</span>. For
+descriptions of the weighting methods available in <em>WeightIt</em> and
+guidance on choosing among them, see
+<code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>.</p>
 <p>Typically, the analysis of an observational study might proceed as
 follows: identify the covariates for which balance is required; assess
 the quality of the data available, including missingness and measurement
@@ -272,7 +277,8 @@ Let’s see if we can do better. We’ll choose a different method: entropy
 balancing <span class="citation">(<a href="#ref-hainmuellerEntropyBalancingCausal2012">Hainmueller
 2012</a>)</span>, which guarantees perfect balance on specified moments
 of the covariates while minimizing the negative entropy (a measure of
-dispersion) of the weights.</p>
+dispersion) of the weights. The other weighting methods are described in
+<code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span></span>
 <span>                    <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
@@ -319,7 +325,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
@@ -381,7 +387,9 @@ in detail at <code><a href="../articles/estimating-effects.html">vignette("estim
 <p><em>WeightIt</em> can estimate weights for marginal structural models
 with longitudinal treatments as well. This time, we’ll use the sample
 data set <code>msmdata</code> to estimate our weights. Data must be in
-“wide” format, with one row per unit.</p>
+“wide” format, with one row per unit. For an explanation of the estimand
+and assumptions involved and a fuller analysis, see
+<code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code>.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"msmdata"</span><span class="op">)</span></span>
 <span></span>
@@ -767,7 +775,8 @@ both the treatment and censoring weights are still available:</p>
 <p>Balance for a censoring model is assessed against the full at-risk
 sample rather than against another treatment group, and
 <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> does this directly for an object like
-<code>Wc</code>. See <code><a href="../reference/dot-cens.html">?.cens</a></code> for more.</p>
+<code>Wc</code>. See <code><a href="../reference/dot-cens.html">?.cens</a></code> and
+<code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code> for more.</p>
 </div>
 </div>
 <div class="section level2 unnumbered">

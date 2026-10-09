@@ -23,6 +23,9 @@ and how to install the required packages either from CRAN or otherwise
 when the CRAN version is not available. In many cases, this involves
 installing the package from the author’s GitHub repository, which
 requires the *pak* package, which contains the function `pkg_install()`.
+For descriptions of the methods themselves and guidance on choosing
+among them, see
+[`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md).
 
 ## Propensity score weighting using GLMs (`method = "glm"`)
 
