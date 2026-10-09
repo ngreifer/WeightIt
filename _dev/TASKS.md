@@ -10,6 +10,10 @@
 
 ## Done
 
+- [x] Remove the effects of individual treatments from `vignette("longitudinal-treatments")`, so its estimands are the comparisons between regimes only (2026-10-09).
+
+- [x] Break the saturated MSM equation in `vignette("longitudinal-treatments")` over two lines so it fits the pkgdown margins, and replace the worked code in the longitudinal section of `vignette("estimating-effects")` with a pointer to the new vignette (2026-10-09).
+
 - [x] Add cross-references to `vignette("weighting-methods")` and `vignette("longitudinal-treatments")` in the README, the help pages (`weightit()`, `weightitMSM()`, `.cens()`, `msmdata`, `.weightit_methods`, `get_w_from_ps()`, `ESS()`, `trim()`, `calibrate()`, and the eleven method pages), and the other vignettes (2026-10-08).
 
 - [x] Write `vignette("longitudinal-treatments")`, a worked analysis of a longitudinal treatment with `weightitMSM()`, with a second analysis adding censoring weights (2026-10-08).

@@ -499,47 +499,11 @@ For more information on all of the capabilities of *adrftools*, see its [website
 
 ### Longitudinal Treatments
 
-For longitudinal treatments, estimation proceeds as usual, except that we estimate weights using `weightitMSM()` and fit a weighted outcome model that includes treatment at all time periods (and, optionally, any covariates measured prior to the first treatment). It is important not to include any covariates possibly caused by any of the treatments to avoid any bias; this is the whole point of using weighting to estimate the marginal structural model in the first place. See `vignette("longitudinal-treatments")` for an explanation of the estimand and assumptions involved and a fuller analysis, including censoring weights.
+For longitudinal treatments, estimation proceeds as usual, except that we estimate weights using `weightitMSM()` and fit a weighted outcome model (i.e., a marginal structural model) that includes treatment at all time periods (and, optionally, any covariates measured prior to the first treatment). It is important not to include any covariates possibly caused by any of the treatments to avoid any bias; this is the whole point of using weighting to estimate the marginal structural model in the first place.
 
-`glm_weightit()` makes it easy to incorporate the weights and account for their estimation in computing the parameter variance matrix, if desired. As with other methods, when the components required for M-estimation are included in the `weightitMSM()` output, they will be used to estimate standard errors that adjust for estimation of the weights. Otherwise, the weights can be treated as fixed or the whole estimation can be done through bootstrapping.
+`glm_weightit()` makes it easy to incorporate the weights and account for their estimation in computing the parameter variance matrix, if desired. As with other methods, when the components required for M-estimation are included in the `weightitMSM()` output, they will be used to estimate standard errors that adjust for estimation of the weights, including the estimation of the stabilization factor, if any. Otherwise, the weights can be treated as fixed or the whole estimation can be done through bootstrapping. The average expected potential outcomes under each treatment regime can then be computed using `avg_predictions()` and compared using `hypotheses()`, as with multi-category treatments.
 
-Below, we demonstrate using the usual inverse probability weights for a marginal structural model. Because these weights are computed from propensity scores estimated with logistic regression, we can use M-estimation to adjust for their estimation in computing the parameter covariance matrix. This also includes estimation of the stabilization factor, if any. We'll use the toy dataset `msmdata` that comes with *WeightIt*.
-
-```{r}
-data("msmdata")
-
-Wmsm <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
-                             A_2 ~ X1_1 + X2_1 +
-                               A_1 + X1_0 + X2_0,
-                             A_3 ~ X1_2 + X2_2 +
-                               A_2 + X1_1 + X2_1 +
-                               A_1 + X1_0 + X2_0),
-                        data = msmdata, method = "glm",
-                        stabilize = TRUE)
-```
-
-Next we'll fit the outcome model using `glm_weightit()`, which includes the baseline covariates (i.e., only those measured prior to the first treatment).
-
-```{r}
-fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
-                    data = msmdata, weightit = Wmsm,
-                    family = binomial)
-```
-
-Then, we compute the average expected potential outcomes under each treatment regime using `marginaleffects::avg_predictions()`:
-
-```{r, eval = me_ok}
-p <- avg_predictions(fit,
-                     variables = c("A_1", "A_2", "A_3"))
-
-p
-```
-
-We can compare individual predictions using `marginaleffects::hypotheses()`. For example, to compare all treatment histories to just the first treatment history (i.e., in which all units are untreated for all time periods), we can run the following:
-
-```{r, eval = me_ok}
-hypotheses(p, ~reference)
-```
+See `vignette("longitudinal-treatments")` for an explanation of the estimand and assumptions involved and a full worked example that goes through estimating the weights, assessing balance, fitting the marginal structural model, and estimating and comparing the expected potential outcomes under each treatment regime, including with censoring weights.
 
 ### Moderation Analysis
 
