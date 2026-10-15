@@ -25,6 +25,14 @@ WeightIt News and Updates
 
 * Fixed a bug in `coxph_weightit()` in which arguments to `survival::coxph.control()` supplied through `...` (e.g., `iter.max`) were ignored. Arguments supplied in a list to `control` were unaffected.
 
+* Fixed a bug in which `glm_weightit()`, `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()` failed with an error when `weightit` was the output of `as.weightit()` or `as.weightitMSM()` without `s.weights` supplied.
+
+* Fixed a bug in `ordinal_weightit()` in which the model failed to fit when more than half of the units were in the highest category of the outcome, either with an error or with a warning about convergence and nonsensical estimates. This also affected `weightit()` with `method = "glm"` and an ordered treatment.
+
+* Fixed a bug in `predict()` after `ordinal_weightit()` in which `newdata` with a single row caused an error. Predictions for a single row with `level` supplied now keep its row name, as they do with more than one row.
+
+* `sbps()` now gives an informative error when `obj` is not the output of a call to `weightit()` (e.g., when it was created by `as.weightit()`) and `obj2` or `formula` is not supplied; both are required for such objects. Previously, the error was uninformative.
+
 * Warnings raised while refitting the model in bootstrap replicates are now issued once each after the bootstrap, along with the number of replicates that raised them, rather than once per replicate. Previously, a warning raised in many replicates led R to report only that there were 50 or more warnings. Fixed a bug in which such warnings from `coxph_weightit()`, `multinom_weightit()`, and `ordinal_weightit()` began with an empty function name, as in `(from ): `.
 
 # `WeightIt` 2.1.0

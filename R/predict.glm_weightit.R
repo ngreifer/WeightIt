@@ -316,7 +316,8 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
 
   if (type == "response") {
     if (is_not_null(level)) {
-      p <- p[, level]
+      #Names set explicitly because `p[, level]` loses the row name of a single unit
+      p <- setNames(p[, level], rownames(p))
     }
 
     return(p)

@@ -13,14 +13,20 @@
 #'   sample.
 #' @param obj2 a `weightit` object containing weights estimated in the
 #'   subgroups. Typically this has been estimated by including `by` in the call
-#'   to [weightit()]. Either `obj2` or `moderator` must be specified.
+#'   to [weightit()]. Either `obj2` or `moderator` must be specified. `obj2`
+#'   must be specified when `obj` is not the output of a call to [weightit()]
+#'   (e.g., when it was created by [as.weightit()]), since `obj` cannot then be
+#'   refit within subgroups.
 #' @param moderator optional; a string containing the name of the variable in
 #'   `data` for which weighting is to be done within subgroups or a one-sided
 #'   formula with the subgrouping variable on the right-hand side. This argument
 #'   is analogous to the `by` argument in `weightit()`, and in fact it is passed
 #'   on to `by`. Either `obj2` or `moderator` must be specified.
 #' @param formula an optional formula with the covariates for which balance is
-#'   to be optimized. If not specified, the formula in `obj$call` will be used.
+#'   to be optimized. If not specified, the formula used to estimate the weights
+#'   in `obj` will be used, so `formula` must be specified when `obj` is not the
+#'   output of a call to [weightit()] (e.g., when it was created by
+#'   [as.weightit()]).
 #' @param data an optional data set in the form of a data frame that contains
 #'   the variables in `formula` or `moderator`.
 #' @param smooth `logical`; whether the smooth version of the SBPS should be
@@ -162,6 +168,10 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
     }
   }
   else {
+    if (!came_from_weightit(obj)) {
+      arg::err("{.arg obj} does not appear to be the result of a call to {.fun weightit}, so it cannot be refit within subgroups; supply weights estimated within subgroups to {.arg obj2} instead")
+    }
+
     call <- obj[["call"]]
 
     if (is_not_null(obj[["by"]])) {
@@ -183,6 +193,10 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
 
   if (is_null(formula)) {
     formula <- obj[["formula"]]
+
+    if (is_null(formula)) {
+      arg::err("{.arg formula} must be supplied when {.arg obj} does not contain the formula used to estimate its weights (e.g., when it was created by {.fun as.weightit})")
+    }
   }
 
   t.c <- terms(formula) |>

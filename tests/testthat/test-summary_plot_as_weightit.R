@@ -339,6 +339,61 @@ test_that("as.weightit() validates its input", {
   expect_error(as.weightit(w, treat = d$A, s.weights = d$SW[-1L]))
 })
 
+test_that("as.weightit() objects without sampling weights work in every model fitting function", {
+  skip_if_not_installed("patrick")
+
+  d <- test_data
+
+  cutoff <- quantile(d$Y_S, .8)
+  d$event <- as.numeric(d$Y_S < cutoff)
+  d$time <- pmin(d$Y_S, cutoff)
+  d$Y_M <- factor(d$Y_O, ordered = FALSE)
+
+  #Unlike `weightit()`, `as.weightit()` leaves `s.weights` `NULL` when it is not
+  #supplied, which made every fitting function fail with "replacement has 0 rows"
+  W <- as.weightit(d$SW, treat = d$A, estimand = "ATE")
+
+  expect_null(W$s.weights)
+
+  patrick::with_parameters_test_that(
+    "{fitter}",
+    {
+      if (fitter == "coxph_weightit") {
+        skip_if_not_installed("survival")
+      }
+
+      fit_call <- function(...) {
+        do.call(fitter, c(fit_args, list(data = quote(d), ...)))
+      }
+
+      expect_no_condition({
+        fit <- fit_call(weightit = W)
+      })
+
+      #The weights were not estimated, so the fit is the one with them held fixed
+      fit_w <- fit_call(weights = quote(SW))
+
+      expect_equal(coef(fit), coef(fit_w), tolerance = eps)
+      expect_equal(vcov(fit), vcov(fit_w), tolerance = eps)
+
+      expect_equal(model.frame(fit)[["(s.weights)"]], rep.int(1, nrow(d)))
+      expect_equal(model.frame(fit)[["(weights)"]], d$SW)
+    },
+    .cases = patrick::cases(
+      list(fitter = "glm_weightit",
+           fit_args = list(quote(Y_B ~ A + X1), family = quote(binomial))),
+      list(fitter = "lm_weightit",
+           fit_args = list(quote(Y_C ~ A + X1))),
+      list(fitter = "multinom_weightit",
+           fit_args = list(quote(Y_M ~ A + X1))),
+      list(fitter = "ordinal_weightit",
+           fit_args = list(quote(Y_O ~ A + X1))),
+      list(fitter = "coxph_weightit",
+           fit_args = list(quote(survival::Surv(time, event) ~ A + X1)))
+    )
+  )
+})
+
 test_that("as.weightitMSM() wraps weights for a longitudinal treatment", {
   d <- msmdata
 
@@ -358,6 +413,20 @@ test_that("as.weightitMSM() wraps weights for a longitudinal treatment", {
 
   expect_error(as.weightitMSM(w))
   expect_error(as.weightitMSM(w, treat.list = list(d$A_1, d$A_2[-1L])))
+
+  #Without `s.weights`, as for `as.weightit()`
+  expect_null(W$s.weights)
+
+  expect_no_condition({
+    fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3, data = d, weightit = W,
+                        family = binomial)
+  })
+
+  fit_w <- glm_weightit(Y_B ~ A_1 * A_2 * A_3, data = d, weights = w,
+                        family = binomial)
+
+  expect_equal(coef(fit), coef(fit_w), tolerance = eps)
+  expect_equal(vcov(fit), vcov(fit_w), tolerance = eps)
 })
 
 test_that("as.weightitMSM() takes a censoring indicator among the treatments", {

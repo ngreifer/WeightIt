@@ -1274,13 +1274,17 @@
   }
 
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
+    #`weightit` objects from `as.weightit()` have no sampling weights unless they
+    #were supplied
+    SW <- weightit[["s.weights"]] %or% rep_with(1, weightit[["weights"]])
+
     #Weights supplied to `weights` are not sampling weights, though they are stored
     #as such in the placeholder `weightit` object
     if (!inherits(weightit, "fake_weightit")) {
-      fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
+      fit$model[["(s.weights)"]] <- SW
     }
 
-    fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
+    fit$model[["(weights)"]] <- weightit[["weights"]] * SW
   }
 
   fit[["vcov_type"]] <- .attr(fit[["vcov"]], "vcov_type")

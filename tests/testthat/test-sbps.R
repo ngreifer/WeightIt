@@ -181,3 +181,28 @@ test_that("sbps() rejects what it cannot handle", {
   Wc <- weightit(.cens(C) ~ X1 + X2, data = d, method = "glm")
   expect_error(sbps(Wc, moderator = ~G), "cannot be used with censoring")
 })
+
+test_that("as.weightit() objects work when obj2 and formula are supplied", {
+  d <- make_data()
+
+  f <- A ~ X1 + X2 + X3 + G
+
+  W1 <- weightit(f, data = d, method = "glm", estimand = "ATT")
+  W2 <- weightit(f, data = d, method = "glm", estimand = "ATT", by = "G")
+
+  # No call to refit and no formula to fall back on, as when the weights were
+  # estimated outside `weightit()`
+  A1 <- as.weightit(W1$weights, treat = d$A, estimand = "ATT", ps = W1$ps)
+  A2 <- as.weightit(W2$weights, treat = d$A, estimand = "ATT", ps = W2$ps)
+
+  # Both previously failed with "no terms component nor attribute"
+  expect_error(sbps(A1, moderator = "G", formula = f, data = d), "cannot be refit")
+  expect_error(sbps(A1, A2, moderator = "G", data = d), "must be supplied")
+
+  # With both supplied, the result is the one from the objects holding the same weights
+  S <- sbps(W1, W2)
+  S_as <- sbps(A1, A2, moderator = "G", formula = f, data = d)
+
+  expect_equal(unname(S_as$weights), unname(S$weights), tolerance = eps)
+  expect_equal(S_as$prop.subgroup, S$prop.subgroup)
+})

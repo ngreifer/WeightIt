@@ -244,6 +244,48 @@ test_that("predict.ordinal_weightit", {
   expect_equal(unname(p_sub_mean), unname(p_mean[1:100]), tolerance = eps)
 })
 
+test_that("predict() for ordinal and multinomial models works with one row of newdata", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+
+  W <- weightit(A ~ X1 + X2 + X3, data = test_data, method = "glm",
+                estimand = "ATE")
+
+  one <- test_data[5L, ]
+
+  #A single unit previously made the ordinal model's category probabilities a
+  #vector rather than a one-row matrix, so every type that uses them failed
+  fit_o <- ordinal_weightit(Y_O ~ A + X1 + X2, data = test_data, weightit = W,
+                            vcov = "none")
+
+  p_o <- predict(fit_o, newdata = one)
+  expect_true(is.matrix(p_o))
+  expect_equal(p_o, predict(fit_o, newdata = test_data)[5L, , drop = FALSE],
+               tolerance = eps)
+
+  expect_equal(predict(fit_o, newdata = one, type = "class"),
+               predict(fit_o, newdata = test_data, type = "class")[5L])
+  expect_equal(predict(fit_o, newdata = one, type = "mean"),
+               predict(fit_o, newdata = test_data, type = "mean")[5L],
+               tolerance = eps)
+
+  #`level` keeps the unit's row name, for both models
+  expect_equal(predict(fit_o, newdata = one, level = 2L),
+               predict(fit_o, newdata = test_data, level = 2L)[5L],
+               tolerance = eps)
+
+  fit_m <- multinom_weightit(Y_M ~ A + X1 + X2, data = test_data, weightit = W,
+                             vcov = "none")
+
+  expect_equal(predict(fit_m, newdata = one, level = 2L),
+               predict(fit_m, newdata = test_data, level = 2L)[5L],
+               tolerance = eps)
+})
+
 test_that("predict.coxph_weightit", {
   skip_on_cran()
   skip_if_not_installed("survival")

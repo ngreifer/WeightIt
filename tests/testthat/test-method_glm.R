@@ -376,6 +376,31 @@ test_that("Ordinal treatment", {
   expect_equal(W_dep$weights, W_wi_br$weights, tolerance = eps)
 })
 
+test_that("Ordinal treatment whose top category holds most units", {
+  skip_on_cran()
+  skip_if_not_installed("MASS")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Ao <- ordered(findInterval(test_data$Ac, quantile(test_data$Ac, c(.2, .4))))
+
+  #Previously failed with "non-finite value supplied by optim" because of the
+  #starting values of the in-house fitter
+  W <- expect_no_condition({
+    weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+             estimand = "ATE", include.obj = TRUE)
+  })
+
+  W_polr <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                     estimand = "ATE", multi.method = "polr")
+
+  expect_equal(W$weights, W_polr$weights, tolerance = eps)
+
+  #Last, because it skips when rootSolve is not installed
+  expect_M_parts_okay(W, tolerance = eps)
+})
+
 test_that("Ordinal treatment: bias-reduced links", {
   skip_on_cran()
   skip_if_not_installed("rootSolve")

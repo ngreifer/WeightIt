@@ -314,6 +314,70 @@ test_that("Additional links", {
   )
 })
 
+#The starting values come from a binary GLM split at the median category. When the
+#top category held most units, the split was above it, so the GLM's outcome was all
+#0 and the fit failed.
+test_that("the top category can hold most units: two categories", {
+  skip_on_cran()
+  skip_if_not_installed("patrick")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_O2 <- factor(1 - test_data$Y_B, ordered = TRUE)
+
+  W <- as.weightit(test_data$SW, treat = test_data$A, estimand = "ATE",
+                   s.weights = rep.int(1, nrow(test_data)))
+
+  #With k = 2 the cumulative link model is a GLM for the first category, as in the
+  #`br = TRUE` test below
+  patrick::with_parameters_test_that(
+    "link = {link}, weighted = {weighted}",
+    {
+      fit <- expect_no_condition({
+        ordinal_weightit(Y_O2 ~ A + X1 + X2, data = test_data, link = link,
+                         weightit = if (weighted) W, vcov = "HC0")
+      })
+
+      fit_g <- glm_weightit(I(Y_O2 == "0") ~ A + X1 + X2, data = test_data,
+                            family = binomial(link), weightit = if (weighted) W,
+                            vcov = "HC0")
+
+      expect_equal(unname(coef(fit)),
+                   unname(c(-coef(fit_g)[-1L], coef(fit_g)[1L])),
+                   tolerance = eps)
+    },
+    .cases = expand.grid(weighted = c(FALSE, TRUE),
+                         link = c("logit", "probit", "cloglog", "cauchit"),
+                         stringsAsFactors = FALSE)
+  )
+})
+
+test_that("the top category can hold most units: three categories", {
+  skip_on_cran()
+  skip_if_not_installed("MASS")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_O3 <- ordered(findInterval(test_data$Y_C,
+                                         quantile(test_data$Y_C, c(.2, .4))))
+
+  W <- as.weightit(test_data$SW, treat = test_data$A, estimand = "ATE",
+                   s.weights = rep.int(1, nrow(test_data)))
+
+  fit <- expect_no_condition({
+    ordinal_weightit(Y_O3 ~ A + X1 + X2, data = test_data, weightit = W,
+                     vcov = "HC0")
+  })
+
+  fit_g <- MASS::polr(Y_O3 ~ A + X1 + X2, data = test_data, weights = SW,
+                      control = list(reltol = 1e-12))
+
+  expect_equal(unname(coef(fit)), unname(c(coef(fit_g), fit_g$zeta)),
+               tolerance = eps)
+})
+
 test_that("Unordered factor outcome (documents actual behavior)", {
   skip_on_cran()
 

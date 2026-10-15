@@ -441,7 +441,9 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     start <- .linkfun(cumsum(tabulate(y_)[-m] / n))
   }
   else if (is_null(start)) {
-    q1 <- floor(median(y_))
+    #Split below the top category even when it holds most units; otherwise `y1`
+    #would be all 0
+    q1 <- min(floor(median(y_)), m - 1L)
     y1 <- as.numeric(y_ > q1)
     coefs <- .get_glm_starting_values(X = cbind(1, x_), Y = y1, w = weights,
                                       family = fam, offset = offset)
@@ -730,7 +732,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   # natural parameterization of `a`
   get_pp <- function(B, X, offset = NULL) {
     if (is_null(offset)) {
-      offset <- rep.int(0, n)
+      offset <- rep.int(0, nrow(X))
     }
 
     if (ncol(X) == 0L) {
@@ -743,8 +745,11 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
       Xb <- offset + drop(X %*% b)
     }
 
-    GG <- vapply(a, function(a_) .linkinv(a_ - Xb),
-                 numeric(length(Xb)))
+    #Built with `outer()` and `matrix()` so that a single unit (e.g., one row of
+    #`newdata` in `predict()`) stays a one-row matrix
+    eta <- outer(-Xb, a, "+")
+
+    GG <- matrix(.linkinv(eta), nrow(eta), ncol(eta))
 
     pp <- cbind(GG, 1) - cbind(0, GG)
 

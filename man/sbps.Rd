@@ -20,7 +20,10 @@ sample.}
 
 \item{obj2}{a \code{weightit} object containing weights estimated in the
 subgroups. Typically this has been estimated by including \code{by} in the call
-to \code{\link[=weightit]{weightit()}}. Either \code{obj2} or \code{moderator} must be specified.}
+to \code{\link[=weightit]{weightit()}}. Either \code{obj2} or \code{moderator} must be specified. \code{obj2}
+must be specified when \code{obj} is not the output of a call to \code{\link[=weightit]{weightit()}}
+(e.g., when it was created by \code{\link[=as.weightit]{as.weightit()}}), since \code{obj} cannot then be
+refit within subgroups.}
 
 \item{moderator}{optional; a string containing the name of the variable in
 \code{data} for which weighting is to be done within subgroups or a one-sided
@@ -29,7 +32,10 @@ is analogous to the \code{by} argument in \code{weightit()}, and in fact it is p
 on to \code{by}. Either \code{obj2} or \code{moderator} must be specified.}
 
 \item{formula}{an optional formula with the covariates for which balance is
-to be optimized. If not specified, the formula in \code{obj$call} will be used.}
+to be optimized. If not specified, the formula used to estimate the weights
+in \code{obj} will be used, so \code{formula} must be specified when \code{obj} is not the
+output of a call to \code{\link[=weightit]{weightit()}} (e.g., when it was created by
+\code{\link[=as.weightit]{as.weightit()}}).}
 
 \item{data}{an optional data set in the form of a data frame that contains
 the variables in \code{formula} or \code{moderator}.}
