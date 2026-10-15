@@ -104,6 +104,43 @@
   supplied through `...` (e.g., `iter.max`) were ignored. Arguments
   supplied in a list to `control` were unaffected.
 
+- Fixed a bug in which
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  failed with an error when `weightit` was the output of
+  [`as.weightit()`](https://ngreifer.github.io/WeightIt/reference/as.weightit.md)
+  or
+  [`as.weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/as.weightit.md)
+  without `s.weights` supplied.
+
+- Fixed a bug in
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  in which the model failed to fit when more than half of the units were
+  in the highest category of the outcome, either with an error or with a
+  warning about convergence and nonsensical estimates. This also
+  affected
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  with `method = "glm"` and an ordered treatment.
+
+- Fixed a bug in [`predict()`](https://rdrr.io/r/stats/predict.html)
+  after
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  in which `newdata` with a single row caused an error. Predictions for
+  a single row with `level` supplied now keep its row name, as they do
+  with more than one row.
+
+- [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md) now
+  gives an informative error when `obj` is not the output of a call to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  (e.g., when it was created by
+  [`as.weightit()`](https://ngreifer.github.io/WeightIt/reference/as.weightit.md))
+  and `obj2` or `formula` is not supplied; both are required for such
+  objects. Previously, the error was uninformative.
+
 - Warnings raised while refitting the model in bootstrap replicates are
   now issued once each after the bootstrap, along with the number of
   replicates that raised them, rather than once per replicate.

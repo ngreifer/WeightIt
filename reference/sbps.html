@@ -25,7 +25,7 @@ criterion that includes subgroup as well as overall balance."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,7 +99,10 @@ sample.</p></dd>
 <dt id="arg-obj-">obj2<a class="anchor" aria-label="anchor" href="#arg-obj-"></a></dt>
 <dd><p>a <code>weightit</code> object containing weights estimated in the
 subgroups. Typically this has been estimated by including <code>by</code> in the call
-to <code><a href="weightit.html">weightit()</a></code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></dd>
+to <code><a href="weightit.html">weightit()</a></code>. Either <code>obj2</code> or <code>moderator</code> must be specified. <code>obj2</code>
+must be specified when <code>obj</code> is not the output of a call to <code><a href="weightit.html">weightit()</a></code>
+(e.g., when it was created by <code><a href="as.weightit.html">as.weightit()</a></code>), since <code>obj</code> cannot then be
+refit within subgroups.</p></dd>
 
 
 <dt id="arg-moderator">moderator<a class="anchor" aria-label="anchor" href="#arg-moderator"></a></dt>
@@ -112,7 +115,10 @@ on to <code>by</code>. Either <code>obj2</code> or <code>moderator</code> must b
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>an optional formula with the covariates for which balance is
-to be optimized. If not specified, the formula in <code>obj$call</code> will be used.</p></dd>
+to be optimized. If not specified, the formula used to estimate the weights
+in <code>obj</code> will be used, so <code>formula</code> must be specified when <code>obj</code> is not the
+output of a call to <code><a href="weightit.html">weightit()</a></code> (e.g., when it was created by
+<code><a href="as.weightit.html">as.weightit()</a></code>).</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>

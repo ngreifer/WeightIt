@@ -345,8 +345,8 @@ summary(fit3)
 #> 
 #> Coefficients:
 #>             Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)   5515.9      361.5  15.257   <1e-06 ***
-#> treat          833.2      644.4   1.293    0.196    
+#> (Intercept)   5515.9      373.6  14.763   <1e-06 ***
+#> treat          833.2      684.7   1.217    0.224    
 #> Standard error: fractional weighted bootstrap
 #> 
 ```

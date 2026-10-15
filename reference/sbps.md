@@ -35,7 +35,12 @@ sbps(
   a `weightit` object containing weights estimated in the subgroups.
   Typically this has been estimated by including `by` in the call to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
-  Either `obj2` or `moderator` must be specified.
+  Either `obj2` or `moderator` must be specified. `obj2` must be
+  specified when `obj` is not the output of a call to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  (e.g., when it was created by
+  [`as.weightit()`](https://ngreifer.github.io/WeightIt/reference/as.weightit.md)),
+  since `obj` cannot then be refit within subgroups.
 
 - moderator:
 
@@ -50,7 +55,12 @@ sbps(
 - formula:
 
   an optional formula with the covariates for which balance is to be
-  optimized. If not specified, the formula in `obj$call` will be used.
+  optimized. If not specified, the formula used to estimate the weights
+  in `obj` will be used, so `formula` must be specified when `obj` is
+  not the output of a call to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  (e.g., when it was created by
+  [`as.weightit()`](https://ngreifer.github.io/WeightIt/reference/as.weightit.md)).
 
 - data:
 
