@@ -64,6 +64,10 @@
   treatment produced a warning about an unused argument on versions of R
   before 4.3.0.
 
+- Fixed a bug when using `method = "optweight"` with *clarabel* as the
+  solver (e.g., with `norm = "entropy"` when *scs* is not installed), in
+  which the solver’s output was printed even with `verbose = FALSE`.
+
 - Fixed a bug in
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   in which M-estimation-based standard errors (the default when the
