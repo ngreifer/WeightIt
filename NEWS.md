@@ -17,6 +17,8 @@ WeightIt News and Updates
 
 * Fixed a bug in which setting `density = "kernel"` with a continuous treatment produced a warning about an unused argument on versions of R before 4.3.0.
 
+* Fixed a bug when using `method = "optweight"` with *clarabel* as the solver (e.g., with `norm = "entropy"` when *scs* is not installed), in which the solver's output was printed even with `verbose = FALSE`.
+
 * Fixed a bug in `coxph_weightit()` in which M-estimation-based standard errors (the default when the supplied `weightit` object supports M-estimation) were incorrect, as was the output of `sandwich::estfun()`. The derivative of the outcome score with respect to the weighting model's coefficients was computed as though each unit's contribution depended only on its own weight, but in a Cox model it also depends on the other units' weights through the risk sets. Standard errors will change, in some cases noticeably.
 
 * `sandwich::estfun()` on objects fit with `br = TRUE` now computes the derivative of the outcome score with respect to the weighting model's coefficients by numeric differentiation, as `vcov()` has since version 2.1.0. Previously the two gave slightly different results.

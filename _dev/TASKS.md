@@ -12,6 +12,8 @@
 
 ## Done
 
+- [x] Stop `method = "optweight"` from printing the *clarabel* solver's log with `verbose = FALSE`. The three fitting functions in `R/weightit2optweight.R` passed `verbose = TRUE` to *optweight* and relied on `capture.output()`, which cannot catch *clarabel*'s output (it writes to stdout outside R's connections); they now pass the user's `verbose`. Present in 2.1.0, so a NEWS item was added. Test added in `test-method_optweight.R` (mocks *optweight*'s fitting functions), and it fails on the old code (2026-10-27).
+
 - [x] Fix GitHub issue #96: the `norm = "entropy"` test in `test-censoring.R` errored when neither *scs* nor *clarabel* was installed; it now skips in that case. *scs* was not added to Suggests pending a decision; the issue has not been answered on GitHub (2026-10-27).
 
 - [x] `sbps()` gives an informative error when `obj` did not come from `weightit()` (e.g., from `as.weightit()`) and `obj2` or `formula` is missing; previously it failed with "no terms component nor attribute". With both supplied, such objects already worked and give the same result as the `weightit()` objects holding the same weights. Documented on `?sbps`, test added (2026-10-15).

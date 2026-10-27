@@ -641,3 +641,51 @@ test_that("Continuous treatment: configurations", {
     sw = c(FALSE, TRUE)
   )
 })
+
+test_that("verbose is passed to the solver", {
+  skip_on_cran()
+  skip_if_not_installed("optweight", minimum_version = "2.0.1")
+  skip_if_not_installed("patrick")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Some solvers (e.g., clarabel) print their log directly to the console, where
+  # `capture.output()` cannot hide it, so the solver should only be asked for its
+  # log when `verbose = TRUE`. `seen` records what optweight received.
+  seen <- new.env()
+  fit <- optweight::optweight.fit
+  svy_fit <- optweight::optweight.svy.fit
+
+  local_mocked_bindings(
+    optweight.fit = function(..., verbose) {
+      seen$verbose <- verbose
+      fit(..., verbose = verbose)
+    },
+    optweight.svy.fit = function(..., verbose) {
+      seen$verbose <- verbose
+      svy_fit(..., verbose = verbose)
+    },
+    .package = "optweight"
+  )
+
+  patrick::with_parameters_test_that(
+    "{type} treatment, verbose = {verbose}",
+    {
+      f <- switch(type,
+                  binary = A ~ X1 + X2 + X3,
+                  continuous = Ac ~ X1 + X2 + X3,
+                  censoring = .cens(A) ~ X1 + X2 + X3)
+
+      seen$verbose <- NULL
+
+      capture.output({
+        weightit(f, data = test_data, method = "optweight", verbose = verbose)
+      })
+
+      expect_identical(seen$verbose, verbose)
+    },
+    .cases = expand.grid(type = c("binary", "continuous", "censoring"),
+                         verbose = c(FALSE, TRUE),
+                         stringsAsFactors = FALSE)
+  )
+})

@@ -222,7 +222,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   A[["s.weights"]] <- s.weights
   A[["b.weights"]] <- bw
   A[["focal"]] <- focal
-  A[["verbose"]] <- TRUE
+  A[["verbose"]] <- verbose
 
   if (is_not_null(A[["targets"]])) {
     arg::wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
@@ -290,7 +290,7 @@ weightit2optweight.cens <- function(covs, treat, s.weights, subset, missing, ver
   A[["covs"]] <- covs[u, , drop = FALSE]
   A[["s.weights"]] <- s.weights[u]
   A[["b.weights"]] <- bw[u]
-  A[["verbose"]] <- TRUE
+  A[["verbose"]] <- verbose
 
   verbosely({
     opt.out <- do.call(optweight::optweight.svy.fit, A, quote = TRUE)
@@ -331,7 +331,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
   A[["estimand"]] <- "ATE"
   A[["s.weights"]] <- s.weights
   A[["b.weights"]] <- bw
-  A[["verbose"]] <- TRUE
+  A[["verbose"]] <- verbose
 
   if (is_not_null(A[["targets"]])) {
     arg::wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
