@@ -12,6 +12,8 @@
 
 ## Done
 
+- [x] Fix GitHub issue #96: the `norm = "entropy"` test in `test-censoring.R` errored when neither *scs* nor *clarabel* was installed; it now skips in that case. *scs* was not added to Suggests pending a decision; the issue has not been answered on GitHub (2026-10-27).
+
 - [x] `sbps()` gives an informative error when `obj` did not come from `weightit()` (e.g., from `as.weightit()`) and `obj2` or `formula` is missing; previously it failed with "no terms component nor attribute". With both supplied, such objects already worked and give the same result as the `weightit()` objects holding the same weights. Documented on `?sbps`, test added (2026-10-15).
 
 - [x] Fix the two bugs reported from *mediation*: the five model fitting functions failed for `as.weightit()`/`as.weightitMSM()` objects without `s.weights` (`.process_fit()`), and `predict()` after `ordinal_weightit()` failed for one row of `newdata` (`get_pp()`), which also dropped the row name with `level` for `multinom_weightit()`. Probing for other manifestations found a third: `ordinal_weightit()` and ordered treatments in `weightit(method = "glm")` failed when the top category held most units (starting values split above the top category). Tests added in four files; each fails on the old code (2026-10-14).

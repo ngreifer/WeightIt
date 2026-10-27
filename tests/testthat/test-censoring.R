@@ -693,6 +693,11 @@ test_that("cfd with kernel = 'energy' equals energy", {
 test_that("optweight with norm = 'entropy' equals ebal up to scale", {
   skip_if_not_installed("optweight")
 
+  # optweight solves the entropy problem with scs or clarabel, whichever is
+  # installed, and imports neither
+  skip_if_not(rlang::is_installed("scs") || rlang::is_installed("clarabel"),
+              "neither {scs} nor {clarabel} is installed")
+
   d <- make_cens_data()
 
   W_ebal <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "ebal")
