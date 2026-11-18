@@ -49,6 +49,8 @@
 #'   [glm_weightit()] for details.
 #' @param evaluate `logical`; whether to evaluate the call (`TRUE`, the default) or just
 #'   return it.
+#' @param model for `hatvalues()`, an output from `ordinal_weightit()` or
+#'   `multinom_weightit()`.
 #'
 #' @returns
 #' `summary()` returns a `summary.glm_weightit()` object, which has its
@@ -93,6 +95,23 @@
 #' replaces any `weights` supplied to the original call.
 #'
 #' `estfun()` extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with `bread()`, is used by [sandwich::sandwich()] to compute the robust covariance matrix of the estimated coefficients. See [glm_weightit()] and `vcov()` above for more details.
+#'
+#' `hatvalues()` computes the generalized leverage of each unit for
+#' `ordinal_weightit` and `multinom_weightit` objects, \eqn{h_i =
+#' \text{tr}(F^{-1} F_i)}, where \eqn{F_i} is the unit's contribution to the
+#' expected information matrix \eqn{F} (including its weight). This is the trace
+#' of the unit's block of the hat matrix of the model written as a vector
+#' generalized linear model, i.e., the sum across columns of what `hatvalues()`
+#' returns for `vglm` objects in \pkg{VGAM}, and it is equal to the usual hat
+#' value when the outcome has two categories. The leverages sum to the number of
+#' estimated coefficients, and units with a weight of 0 have a leverage of 0.
+#' Unlike in a generalized linear model, a leverage can exceed 1, though it
+#' cannot exceed the number of outcome categories minus 1. The leverages can be
+#' used to compute an HC2 robust covariance matrix, which scales each unit's
+#' estimating function by \eqn{1/\sqrt{1 - h_i}}; note that with more than two
+#' outcome categories, this is an approximation to the exact HC2 adjustment,
+#' which applies a matrix correction to each unit's vector of residuals. For
+#' `glm_weightit` objects, the `hatvalues()` method for `glm` objects is used.
 #'
 #' @seealso
 #' [glm_weightit()] for the page documenting `glm_weightit()`,
@@ -619,6 +638,102 @@ nobs.ordinal_weightit <- nobs.multinom_weightit
 
 #' @exportS3Method stats::nobs coxph_weightit
 nobs.coxph_weightit <- nobs.multinom_weightit
+
+# Generalized leverage h_i = tr(F^{-1} F_i), where F_i is unit i's contribution to
+# the expected information F = sum_i F_i. This is the trace of the unit's diagonal
+# block of the hat matrix W^{1/2} X (X'WX)^{-1} X' W^{1/2} of the model written as a
+# vector GLM, which is what `VGAM::hatvalues()` returns (by element) for `vglm()`
+# fits, and it reduces to the usual hat value when the outcome has two categories.
+# The leverages sum to the number of estimated coefficients, and each lies between 0
+# and the number of non-reference categories (not 1, as in a GLM).
+
+#' @exportS3Method stats::hatvalues multinom_weightit
+#' @rdname glm_weightit-methods
+hatvalues.multinom_weightit <- function(model, ...) {
+  X <- model[["x"]] %or% model.matrix(model)
+  P <- model[["fitted.values"]]
+  w <- model[["weights"]] %or% rep.int(1, nrow(X))
+
+  p <- ncol(X)
+  K <- ncol(P) - 1L
+
+  X <- X[, !is.na(model[["coefficients"]][seq_len(p)]), drop = FALSE]
+  p <- ncol(X)
+
+  Finv <- .solve_hessian(.multinom_info(X, P, w))
+
+  P <- squish(P, lo = 1e-12, hi = 1)
+
+  h <- numeric(nrow(X))
+
+  for (k in seq_len(K)) {
+    k_ind <- (k - 1L) * p + seq_len(p)
+
+    for (l in seq_len(K)) {
+      l_ind <- (l - 1L) * p + seq_len(p)
+
+      s <- {
+        if (l == k) P[, k + 1L] * (1 - P[, k + 1L])
+        else -P[, k + 1L] * P[, l + 1L]
+      }
+
+      h <- h + s * rowSums((X %*% Finv[l_ind, k_ind, drop = FALSE]) * X)
+    }
+  }
+
+  setNames(w * h, names(model[["residuals"]]))
+}
+
+#' @exportS3Method stats::hatvalues ordinal_weightit
+#' @rdname glm_weightit-methods
+hatvalues.ordinal_weightit <- function(model, ...) {
+  X <- model.matrix(model)
+  P <- model[["fitted.values"]]
+  w <- model[["weights"]] %or% rep.int(1, nrow(X))
+  offset <- model[["offset"]] %or% rep.int(0, nrow(X))
+  coefs <- model[["coefficients"]]
+
+  b_ind <- seq_col(X)
+
+  X <- X[, !is.na(coefs[b_ind]), drop = FALSE]
+  b <- na.rem(coefs[b_ind])
+  a <- coefs[setdiff(seq_along(coefs), b_ind)]
+
+  q <- length(a)
+  m <- q + 1L
+
+  eta <- outer(-(offset + drop(X %*% b)), a, "+")
+  g <- matrix(model[["family"]][["mu.eta"]](eta), nrow(eta), q)
+
+  Finv <- .solve_hessian(.ordinal_info(X, P, g, w))
+
+  P <- squish(P, lo = 1e-16, hi = 1)
+
+  # Derivative of the probability of category `j` with respect to the coefficients,
+  # (-x_i [g_j - g_{j-1}], [0, ..., -g_{j-1}, g_j, ..., 0]), with g_0 = g_m = 0
+  g0 <- cbind(0, g)
+  g1 <- cbind(g, 0)
+
+  h <- numeric(nrow(X))
+
+  for (j in seq_len(m)) {
+    D <- matrix(0, nrow(X), q)
+
+    if (j < m) {
+      D[, j] <- g1[, j]
+    }
+
+    if (j > 1L) {
+      D[, j - 1L] <- -g0[, j]
+    }
+
+    D <- cbind(-X * (g1[, j] - g0[, j]), D)
+
+    h <- h + rowSums((D %*% Finv) * D) / P[, j]
+  }
+
+  setNames(w * h, names(model[["residuals"]]))
+}
 
 #' @importFrom sandwich estfun
 #' @exportS3Method sandwich::estfun glm_weightit

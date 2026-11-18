@@ -8,6 +8,8 @@
 \alias{summary.coxph_weightit}
 \alias{print.glm_weightit}
 \alias{vcov.glm_weightit}
+\alias{hatvalues.multinom_weightit}
+\alias{hatvalues.ordinal_weightit}
 \alias{estfun.glm_weightit}
 \alias{update.glm_weightit}
 \title{Methods for \code{glm_weightit()} objects}
@@ -31,6 +33,10 @@
 \method{print}{glm_weightit}(x, digits = max(3L, getOption("digits") - 3L), ...)
 
 \method{vcov}{glm_weightit}(object, complete = TRUE, vcov = NULL, ...)
+
+\method{hatvalues}{multinom_weightit}(model, ...)
+
+\method{hatvalues}{ordinal_weightit}(model, ...)
 
 \method{estfun}{glm_weightit}(x, asympt = TRUE, ...)
 
@@ -77,6 +83,9 @@ be returned also in case of an over-determined system where some
 coefficients are undefined and \code{coef(.)} contains \code{NA}s correspondingly.
 When \code{complete = TRUE}, \code{vcov()} is compatible with \code{coef()} also in this
 singular case.}
+
+\item{model}{for \code{hatvalues()}, an output from \code{ordinal_weightit()} or
+\code{multinom_weightit()}.}
 
 \item{asympt}{\code{logical}; for \code{estfun()}, whether to use the asymptotic
 empirical estimating functions that account for estimation of the weights
@@ -140,6 +149,23 @@ the model fitting function, which treats them as fixed. Supplying \code{weightit
 replaces any \code{weights} supplied to the original call.
 
 \code{estfun()} extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with \code{bread()}, is used by \code{\link[sandwich:sandwich]{sandwich::sandwich()}} to compute the robust covariance matrix of the estimated coefficients. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vcov()} above for more details.
+
+\code{hatvalues()} computes the generalized leverage of each unit for
+\code{ordinal_weightit} and \code{multinom_weightit} objects, \eqn{h_i =
+\text{tr}(F^{-1} F_i)}, where \eqn{F_i} is the unit's contribution to the
+expected information matrix \eqn{F} (including its weight). This is the trace
+of the unit's block of the hat matrix of the model written as a vector
+generalized linear model, i.e., the sum across columns of what \code{hatvalues()}
+returns for \code{vglm} objects in \pkg{VGAM}, and it is equal to the usual hat
+value when the outcome has two categories. The leverages sum to the number of
+estimated coefficients, and units with a weight of 0 have a leverage of 0.
+Unlike in a generalized linear model, a leverage can exceed 1, though it
+cannot exceed the number of outcome categories minus 1. The leverages can be
+used to compute an HC2 robust covariance matrix, which scales each unit's
+estimating function by \eqn{1/\sqrt{1 - h_i}}; note that with more than two
+outcome categories, this is an approximation to the exact HC2 adjustment,
+which applies a matrix correction to each unit's vector of residuals. For
+\code{glm_weightit} objects, the \code{hatvalues()} method for \code{glm} objects is used.
 }
 \examples{
 ## See examples at ?glm_weightit
