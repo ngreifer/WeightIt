@@ -556,3 +556,73 @@ test_that("ATOS is not an allowed estimand for GBM", {
                         criterion = "smd.mean"),
                "ATOS")
 })
+
+test_that("Covariates reach gbm as they appear in the formula", {
+  skip_on_cran()
+  skip_if_not_installed("gbm")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  d <- test_data
+  d$Xf <- factor(cut(d$X2, c(-Inf, -1, -.3, .3, 1, Inf)), labels = letters[1:5])
+
+  # A factor is one categorical variable that the trees split on subsets of its
+  # levels, not a set of dummies
+  set.seed(123)
+  expect_no_condition({
+    W <- weightit(A ~ X1 + Xf + X3 + X4, data = d, method = "gbm",
+                  criterion = "smd.max", n.trees = 200, include.obj = TRUE)
+  })
+
+  expect_identical(W$obj$var.names, c("X1", "Xf", "X3", "X4"))
+  expect_equal(W$obj$var.type, c(0, 5, 0, 0))
+  expect_true(all(is.finite(W$weights) & W$weights > 0))
+
+  # `weightit.fit()` with the covariates as a data frame gives the same fit
+  set.seed(123)
+  W.fit <- weightit.fit(d[c("X1", "Xf", "X3", "X4")], treat = d$A, method = "gbm",
+                        criterion = "smd.max", n.trees = 200)
+
+  expect_equal(unname(W.fit$weights), unname(W$weights))
+
+  # Balance is assessed on the same covariates, with a two-level variable as one
+  # dummy, as `bal.tab()` would split it, rather than the two in the model matrix
+  d$Xc <- ifelse(d$X3 > 0, "hi", "lo")
+
+  W.c <- weightit(A ~ X1 + Xc + X4, data = d, method = "gbm",
+                  criterion = "smd.mean", n.trees = 200)
+
+  tv <- W.c$info$tree.val
+  crit <- tv[["smd.mean"]][tv[["tree"]] == W.c$info$best.tree]
+
+  expect_equal(crit,
+               cobalt::bal.compute(d[c("X1", "Xc", "X4")], treat = d$A, stat = "smd.mean",
+                                   estimand = "ATE", weights = W.c$weights))
+})
+
+test_that("use.offset works with missing covariates", {
+  skip_on_cran()
+  skip_if_not_installed("gbm")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  test_data_na <- inject_missingness(test_data, c("X1", "X3"))
+
+  # The GLM supplying the offset uses missingness indicators; previously, any
+  # missing value made it fail
+  expect_no_error({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5, data = test_data_na, method = "gbm",
+                  criterion = "smd.max", n.trees = 200, use.offset = TRUE,
+                  missing = "ind")
+  })
+
+  expect_true(all(is.finite(W$weights) & W$weights > 0))
+
+  expect_no_error({
+    W.c <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5, data = test_data_na, method = "gbm",
+                    criterion = "p.mean", n.trees = 200, use.offset = TRUE,
+                    missing = "ind")
+  })
+
+  expect_true(all(is.finite(W.c$weights) & W.c$weights > 0))
+})

@@ -430,6 +430,7 @@
          ind = "missingness indicators",
          saem = "SAEM",
          surr = "surrogate splitting",
+         mia = "missingness incorporated in attributes",
          missing)
 }
 
@@ -1022,7 +1023,7 @@
 #has already been expanded to a numeric model matrix. Fixed-effect columns are
 #renamed to non-syntactic-safe placeholders (`.x1`, `.x2`, ...) for the fit; the
 #coefficients are never interpreted, only the predictions.
-.make_re_data_formula <- function(covs, treat, s.weights, bars, .data, subset, bart = FALSE) {
+.make_re_data_formula <- function(covs, treat, s.weights, bars, .data, subset) {
   re.vars <- unique(unlist(lapply(bars, get_varnames)))
 
   not.found <- setdiff(re.vars, names(.data))
@@ -1042,10 +1043,6 @@
     data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
                   fe.data, re.data)
     fe.string <- paste(names(fe.data), collapse = " + ")
-
-    if (bart) {
-      fe.string <- sprintf("bart(%s)", fe.string)
-    }
   }
   else {
     data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
@@ -1067,40 +1064,6 @@
   out <- lapply(bars, function(b) stats::as.formula(call("~", b)))
 
   if (length(out) == 1L) out[[1L]] else out
-}
-
-#Assemble the argument list for stan4bart::stan4bart() from the arguments passed
-#through `...` (used by the multilevel BART method). bart2-style arguments (as
-#accepted by the non-multilevel BART method) are translated into their stan4bart
-#equivalents so a single argument interface works for both paths; a natively-named
-#stan4bart argument supplied directly takes precedence over its translation. The
-#returned list excludes `formula`, `data`, and `verbose`, which the caller sets.
-.make_stan4bart_args <- function(...) {
-  #Natively-named stan4bart sampling/control arguments supplied directly
-  native <- c("iter", "warmup", "skip", "chains", "cores", "refresh",
-              "offset_type", "seed", "stan_args")
-  A <- ...mget(intersect(...names(), native))
-
-  #BART hyperparameters -> bart_args (a natively-supplied `bart_args` wins)
-  bart_hp <- c("n.trees", "n.cuts", "k", "power", "base", "keepTrees", "useQuantiles")
-  bart_args <- utils::modifyList(...mget(intersect(...names(), bart_hp)),
-                                 as.list(...get("bart_args")))
-  if (length(bart_args) > 0L) {
-    A[["bart_args"]] <- bart_args
-  }
-
-  #Translate bart2-style sampling arguments to stan4bart's (native args win)
-  if (is_null(A[["chains"]]) && is_not_null(...get("n.chains"))) A[["chains"]] <- ...get("n.chains")
-  if (is_null(A[["cores"]]) && is_not_null(...get("n.threads"))) A[["cores"]] <- ...get("n.threads")
-  if (is_null(A[["skip"]]) && is_not_null(...get("n.thin"))) A[["skip"]] <- ...get("n.thin")
-  if (is_null(A[["warmup"]]) && is_not_null(...get("n.burn"))) A[["warmup"]] <- ...get("n.burn")
-  if (is_null(A[["iter"]]) && is_not_null(...get("n.samples"))) {
-    #stan4bart's `iter` includes warmup, so kept samples = iter - warmup
-    if (is_null(A[["warmup"]])) A[["warmup"]] <- 1000L #stan4bart's default warmup
-    A[["iter"]] <- A[["warmup"]] + ...get("n.samples")
-  }
-
-  A
 }
 
 .make_covs_full_rank <- function(covs, with.intercept = TRUE) {
@@ -2182,6 +2145,69 @@ replace_na_with <- function(covs, with = "median") {
   }
 
   covs
+}
+
+#Convert a data frame of covariates supplied to `weightit.fit()` into the model
+#matrix `weightit()` would build from a formula naming each of its variables, and
+#keep the covariates as they are (with character variables as factors) as
+#`reported.covs`, which is passed to the method as `.covs`.
+.process_covs_df <- function(covs) {
+  if (ncol(covs) == 0L) {
+    return(list(model.covs = matrix(numeric(0L), nrow = nrow(covs), ncol = 0L),
+                reported.covs = covs))
+  }
+
+  get_covs_and_treat_from_formula2(~ ., covs)
+}
+
+#The covariates as a data frame for methods that can use them as they appear in
+#the model formula (e.g., tree-based methods), with factors kept as factors so
+#that a tree can split on subsets of their levels, rather than the model matrix
+#`covs`, in which a factor is split into dummies and an interaction is its own
+#column. `.covs` holds these; it is supplied by `weightit()` and `weightitMSM()`,
+#and by `weightit.fit()` when `covs` is a data frame (see `.process_covs_df()`).
+#Without it, the model matrix is used. Character variables become factors,
+#unused levels are dropped, and logical variables become numeric. Missing values
+#are left in place; see `.add_missing_indicators_df()` for missingness indicators.
+.make_covs_df <- function(covs, .covs, subset) {
+  X <- {
+    if (is_null(.covs)) as.data.frame(covs)
+    else as.data.frame(.covs)[subset, , drop = FALSE]
+  }
+
+  for (i in seq_col(X)) {
+    if (is.character(X[[i]]) || is.factor(X[[i]])) {
+      X[[i]] <- droplevels(factor(X[[i]]))
+    }
+    else if (is.logical(X[[i]])) {
+      X[[i]] <- as.numeric(X[[i]])
+    }
+  }
+
+  X
+}
+
+#Missingness indicators for a data frame of covariates: for a numeric covariate
+#with missing values, an indicator for being missing is added and the missing
+#values are replaced with the median, as `add_missing_indicators()` does for a
+#matrix; for a factor, missing values become a category of their own.
+.add_missing_indicators_df <- function(X) {
+  for (v in names(X)[vapply(X, anyNA, logical(1L))]) {
+    x <- X[[v]]
+
+    if (is.factor(x)) {
+      x <- factor(x, levels = c(levels(x), "<NA>"))
+      x[is.na(x)] <- "<NA>"
+    }
+    else {
+      X[[paste0(v, ":<NA>")]] <- as.numeric(is.na(x))
+      x[is.na(x)] <- median(x, na.rm = TRUE)
+    }
+
+    X[[v]] <- x
+  }
+
+  X
 }
 
 add_missing_indicators <- function(covs, replace_with = "median") {

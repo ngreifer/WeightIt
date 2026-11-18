@@ -10,72 +10,66 @@
 #'
 #' In general, this method relies on estimating propensity scores using BART and
 #' then converting those propensity scores into weights using a formula that
-#' depends on the desired estimand. This method relies on \pkgfun{dbarts}{bart2}
-#' from the \CRANpkg{dbarts} package.
+#' depends on the desired estimand. This method relies on \pkgfun{bartisan}{bartisan}
+#' from the \CRANpkg{bartisan} package, which fits BART models with soft decision
+#' rules and with likelihoods beyond the normal using the sampler of Linero
+#' (2025).
 #'
 #' ## Binary Treatments
 #'
 #' For binary treatments, this method estimates the propensity scores using
-#' \pkgfun{dbarts}{bart2}. The following estimands are allowed: ATE, ATT, ATC,
-#' ATO, ATM, and ATOS. Weights can also be computed using marginal mean
-#' weighting through stratification for the ATE, ATT, and ATC. See
-#' [get_w_from_ps()] for details.
+#' \pkgfun{bartisan}{bartisan} with a binomial likelihood, by default with a
+#' logit link (see `link` in *Additional Arguments* below). The following
+#' estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights
+#' can also be computed using marginal mean weighting through stratification for
+#' the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Multi-Category Treatments
 #'
-#' For multi-category treatments, the propensity scores are estimated using
-#' several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the
-#' treatment probabilities are not normalized to sum to 1. The following
-#' estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-#' estimand are computed using the standard formulas.
-#' Weights can also be computed using marginal mean weighting through
-#' stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For multi-category treatments, the propensity scores are estimated using a
+#' single call to \pkgfun{bartisan}{bartisan} with a multinomial likelihood
+#' (\pkgfun{bartisan}{multinomial}), by default with a logit link (see `link` in
+#' *Additional Arguments* below). One forest is fit for each treatment level,
+#' and the predicted probabilities for each unit sum to 1. The following estimands are allowed:
+#' ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using
+#' the standard formulas. Weights can also be computed using marginal mean
+#' weighting through stratification for the ATE, ATT, and ATC. See
+#' [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
 #' For continuous treatments, weights are estimated as
 #' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-#' stabilization factor) is the unconditional density of treatment evaluated the
+#' stabilization factor) is the unconditional density of treatment evaluated at the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
-#' covariates evaluated at the observed treatment value. The shape of
-#' \eqn{f_{A|X}(.)} is controlled by the `density` argument
-#' described below (normal distribution by default), and the predicted values
-#' used for the mean of the conditional density are estimated using BART as
-#' implemented in \pkgfun{dbarts}{bart2}. \eqn{f_A(.)} is estimated by marginalizing
-#' over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
-#' instead of assuming a specific density for the denominator by
-#' setting `density = "kernel"`. Other arguments to [density()] can be specified
-#' to refine the density estimation parameters.
+#' covariates evaluated at the observed treatment value. The conditional density
+#' is estimated directly by a BART model for the treatment whose form is set by
+#' the `family` argument (see *Additional Arguments* below). By default, this is
+#' \pkgfun{bartisan}{dpm}, a model whose mean is a sum of trees and whose error
+#' distribution is a Dirichlet process mixture of normals estimated from the data
+#' (George et al., 2019), so no parametric form for the density needs to be
+#' assumed. The error distribution is the same for all units, though, so when the
+#' variance of the treatment may depend on the covariates, a different `family`
+#' may be preferable, such as `family = "gaussian_ls"`, which fits a
+#' normal model in which both the mean and the logarithm of the standard
+#' deviation are sums of trees. \eqn{f_A(.)} is estimated by marginalizing over
+#' \eqn{f_{A|X}(.)}.
 #'
 #' ## Multilevel Treatment Models
 #'
-#' When the model `formula` contains \CRANpkg{lme4}-style random effects terms
-#' (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using
-#' \pkgfun{stan4bart}{stan4bart} instead of \pkgfun{dbarts}{bart2}. This combines a
-#' BART sum-of-trees for the covariates with a Stan-estimated
-#' random-effects component and can improve balance when units are
-#' clustered (e.g., patients within hospitals or students within schools). The full flexibility of \pkgfun{lme4}{glmer}
-#' random effects is available, including multiple grouping factors (e.g.,
-#' `(1 | school) + (1 | district)`) and random slopes. The grouping (and any
-#' random-slope) variables are taken from `data`; the covariates are placed in the
-#' BART component internally (i.e., the fitted model is `treat ~ bart(x1 + x2) + (1
-#' | school)`). The estimated propensity scores (or conditional means for
-#' continuous treatments) include the estimated random effects; i.e., they are
-#' cluster-specific.
-#'
-#' `stan4bart()` uses a different set of control arguments from `bart2()`: the
-#' number of posterior draws and warmup iterations are controlled by `iter` and
-#' `warmup`, the number of chains and parallel workers by `chains` and `cores`,
-#' BART hyperparameters (e.g., `n.trees`) are supplied in a `bart_args` list, and
-#' Stan and prior options in a `stan_args` list; see \pkgfun{stan4bart}{stan4bart}.
-#' For convenience, `bart2()`-style arguments are translated to their `stan4bart()`
-#' equivalents when supplied (e.g., `n.chains` to `chains`, `n.threads` to `cores`,
-#' and BART hyperparameters like `n.trees` to `bart_args`), so the same argument
-#' names can be used with or without random effects. Only the arguments described
-#' here are passed on; anything else, including the `bart2()` arguments listed as
-#' exceptions in *Additional Arguments* below, is ignored. As with the
-#' single-level case, M-estimation is not supported.
+#' When the model `formula` contains \CRANpkg{lme4}-style random intercept terms
+#' (e.g., `treat ~ x1 + x2 + (1 | school)`), the random intercepts are included
+#' in the BART model directly; see *Random Intercepts* at
+#' \pkgfun{bartisan}{bartisan}. This can improve balance when units are
+#' clustered (e.g., patients within hospitals or students within schools).
+#' Multiple grouping factors (e.g., `(1 | school) + (1 | district)`) and nesting
+#' (`(1 | district/school)`) are allowed, but random slopes are not; a variable
+#' whose effect varies by group belongs in the fixed part of the formula, where
+#' a tree can split on it and on the group together. The grouping variables
+#' are taken from `data`. The estimated propensity scores (or conditional
+#' densities for continuous treatments) include the estimated random effects;
+#' i.e., they are cluster-specific.
 #'
 #' ## Censoring Weights
 #'
@@ -88,15 +82,28 @@
 #'
 #' ## Sampling Weights
 #'
-#' Sampling weights are not supported.
+#' Sampling weights are supported through `s.weights`, except with the default
+#' `family` for continuous treatments. Before being supplied to
+#' \pkgfun{bartisan}{bartisan} as prior weights, they are scaled to have a mean
+#' of 1 among the units in the model, so that the fit does not depend on their
+#' scale. For continuous treatments, they are also used in computing the
+#' marginal density of the treatment in the numerator of the weights. The default
+#' `family` for continuous treatments, \pkgfun{bartisan}{dpm}, does not accept
+#' prior weights, so supplying sampling weights that vary across units with it
+#' is an error. To use sampling weights with a continuous treatment, supply a
+#' family that accepts them, such as `family = gaussian()` or
+#' `family = "gaussian_ls"`.
 #'
 #' ## Missing Data
 #'
 #' In the presence of missing data, the following value(s) for `missing` are
 #' allowed:
 #'     \describe{
-#'       \item{`"ind"` (default)}{
-#'         First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
+#'       \item{`"mia"` (default)}{
+#'         The missing values are left in the covariates and handled by the trees themselves using missingness incorporated in attributes; see *Missing Predictor Values* at \pkgfun{bartisan}{bartisan}. Each splitting rule on a covariate with missing values also determines which side of the split the units missing that covariate go to, or splits on whether the covariate is missing at all, and these choices are made by the sampler along with the rest of the tree. The estimated propensity scores are then conditional on the observed covariate values and on which covariates are missing. With `use.offset = TRUE`, the generalized linear model that supplies the offset uses missingness indicators as described for `"ind"` below. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
+#'       }
+#'       \item{`"ind"`}{
+#'         First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. For a categorical covariate, the missing values are instead given a category of their own. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
 #'       }
 #'     }
 #'
@@ -106,29 +113,31 @@
 #'
 #' @section Additional Arguments:
 #'
-#' All arguments to \pkgfun{dbarts}{bart2} can be passed through `weightit()`
-#' or `weightitMSM()`, with the following exceptions:
+#' All arguments to \pkgfun{bartisan}{bartisan_control} can be passed through
+#' `weightit()` or `weightitMSM()` to control the sampler and the priors, including
+#' `num_trees`, `num_draws`, `num_burn`, `chains`, `gate`, and `sparsity`. Their
+#' defaults are those of `bartisan_control()`. For compatibility with earlier
+#' versions of this method, which used \pkg{dbarts}, the following arguments are
+#' translated to their `bartisan_control()` equivalents when supplied: `n.trees`
+#' to `num_trees`, `n.samples` to `num_draws`, `n.burn` to `num_burn`, and
+#' `n.chains` to `chains`. A natively named argument takes precedence over its
+#' translation. `n.threads` is ignored (see *Parallel Processing* below), and
+#' `seed` is ignored with a warning (see *Reproducibility* below).
 #'
-#' * `test`, `weights`, `subset`, `offset.test`, and `samplerOnly` are ignored
-#' * `combineChains` is always set to `TRUE`
-#' * `keepCall` is always set to `FALSE`
-#' * `verbose` is always set to `FALSE` (use `weightit()`'s own `verbose` argument
-#'   instead)
+#' For binary and multi-category treatments and for censoring weights, only the
+#' link of the model described above can be changed, using `link`; `family` is
+#' ignored. For continuous treatments, the model is set by `family`, described
+#' below.
 #'
-#' When the model `formula` contains random effects terms, \pkgfun{stan4bart}{stan4bart}
-#' is used instead of `bart2()`, and the arguments it accepts differ; see
-#' *Multilevel Treatment Models* below.
-#'
-#' See also the *Reproducibility* section below for information on using the `seed` argument.
-#'
-#' The following additional argument may be supplied:
+#' The following additional arguments may be supplied:
 #' \describe{
-#'   \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the BART model. If `TRUE`, this fits a probit regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predictor to the `offset` argument of `bart2()` or `stan4bart()`, overriding any supplied argument to `offset`. Default is `FALSE` to omit this offset. Only allowed for binary and continuous treatments.
+#'   \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the BART model. If `TRUE`, this fits a binomial regression model with the link specified by `link` (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predictor to the `offset` argument of `bartisan()`, overriding any supplied argument to `offset`. With `missing = "mia"`, this model uses missingness indicators for the covariates with missing values. Default is `FALSE` to omit this offset. Only allowed for binary and continuous treatments.
 #'   }
 #' }
 #'
 #' For binary and multi-category treatments, the following arguments may be supplied:
 #' \describe{
+#'   \item{`link`}{for binary treatments and censoring weights, the link function of the binomial model. Allowable options include `"logit"` (the default), `"probit"`, and `"cloglog"`. For multi-category treatments, the link function of the multinomial model, which can be `"logit"` (the default) or `"probit"`; with `"probit"`, the probabilities have no closed form and are computed by simulation (see \pkgfun{bartisan}{multinomial}).}
 #'   \item{`subclass`}{`integer`; the number of subclasses to use for computing
 #'   weights using marginal mean weighting through stratification (MMWS). If `NULL`,
 #'   standard inverse probability weights (and their extensions) will be
@@ -138,53 +147,68 @@
 #' }
 #'
 #' For continuous treatments, the following arguments may be supplied:
-#'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#' \describe{
+#'   \item{`family`}{the model for the conditional density of the treatment, given as a family object or the name of one; see [`bartisan-families`][bartisan::bartisan-families]. Default is \pkgfun{bartisan}{dpm}, which estimates the shape of the error distribution from the data but does not accept sampling weights. Other options include \pkgfun{bartisan}{gaussian_ls} for a normal density whose mean and standard deviation both depend on the covariates and `gaussian()` for a normal density with a single standard deviation; both accept sampling weights. `gaussian_ls()` can capture a variance that differs across units but takes several times as long to fit as `dpm()`, and, like `gaussian()`, it assumes the conditional density is normal, which can yield extreme weights when the treatment is skewed. With `family = "ordinal"` (\pkgfun{bartisan}{ordinal}), each observed value of the treatment is a category of an ordinal model, and the weights are the ratio of the proportion of units with each unit's treatment value (weighted by the sampling weights) to the probability of that value given the covariates, as for a discrete treatment.}
+#' }
 #'
-#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
-#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
-#'   }
-#'
-#'
+#' The `density`, `bw`, `adjust`, `kernel`, and `n` arguments that other methods
+#' use to specify the conditional density are not used by this method and are
+#' ignored with a warning, since the density is estimated by the model specified
+#' by `family`.
 #'
 #' @section Additional Outputs:
 #' \describe{
 #'   \item{`obj`}{
-#'     When `include.obj = TRUE`, the `bart2` fit(s) used to generate the predicted values (or the \pkgfun{stan4bart}{stan4bart} fit(s) when the model `formula` contains random effects terms). With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
+#'     When `include.obj = TRUE`, the `bartisan_fit` object used to generate the predicted values. For multi-category treatments, this is a single fit, since one multinomial model is fit for all treatment levels. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun{bartisan}{predict.bartisan_fit} with `type = "prob"`, and the conditional density of a continuous treatment with `type = "density"`.
 #'   }
 #' }
 #'
 #' @details
 #' BART works by fitting a sum-of-trees model for the treatment or
-#' probability of treatment. The number of trees is determined by the `n.trees`
+#' probability of treatment. The number of trees is determined by the `num_trees`
 #' argument. Bayesian priors are used for the hyperparameters, so the result is
 #' a posterior distribution of predicted values for each unit. The mean of these
 #' for each unit is taken for use in computing the (generalized) propensity
 #' score. Although the hyperparameters governing the priors can be modified by
 #' supplying arguments to [weightit()] that are passed to the BART fitting
 #' function, the default values tend to work well and require little
-#' modification (though the defaults differ for continuous and categorical
-#' treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike
-#' many other machine learning methods, no loss function is optimized and the
-#' hyperparameters do not need to be tuned (e.g., using cross-validation),
-#' though performance can benefit from tuning. BART tends to balance sparseness
-#' with flexibility by using very weak learners as the trees, which makes it
-#' suitable for capturing complex functions without specifying a particular
-#' functional form and without overfitting.
+#' modification. Unlike many other machine learning methods, no loss function is
+#' optimized and the hyperparameters do not need to be tuned (e.g., using
+#' cross-validation), though performance can benefit from tuning. BART tends to
+#' balance sparseness with flexibility by using very weak learners as the trees,
+#' which makes it suitable for capturing complex functions without specifying a
+#' particular functional form and without overfitting.
+#'
+#' The covariates are supplied to \pkgfun{bartisan}{bartisan} as they appear in
+#' the model formula rather than as a model matrix, so a categorical covariate
+#' remains a single variable whose levels a tree can split into any two groups
+#' (see `categorical` at \pkgfun{bartisan}{bartisan_control}). Transformed terms
+#' (e.g., `I(x^2)`) are included as given, and an interaction term is
+#' represented by its component variables, since the trees can find interactions
+#' among them without one being specified.
+#'
+#' By default, the decision rules in each tree are soft, as in the SoftBart
+#' model of Linero and Yang (2018): an observation reaches every leaf with some
+#' weight, so the fitted propensity score is a smooth function of the covariates
+#' rather than a step function. Smoother propensity scores tend to be better
+#' calibrated and to yield less extreme weights than those from standard BART.
+#' Soft rules are slower than hard rules; the standard BART sampler can be
+#' requested with `gate = "hard"`. See \pkgfun{bartisan}{bartisan_control} for
+#' details.
 #'
 #' ## Reproducibility
 #'
-#' BART has a random component, so some work must be done to ensure
-#' reproducibility across runs. See the *Reproducibility* section at
-#' \pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can
-#' do one of two things:
+#' BART has a random component. \pkg{bartisan} uses R's random number generator,
+#' so calling [set.seed()] before `weightit()` makes the results reproducible,
+#' including when the chains run in parallel, since each chain is given its own
+#' random number stream. The `seed` argument accepted by earlier versions of this
+#' method, which used \pkg{dbarts}, is ignored with a warning.
 #'
-#' 1. supply an argument to `seed`, which is passed to `dbarts::bart2()` and sets the seed for single- and multi-threaded uses, or
-#' 2. call [set.seed()] and set `n.threads = 1` to use single-threading.
+#' ## Parallel Processing
 #'
-#' Note that to ensure reproducibility on any machine, regardless of the number of
-#' cores available, one should use single-threading by setting `n.threads = 1` and either supply `seed` or
-#' call `set.seed()`.
+#' When `chains` is greater than 1 and the \CRANpkg{future.apply} package is
+#' installed, the chains run in parallel under whatever \pkgfun{future}{plan} has
+#' been set. See *Parallelization with future* at \pkgfun{bartisan}{bartisan_control}.
 #'
 #' @seealso [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
@@ -194,14 +218,22 @@
 #' `vignette("weighting-methods")` for descriptions of all the weighting methods and guidance on choosing among them.
 #'
 #' @references
+#' Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian
+#' additive regression trees. *The Annals of Applied Statistics*, 4(1), 266–298.
+#' \doi{10.1214/09-AOAS285}
+#'
 #' Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With
 #' Propensity Score Strategies in a High-Dimensional Setting and a Potential
 #' Alternative. *Multivariate Behavioral Research*, 46(3), 477–513.
 #' \doi{10.1080/00273171.2011.570161}
 #'
-#' Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian
-#' additive regression trees. *The Annals of Applied Statistics*, 4(1), 266–298.
-#' \doi{10.1214/09-AOAS285}
+#' Linero, A. R. (2025). Generalized Bayesian additive regression trees models: beyond conditional conjugacy. *Journal of the American Statistical Association*, 120(549), 356–369. \doi{10.1080/01621459.2024.2337156}
+#'
+#' Linero, A. R., & Yang, Y. (2018). Bayesian regression tree ensembles that adapt to smoothness and sparsity. *Journal of the Royal Statistical Society Series B*, 80(5), 1087–1110. \doi{10.1111/rssb.12293}
+#'
+#' - Continuous treatments
+#'
+#' George, E., Laud, P., Logan, B., McCulloch, R., & Sparapani, R. (2019). Fully Nonparametric Bayesian Additive Regression Trees. In *Topics in Identification, Limited Dependent Variables, Partial Observability, Experimentation, and Flexible Modeling: Part B* (Advances in Econometrics, Vol. 40B, pp. 89–110). Emerald Publishing Limited. \doi{10.1108/S0731-90532019000040B006}
 #'
 #' Note that many references that deal with BART for causal inference focus on
 #' estimating potential outcomes with BART, not the propensity scores, and so
@@ -211,8 +243,10 @@
 #' See [`method_glm`] for additional references on propensity score weighting
 #' more generally.
 #'
-#' @examplesIf rlang::is_installed("dbarts")
+#' @examplesIf rlang::is_installed("bartisan")
 #' \donttest{data("lalonde", package = "cobalt")
+#'
+#' set.seed(123)
 #'
 #' #Balancing covariates between treatment groups (binary)
 #' (W1 <- weightit(treat ~ age + educ + married +
@@ -233,14 +267,24 @@
 #' cobalt::bal.tab(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
-#' #with kernel density estimation for GPS
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
-#'                 method = "bart", density = "kernel"))
+#'                 method = "bart"))
 #'
 #' summary(W3)
 #'
-#' cobalt::bal.tab(W3)}
+#' cobalt::bal.tab(W3)
+#'
+#' #Using a normal model whose variance depends on the
+#' #covariates for the conditional density
+#' (W4 <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "bart",
+#'                 family = "gaussian_ls"))
+#'
+#' summary(W4)
+#'
+#' cobalt::bal.tab(W4)}
 NULL
 
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
@@ -254,24 +298,31 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   missing <- .process_missing2(missing, covs)
 
-  if (missing == "ind") {
-    covs <- add_missing_indicators(covs)
-  }
+  X <- .make_covs_df(covs, ...get(".covs"), subset)
 
-  covs <- covs |>
-    .make_covs_closer_to_1() |>
-    .make_covs_full_rank()
+  if (missing == "ind") {
+    X <- .add_missing_indicators_df(X)
+  }
 
   t.lev <- t.lev %or% .get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
+
+  link <- ...get("link", "logit")
+  link <- arg::match_arg(link, c("logit", "probit", "cloglog"))
+
+  s.weights <- .scale_s_weights(s.weights)
 
   use.offset <- ...get("use.offset", FALSE)
   arg::arg_flag(use.offset)
 
   if (use.offset) {
+    #The GLM uses the model matrix, with missingness indicators for any missing
+    #values whatever `missing` is, since a GLM cannot use them
+    glm.covs <- add_missing_indicators(covs)
+
     rlang::try_fetch({
-      fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
-                     weights = s.weights, family = quasibinomial("probit"))
+      fit <- glm.fit(x = as.matrix(cbind(1, glm.covs)), y = treat,
+                     weights = s.weights, family = quasibinomial(link))
     },
     warning = function(w) {
       w <- conditionMessage(w)
@@ -287,52 +338,15 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     offset <- ...get("offset", rep.int(0, length(treat)))
   }
 
-  re.bars <- ...get(".random")
+  df <- .make_bartisan_data(X, as.numeric(treat), s.weights, offset,
+                            re.bars = ...get(".random"), .data = .data,
+                            subset = subset)
 
-  if (is_not_null(re.bars)) {
-    #Random effects (multilevel) PS model via stan4bart::stan4bart()
-    rlang::check_installed("stan4bart")
+  A <- .make_bartisan_args(...)
 
-    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data,
-                                subset, bart = TRUE)
+  fit <- .fit_bartisan(df, family = binomial(link), A = A, verbose = verbose)
 
-    A <- .make_stan4bart_args(...)
-    A[["formula"]] <- df[["formula"]]
-    A[["data"]] <- df[["data"]]
-    A[["offset"]] <- offset
-    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
-
-    rlang::try_fetch({verbosely({
-      fit <- do.call(stan4bart::stan4bart, A)
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
-    })
-
-    p.score <- fitted(fit, type = "ev", sample = "train")
-  }
-  else {
-    #dbarts::bart2()
-    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                           rlang::fn_fmls_names(dbarts::dbartsControl)),
-                         c("offset", "offset.test", "weights", "subset", "test", "samplerOnly")))
-
-    A[["data"]] <- treat
-    A[["formula"]] <- covs
-    A[["offset"]] <- offset
-    A[["keepCall"]] <- FALSE
-    A[["combineChains"]] <- TRUE
-    A[["verbose"]] <- FALSE #necessary to prevent crash
-
-    rlang::try_fetch({verbosely({
-      fit <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-    })
-
-    p.score <- fitted(fit)
-  }
+  p.score <- unname(fitted(fit))
 
   w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
                                    stabilize = stabilize, subclass = ...get("subclass"))
@@ -361,88 +375,51 @@ weightit2bart.cens <- function(covs, treat, s.weights, subset, missing, verbose,
   .att_out_to_cens(out, C[subset])
 }
 
-weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
-                                 missing, .data, verbose, ...) {
+weightit2bart.multi <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
+                                missing, .data, verbose, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
   missing <- .process_missing2(missing, covs)
 
+  X <- .make_covs_df(covs, ...get(".covs"), subset)
+
   if (missing == "ind") {
-    covs <- add_missing_indicators(covs)
+    X <- .add_missing_indicators_df(X)
   }
-
-  covs <- covs |>
-    .make_covs_closer_to_1() |>
-    .make_covs_full_rank()
-
-  ps <- make_df(levels(treat), nrow = length(treat))
 
   if (!isFALSE(...get("use.offset", FALSE))) {
     arg::err("{.arg use.offset} cannot be used with multi-category treatments")
   }
 
-  re.bars <- ...get(".random")
+  link <- ...get("link", "logit")
+  link <- arg::match_arg(link, c("logit", "probit"))
 
-  fit.list <- make_list(levels(treat))
+  s.weights <- .scale_s_weights(s.weights)
 
-  if (is_not_null(re.bars)) {
-    #Random effects (multilevel) PS model via stan4bart::stan4bart()
-    rlang::check_installed("stan4bart")
+  #A plain factor, so that bartisan() reads the response as multi-category
+  treat.plain <- factor(as.character(treat), levels = levels(treat))
 
-    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data,
-                                subset, bart = TRUE)
+  df <- .make_bartisan_data(X, treat.plain, s.weights,
+                            offset = rep.int(0, length(treat)),
+                            re.bars = ...get(".random"), .data = .data,
+                            subset = subset)
 
-    A <- .make_stan4bart_args(...)
-    A[["formula"]] <- df[["formula"]]
-    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
+  A <- .make_bartisan_args(...)
 
-    for (i in levels(treat)) {
-      df[["data"]][[".treat"]] <- as.integer(treat == i)
-      A[["data"]] <- df[["data"]]
+  fit <- .fit_bartisan(df, family = bartisan::multinomial(link), A = A,
+                       verbose = verbose)
 
-      rlang::try_fetch({verbosely({
-        fit.list[[i]] <- do.call(stan4bart::stan4bart, A)
-      }, verbose = verbose)},
-      error = function(e) {
-        arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
-      })
+  #ps is a matrix of probabilities for each treatment level, one column per level
+  ps <- predict(fit, type = "prob")[, levels(treat), drop = FALSE] |>
+    as.data.frame()
 
-      ps[[i]] <- fitted(fit.list[[i]], type = "ev", sample = "train")
-    }
-  }
-  else {
-    #dbarts::bart2()
-    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                           rlang::fn_fmls_names(dbarts::dbartsControl)),
-                         c("offset.test", "weights", "subset", "test", "samplerOnly")))
-
-    A[["formula"]] <- covs
-    A[["keepCall"]] <- FALSE
-    A[["combineChains"]] <- TRUE
-    A[["verbose"]] <- FALSE #necessary to prevent crash
-
-    for (i in levels(treat)) {
-      A[["data"]] <- as.integer(treat == i)
-
-      rlang::try_fetch({verbosely({
-        fit.list[[i]] <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
-      }, verbose = verbose)},
-      error = function(e) {
-        arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-      })
-
-      ps[[i]] <- fitted(fit.list[[i]])
-    }
-  }
-
-  #ps should be matrix of probs for each treat
   #Computing weights
   w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat, estimand, focal,
                                      stabilize = stabilize, subclass = ...get("subclass"))
 
-  list(w = w, fit.obj = fit.list)
+  list(w = w, fit.obj = fit)
 }
 
 weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, .data, verbose, ...) {
@@ -453,27 +430,42 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
   missing <- .process_missing2(missing, covs)
 
+  X <- .make_covs_df(covs, ...get(".covs"), subset)
+
   if (missing == "ind") {
-    covs <- add_missing_indicators(covs)
+    X <- .add_missing_indicators_df(X)
   }
 
-  covs <- covs |>
-    .make_covs_closer_to_1()
+  #The conditional density comes from the model, so the density arguments used
+  #by the other methods have no role here
+  dens.args <- intersect(...names(), c("density", "bw", "adjust", "kernel", "n", "use.kernel"))
+  if (is_not_null(dens.args)) {
+    arg::wrn("{.arg {dens.args}} {?is/are} ignored with {.code method = \"bart\"} for continuous treatments; the conditional density of the treatment is estimated by the model specified by {.arg family}")
+  }
 
-  # Process density params
-  make_dens_fun <- .get_make_dens_fun(density = ...get("density"),
-                                      bw = ...get("bw"),
-                                      adjust = ...get("adjust"),
-                                      kernel = ...get("kernel"),
-                                      n = ...get("n"),
-                                      use.kernel = ...get("use.kernel"))
+  family <- ...get("family") %or% bartisan::dpm()
+
+  if (!is.character(family) && !inherits(family, "family")) {
+    arg::err("{.arg family} must be a family object or the name of one; see {.help bartisan::bartisan-families}")
+  }
+
+  if (!.bartisan_family_takes_weights(family) && !all_the_same(s.weights)) {
+    arg::err(c("{.fn bartisan::dpm}, the default {.arg family} for continuous treatments, does not accept sampling weights.",
+               i = "Supply a {.arg family} that does, such as {.code family = gaussian()} or {.code family = bartisan::gaussian_ls()}."))
+  }
+
+  s.weights <- .scale_s_weights(s.weights)
 
   use.offset <- ...get("use.offset", FALSE)
   arg::arg_flag(use.offset)
 
   if (use.offset) {
+    #The GLM uses the model matrix, with missingness indicators for any missing
+    #values whatever `missing` is, since a GLM cannot use them
+    glm.covs <- add_missing_indicators(covs)
+
     rlang::try_fetch({
-      fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
+      fit <- glm.fit(x = as.matrix(cbind(1, glm.covs)), y = treat,
                      weights = s.weights, family = gaussian())
     },
     warning = function(w) {
@@ -486,61 +478,211 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     offset <- ...get("offset", rep.int(0, length(treat)))
   }
 
-  re.bars <- ...get(".random")
+  df <- .make_bartisan_data(X, as.numeric(treat), s.weights, offset,
+                            re.bars = ...get(".random"), .data = .data,
+                            subset = subset)
 
-  if (is_not_null(re.bars)) {
-    #Random effects (multilevel) GPS model via stan4bart::stan4bart()
-    rlang::check_installed("stan4bart")
+  A <- .make_bartisan_args(...)
 
-    #stan4bart's dbartsData requires a plain numeric response (drop "treat" class)
-    df <- .make_re_data_formula(covs, as.numeric(treat), s.weights, re.bars,
-                                .data, subset, bart = TRUE)
+  #Estimate the conditional density of the treatment
+  fit <- .fit_bartisan(df, family = family, A = A, verbose = verbose)
 
-    A <- .make_stan4bart_args(...)
-    A[["formula"]] <- df[["formula"]]
-    A[["data"]] <- df[["data"]]
-    A[["offset"]] <- offset
-    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
-
-    #Estimate GPS
-    rlang::try_fetch({verbosely({
-      fit <- do.call(stan4bart::stan4bart, A)
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
-    })
-
-    mu <- fitted(fit, type = "ev", sample = "train")
-    sd <- fitted(fit, type = "sigma")
+  if (.bartisan_family_name(family) == "ordinal") {
+    #An ordinal model treats each observed value of the treatment as a category,
+    #so the generalized propensity score is the probability of each unit's own
+    #value, and the numerator is the proportion of units with that value,
+    #weighted by the sampling weights, as for a discrete treatment
+    dens_denom <- .bartisan_density(fit, df[["data"]])
+    dens_num <- ave(s.weights, treat, FUN = sum) / sum(s.weights)
   }
   else {
-    #dbarts::bart2()
-    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                           rlang::fn_fmls_names(dbarts::dbartsControl)),
-                         c("offset", "offset.test", "weights", "subset", "test", "samplerOnly")))
+    #Generalized propensity score: the conditional density at each unit's own
+    #treatment value. Computed with `newdata` so that it is evaluated exactly as
+    #the marginal density below is.
+    dens_denom <- .bartisan_density(fit, df[["data"]])
 
-    A[["formula"]] <- covs
-    A[["data"]] <- treat
-    A[["offset"]] <- offset
-    A[["keepCall"]] <- FALSE
-    A[["combineChains"]] <- TRUE
-    A[["verbose"]] <- FALSE #necessary to prevent crash
+    #Marginal density: the conditional density at each of a grid of treatment
+    #values, averaged over the units (with the sampling weights) and interpolated
+    #to the observed treatment values. The log of the density is interpolated,
+    #since a spline through a sharply peaked density (e.g., a treatment with many
+    #values at 0) can dip below 0.
+    n_grid <- 50L
+    t_grid <- seq(min(treat), max(treat), length.out = n_grid)
 
-    #Estimate GPS
-    rlang::try_fetch({verbosely({
-      fit <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-    })
+    dens_grid <- .bartisan_grid_density(fit, df[["data"]], t_grid, s.weights)
 
-    mu <- fitted(fit)
-    sd <- sqrt(mean(fit$sigma^2))
+    dens_num <- spline(x = t_grid, y = log(dens_grid), xout = treat)[["y"]] |>
+      exp()
   }
 
-  #Get weights
-  w <- .get_w_from_gps_internal_cont(mu, treat, sd, s.weights,
-                                     make_dens_fun)
+  if (any(!is.finite(dens_denom)) || any(dens_denom <= 0) ||
+      any(!is.finite(dens_num)) || any(dens_num <= 0)) {
+    arg::err("the estimated density of the treatment is not positive and finite for all units. Try another {.arg family} or more draws")
+  }
+
+  w <- dens_num / dens_denom
 
   list(w = w, fit.obj = fit)
+}
+
+#Assemble the control arguments for bartisan::bartisan() from the arguments
+#passed through `...`. Natively named `bartisan_control()` arguments are collected
+#as they are; the `dbarts::bart2()`-style names accepted by earlier versions of
+#this method are translated to their equivalents, with a native name taking
+#precedence. `seed` is dropped with a warning, since bartisan uses R's own random
+#number generator; `n.threads` is dropped silently, since parallelism is set with
+#a future plan. The returned list excludes `verbose`, which the caller sets.
+.make_bartisan_args <- function(...) {
+  native <- setdiff(rlang::fn_fmls_names(bartisan::bartisan_control), "verbose")
+
+  A <- ...mget(intersect(...names(), native))
+
+  translations <- c(n.trees = "num_trees", n.samples = "num_draws",
+                    n.burn = "num_burn", n.chains = "chains")
+
+  for (i in intersect(...names(), names(translations))) {
+    if (is_null(A[[translations[i]]])) {
+      A[[translations[i]]] <- ...get(i)
+    }
+  }
+
+  if (is_not_null(...get("seed"))) {
+    arg::wrn("{.arg seed} is ignored with {.code method = \"bart\"}; call {.fn set.seed} before {.fn weightit} to make the results reproducible")
+  }
+
+  A
+}
+
+#Scale the sampling weights to have a mean of 1 so the fit does not depend on
+#their scale.
+.scale_s_weights <- function(s.weights) {
+  s.weights / mean(s.weights)
+}
+
+#Assemble the data frame and formula for bartisan::bartisan(). The covariates are
+#renamed `.x1`, `.x2`, ... so that any covariate name is a valid formula term,
+#and the treatment, sampling weights, and offset are stored as columns, so that
+#the call bartisan() records does not carry the vectors themselves. With random
+#effects terms, `.make_re_data_formula()` adds the grouping variables and the
+#terms to the formula.
+.make_bartisan_data <- function(covs, treat, s.weights, offset, re.bars = NULL,
+                                .data = NULL, subset = NULL) {
+  if (is_not_null(re.bars)) {
+    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data, subset)
+  }
+  else {
+    fe.string <- "1"
+
+    if (ncol(covs) > 0L) {
+      fe.data <- as.data.frame(covs)
+      names(fe.data) <- paste0(".x", seq_col(covs))
+      data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
+                    fe.data)
+      fe.string <- paste(names(fe.data), collapse = " + ")
+    }
+    else {
+      data <- data.frame(.treat = treat, .s.weights = s.weights)
+    }
+
+    df <- list(data = data,
+               formula = stats::as.formula(sprintf(".treat ~ %s", fe.string)))
+  }
+
+  df[["data"]][[".offset"]] <- offset
+
+  df
+}
+
+#Fit the bartisan model, referring to the weights and offset by the names of
+#their columns in the data so that the call bartisan() stores stays small.
+#`family` is always supplied, which also silences the message bartisan() gives
+#when it infers the family from the response.
+.fit_bartisan <- function(df, family, A, verbose) {
+  A[["formula"]] <- df[["formula"]]
+  A[["data"]] <- df[["data"]]
+  A[["family"]] <- family
+  A[["weights"]] <- quote(.s.weights)
+  A[["offset"]] <- quote(.offset)
+  A[["verbose"]] <- isTRUE(verbose)
+
+  rlang::try_fetch({
+    fit <- eval(as.call(c(list(quote(bartisan::bartisan)), A)))
+  },
+  error = function(e) {
+    arg::err("(from {.fun bartisan::bartisan}): {conditionMessage(e)}")
+  })
+
+  fit
+}
+
+#The name of a bartisan family, supplied as a family object or as its name
+.bartisan_family_name <- function(family) {
+  if (is.character(family)) family
+  else family[["family"]]
+}
+
+#Whether a bartisan family accepts prior weights. The Dirichlet process mixture
+#families refuse them, since a weight would have to be a multiplicity.
+.bartisan_family_takes_weights <- function(family) {
+  .bartisan_family_name(family) %nin% c("dpm", "dpm_aft")
+}
+
+#The marginal density of the treatment at each value in `t_grid`: the conditional
+#density at that value, evaluated for every unit's covariates and averaged over
+#the units with the sampling weights. Evaluating the density costs draws by rows
+#by trees, so two approximations keep it affordable: the posterior draws are
+#thinned to at most `max_draws`, since the average over units and draws is smooth,
+#and at most `max_units` units (a random subset) are averaged over, since the
+#marginal density is a stabilization factor rather than something that has to be
+#exact. With the defaults, the average at each grid value is over up to 50,000
+#density evaluations, and the cost no longer grows with the sample size beyond
+#`max_units`. Each predict() call computes a matrix of draws by rows, so the grid is
+#split into blocks whose stacked copies of the data keep that matrix small.
+.bartisan_grid_density <- function(fit, data, t_grid, s.weights, max_draws = 25L,
+                                   max_units = 2000L, max_rows = 1e5) {
+  n <- nrow(data)
+
+  if (n > max_units) {
+    units <- sort(sample.int(n, max_units))
+    data <- data[units, , drop = FALSE]
+    s.weights <- s.weights[units]
+    n <- max_units
+  }
+
+  num_draws <- length(fit[["loglik"]])
+  iterations <- {
+    if (num_draws > max_draws) unique(round(seq(1, num_draws, length.out = max_draws)))
+    else NULL
+  }
+
+  per_call <- max(1L, min(length(t_grid), floor(max_rows / n)))
+  blocks <- split(t_grid, ceiling(seq_along(t_grid) / per_call))
+
+  out <- lapply(blocks, function(block) {
+    nd <- data[rep(seq_len(n), times = length(block)), , drop = FALSE]
+    nd[[".treat"]] <- rep(block, each = n)
+    d <- matrix(.bartisan_density(fit, nd, iterations = iterations), nrow = n)
+    apply(d, 2L, w.m, w = s.weights)
+  })
+
+  unlist(out, use.names = FALSE)
+}
+
+#The conditional density of the treatment at the values in `newdata`, averaged
+#over the posterior draws. The offset column is passed back, since a model fit
+#with an offset requires it at prediction time, and every row gets a prior
+#weight of 1, since with a family that takes prior weights, a weight other than 1
+#would raise the density to that power.
+.bartisan_density <- function(fit, newdata, iterations = NULL) {
+  rlang::try_fetch({
+    d <- predict(fit, newdata = newdata, type = "density",
+                 offset = newdata[[".offset"]],
+                 weights = rep.int(1, nrow(newdata)),
+                 iterations = iterations)
+  },
+  error = function(e) {
+    arg::err("(from {.fun bartisan::predict.bartisan_fit}): {conditionMessage(e)}")
+  })
+
+  unname(d)
 }

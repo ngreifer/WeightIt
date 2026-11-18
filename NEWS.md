@@ -7,6 +7,20 @@ WeightIt News and Updates
 
 * Added a new vignette, `vignette("longitudinal-treatments")`, which explains the estimand and assumptions for longitudinal treatments and demonstrates estimating weights with `weightitMSM()`, assessing balance, estimating effects with a marginal structural model, and accounting for loss to follow-up with censoring weights.
 
+* `method = "bart"` now fits the BART model using `bartisan::bartisan()` from the *bartisan* package instead of using *dbarts* and *stan4bart*, which are no longer used. Binary treatments are modeled with a logit link by default (previously always a probit link), multi-category treatments with a single multinomial model whose probabilities sum to 1 (previously one model per category), and continuous treatments by default with a model for the conditional density whose error distribution is a Dirichlet process mixture of normals. The trees use soft decision rules by default. Results will differ from those of previous versions; see `?method_bart` for details.
+
+* With `method = "bart"`, the new `link` argument sets the link function of the model for binary and multi-category treatments and censoring weights, as it does with `method = "glm"`.
+
+* With `method = "bart"` and a continuous treatment, the new `family` argument sets the model for the conditional density of the treatment, replacing `density`, which no longer applies. For example, `family = bartisan::gaussian_ls()` fits a normal model whose variance depends on the covariates.
+
+* With `method = "bart"`, missing covariate values are now handled by default by the trees themselves using missingness incorporated in attributes, requested with `missing = "mia"`, rather than with missingness indicators, which are still available with `missing = "ind"`.
+
+* With `method = "bart"`, sampling weights are now supported (except with the default `family` for continuous treatments), only random intercepts are allowed in `formula`, and `set.seed()` must be called for reproducibility (`seed` is ignored with a warning). The arguments that control the sampler are those of `bartisan::bartisan_control()` (e.g., `num_trees`), and `n.trees`, `n.samples`, `n.burn`, and `n.chains` are translated to their equivalents. With `include.obj = TRUE`, a single `bartisan_fit` object is returned for all treatment types.
+
+* With `method = "gbm"` and `method = "bart"`, the covariates are now supplied to the trees as they appear in the model formula, so a factor is a single variable whose levels a tree can split into any two groups rather than a set of dummy variables. With `method = "gbm"`, balance is also assessed on these covariates, so a two-level factor counts once in the balance criterion rather than twice, and an interaction term contributes its components rather than the interaction itself. Results with `method = "gbm"` can change when the formula contains a factor or character variable with two levels or more than three, or an interaction term.
+
+* `weightit.fit()` now accepts a data frame for `covs`, which is converted to a matrix as `weightit()` converts the covariates in its formula. Methods that use the covariates as they are, such as `"gbm"` and `"bart"`, receive the data frame itself.
+
 * `coxph_weightit()` gains a `br` argument, which, when set to `TRUE`, maximizes the partial likelihood penalized by the Jeffreys invariant prior as described by Heinze and Schemper (2001). This yields estimates with smaller asymptotic bias that are finite even when the likelihood is monotone and composes with M-estimation, cluster-robust standard errors, and bootstrapping. Without weights, estimates match those from `coxphf::coxphf()`.
 
 * `glm_weightit()`, `lm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` gain a `weights` argument for supplying fixed weights, which works like the `weights` argument of `glm()`. This makes it easier to use these functions outside of weighting for covariate balance (e.g., for bias reduction or robust and bootstrap standard errors) without constructing a `weightit` object. Only one of `weights` and `weightit` can be supplied, and a `weightit` object supplied to `weights` is treated as though it had been supplied to `weightit`. Previously, `weights` was ignored with a warning.
@@ -18,6 +32,8 @@ WeightIt News and Updates
 * Fixed a bug in which setting `density = "kernel"` with a continuous treatment produced a warning about an unused argument on versions of R before 4.3.0.
 
 * Fixed a bug when using `method = "optweight"` with *clarabel* as the solver (e.g., with `norm = "entropy"` when *scs* is not installed), in which the solver's output was printed even with `verbose = FALSE`.
+
+* Fixed a bug when using `method = "gbm"` with `use.offset = TRUE`, in which any missing covariate value caused an error. The generalized linear model that supplies the offset now uses missingness indicators.
 
 * Fixed a bug in `coxph_weightit()` in which M-estimation-based standard errors (the default when the supplied `weightit` object supports M-estimation) were incorrect, as was the output of `sandwich::estfun()`. The derivative of the outcome score with respect to the weighting model's coefficients was computed as though each unit's contribution depended only on its own weight, but in a Cox model it also depends on the other units' weights through the risk sets. Standard errors will change, in some cases noticeably.
 

@@ -11,73 +11,68 @@ can be used with binary, multi-category, and continuous treatments, as well as f
 
 In general, this method relies on estimating propensity scores using BART and
 then converting those propensity scores into weights using a formula that
-depends on the desired estimand. This method relies on \pkgfun{dbarts}{bart2}
-from the \CRANpkg{dbarts} package.
+depends on the desired estimand. This method relies on \pkgfun{bartisan}{bartisan}
+from the \CRANpkg{bartisan} package, which fits BART models with soft decision
+rules and with likelihoods beyond the normal using the sampler of Linero
+(2025).
 \subsection{Binary Treatments}{
 
 For binary treatments, this method estimates the propensity scores using
-\pkgfun{dbarts}{bart2}. The following estimands are allowed: ATE, ATT, ATC,
-ATO, ATM, and ATOS. Weights can also be computed using marginal mean
-weighting through stratification for the ATE, ATT, and ATC. See
-\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+\pkgfun{bartisan}{bartisan} with a binomial likelihood, by default with a
+logit link (see \code{link} in \emph{Additional Arguments} below). The following
+estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights
+can also be computed using marginal mean weighting through stratification for
+the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, the propensity scores are estimated using
-several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the
-treatment probabilities are not normalized to sum to 1. The following
-estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas.
-Weights can also be computed using marginal mean weighting through
-stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For multi-category treatments, the propensity scores are estimated using a
+single call to \pkgfun{bartisan}{bartisan} with a multinomial likelihood
+(\pkgfun{bartisan}{multinomial}), by default with a logit link (see \code{link} in
+\emph{Additional Arguments} below). One forest is fit for each treatment level,
+and the predicted probabilities for each unit sum to 1. The following estimands are allowed:
+ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using
+the standard formulas. Weights can also be computed using marginal mean
+weighting through stratification for the ATE, ATT, and ATC. See
+\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Continuous Treatments}{
 
 For continuous treatments, weights are estimated as
 \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 propensity score) is the conditional density of treatment given the
-covariates evaluated at the observed treatment value. The shape of
-\eqn{f_{A|X}(.)} is controlled by the \code{density} argument
-described below (normal distribution by default), and the predicted values
-used for the mean of the conditional density are estimated using BART as
-implemented in \pkgfun{dbarts}{bart2}. \eqn{f_A(.)} is estimated by marginalizing
-over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
-instead of assuming a specific density for the denominator by
-setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
-to refine the density estimation parameters.
+covariates evaluated at the observed treatment value. The conditional density
+is estimated directly by a BART model for the treatment whose form is set by
+the \code{family} argument (see \emph{Additional Arguments} below). By default, this is
+\pkgfun{bartisan}{dpm}, a model whose mean is a sum of trees and whose error
+distribution is a Dirichlet process mixture of normals estimated from the data
+(George et al., 2019), so no parametric form for the density needs to be
+assumed. The error distribution is the same for all units, though, so when the
+variance of the treatment may depend on the covariates, a different \code{family}
+may be preferable, such as \code{family = "gaussian_ls"}, which fits a
+normal model in which both the mean and the logarithm of the standard
+deviation are sums of trees. \eqn{f_A(.)} is estimated by marginalizing over
+\eqn{f_{A|X}(.)}.
 }
 
 \subsection{Multilevel Treatment Models}{
 
-When the model \code{formula} contains \CRANpkg{lme4}-style random effects terms
-(e.g., \code{treat ~ x1 + x2 + (1 | school)}), a multilevel BART model is fit using
-\pkgfun{stan4bart}{stan4bart} instead of \pkgfun{dbarts}{bart2}. This combines a
-BART sum-of-trees for the covariates with a Stan-estimated
-random-effects component and can improve balance when units are
-clustered (e.g., patients within hospitals or students within schools). The full flexibility of \pkgfun{lme4}{glmer}
-random effects is available, including multiple grouping factors (e.g.,
-\code{(1 | school) + (1 | district)}) and random slopes. The grouping (and any
-random-slope) variables are taken from \code{data}; the covariates are placed in the
-BART component internally (i.e., the fitted model is \code{treat ~ bart(x1 + x2) + (1 | school)}). The estimated propensity scores (or conditional means for
-continuous treatments) include the estimated random effects; i.e., they are
-cluster-specific.
-
-\code{stan4bart()} uses a different set of control arguments from \code{bart2()}: the
-number of posterior draws and warmup iterations are controlled by \code{iter} and
-\code{warmup}, the number of chains and parallel workers by \code{chains} and \code{cores},
-BART hyperparameters (e.g., \code{n.trees}) are supplied in a \code{bart_args} list, and
-Stan and prior options in a \code{stan_args} list; see \pkgfun{stan4bart}{stan4bart}.
-For convenience, \code{bart2()}-style arguments are translated to their \code{stan4bart()}
-equivalents when supplied (e.g., \code{n.chains} to \code{chains}, \code{n.threads} to \code{cores},
-and BART hyperparameters like \code{n.trees} to \code{bart_args}), so the same argument
-names can be used with or without random effects. Only the arguments described
-here are passed on; anything else, including the \code{bart2()} arguments listed as
-exceptions in \emph{Additional Arguments} below, is ignored. As with the
-single-level case, M-estimation is not supported.
+When the model \code{formula} contains \CRANpkg{lme4}-style random intercept terms
+(e.g., \code{treat ~ x1 + x2 + (1 | school)}), the random intercepts are included
+in the BART model directly; see \emph{Random Intercepts} at
+\pkgfun{bartisan}{bartisan}. This can improve balance when units are
+clustered (e.g., patients within hospitals or students within schools).
+Multiple grouping factors (e.g., \code{(1 | school) + (1 | district)}) and nesting
+(\code{(1 | district/school)}) are allowed, but random slopes are not; a variable
+whose effect varies by group belongs in the fixed part of the formula, where
+a tree can split on it and on the group together. The grouping variables
+are taken from \code{data}. The estimated propensity scores (or conditional
+densities for continuous treatments) include the estimated random effects;
+i.e., they are cluster-specific.
 }
 
 \subsection{Censoring Weights}{
@@ -93,7 +88,17 @@ estimated at each time point.
 
 \subsection{Sampling Weights}{
 
-Sampling weights are not supported.
+Sampling weights are supported through \code{s.weights}, except with the default
+\code{family} for continuous treatments. Before being supplied to
+\pkgfun{bartisan}{bartisan} as prior weights, they are scaled to have a mean
+of 1 among the units in the model, so that the fit does not depend on their
+scale. For continuous treatments, they are also used in computing the
+marginal density of the treatment in the numerator of the weights. The default
+\code{family} for continuous treatments, \pkgfun{bartisan}{dpm}, does not accept
+prior weights, so supplying sampling weights that vary across units with it
+is an error. To use sampling weights with a continuous treatment, supply a
+family that accepts them, such as \code{family = gaussian()} or
+\code{family = "gaussian_ls"}.
 }
 
 \subsection{Missing Data}{
@@ -101,8 +106,11 @@ Sampling weights are not supported.
 In the presence of missing data, the following value(s) for \code{missing} are
 allowed:
 \describe{
-\item{\code{"ind"} (default)}{
-First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+\item{\code{"mia"} (default)}{
+The missing values are left in the covariates and handled by the trees themselves using missingness incorporated in attributes; see \emph{Missing Predictor Values} at \pkgfun{bartisan}{bartisan}. Each splitting rule on a covariate with missing values also determines which side of the split the units missing that covariate go to, or splits on whether the covariate is missing at all, and these choices are made by the sampler along with the rest of the tree. The estimated propensity scores are then conditional on the observed covariate values and on which covariates are missing. With \code{use.offset = TRUE}, the generalized linear model that supplies the offset uses missingness indicators as described for \code{"ind"} below. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+}
+\item{\code{"ind"}}{
+First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. For a categorical covariate, the missing values are instead given a category of their own. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
 }
 }
@@ -114,64 +122,80 @@ M-estimation is not supported.
 }
 \details{
 BART works by fitting a sum-of-trees model for the treatment or
-probability of treatment. The number of trees is determined by the \code{n.trees}
+probability of treatment. The number of trees is determined by the \code{num_trees}
 argument. Bayesian priors are used for the hyperparameters, so the result is
 a posterior distribution of predicted values for each unit. The mean of these
 for each unit is taken for use in computing the (generalized) propensity
 score. Although the hyperparameters governing the priors can be modified by
 supplying arguments to \code{\link[=weightit]{weightit()}} that are passed to the BART fitting
 function, the default values tend to work well and require little
-modification (though the defaults differ for continuous and categorical
-treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike
-many other machine learning methods, no loss function is optimized and the
-hyperparameters do not need to be tuned (e.g., using cross-validation),
-though performance can benefit from tuning. BART tends to balance sparseness
-with flexibility by using very weak learners as the trees, which makes it
-suitable for capturing complex functions without specifying a particular
-functional form and without overfitting.
+modification. Unlike many other machine learning methods, no loss function is
+optimized and the hyperparameters do not need to be tuned (e.g., using
+cross-validation), though performance can benefit from tuning. BART tends to
+balance sparseness with flexibility by using very weak learners as the trees,
+which makes it suitable for capturing complex functions without specifying a
+particular functional form and without overfitting.
+
+The covariates are supplied to \pkgfun{bartisan}{bartisan} as they appear in
+the model formula rather than as a model matrix, so a categorical covariate
+remains a single variable whose levels a tree can split into any two groups
+(see \code{categorical} at \pkgfun{bartisan}{bartisan_control}). Transformed terms
+(e.g., \code{I(x^2)}) are included as given, and an interaction term is
+represented by its component variables, since the trees can find interactions
+among them without one being specified.
+
+By default, the decision rules in each tree are soft, as in the SoftBart
+model of Linero and Yang (2018): an observation reaches every leaf with some
+weight, so the fitted propensity score is a smooth function of the covariates
+rather than a step function. Smoother propensity scores tend to be better
+calibrated and to yield less extreme weights than those from standard BART.
+Soft rules are slower than hard rules; the standard BART sampler can be
+requested with \code{gate = "hard"}. See \pkgfun{bartisan}{bartisan_control} for
+details.
 \subsection{Reproducibility}{
 
-BART has a random component, so some work must be done to ensure
-reproducibility across runs. See the \emph{Reproducibility} section at
-\pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can
-do one of two things:
-\enumerate{
-\item supply an argument to \code{seed}, which is passed to \code{dbarts::bart2()} and sets the seed for single- and multi-threaded uses, or
-\item call \code{\link[=set.seed]{set.seed()}} and set \code{n.threads = 1} to use single-threading.
+BART has a random component. \pkg{bartisan} uses R's random number generator,
+so calling \code{\link[=set.seed]{set.seed()}} before \code{weightit()} makes the results reproducible,
+including when the chains run in parallel, since each chain is given its own
+random number stream. The \code{seed} argument accepted by earlier versions of this
+method, which used \pkg{dbarts}, is ignored with a warning.
 }
 
-Note that to ensure reproducibility on any machine, regardless of the number of
-cores available, one should use single-threading by setting \code{n.threads = 1} and either supply \code{seed} or
-call \code{set.seed()}.
+\subsection{Parallel Processing}{
+
+When \code{chains} is greater than 1 and the \CRANpkg{future.apply} package is
+installed, the chains run in parallel under whatever \pkgfun{future}{plan} has
+been set. See \emph{Parallelization with future} at \pkgfun{bartisan}{bartisan_control}.
 }
 }
 \section{Additional Arguments}{
 
 
-All arguments to \pkgfun{dbarts}{bart2} can be passed through \code{weightit()}
-or \code{weightitMSM()}, with the following exceptions:
-\itemize{
-\item \code{test}, \code{weights}, \code{subset}, \code{offset.test}, and \code{samplerOnly} are ignored
-\item \code{combineChains} is always set to \code{TRUE}
-\item \code{keepCall} is always set to \code{FALSE}
-\item \code{verbose} is always set to \code{FALSE} (use \code{weightit()}'s own \code{verbose} argument
-instead)
-}
+All arguments to \pkgfun{bartisan}{bartisan_control} can be passed through
+\code{weightit()} or \code{weightitMSM()} to control the sampler and the priors, including
+\code{num_trees}, \code{num_draws}, \code{num_burn}, \code{chains}, \code{gate}, and \code{sparsity}. Their
+defaults are those of \code{bartisan_control()}. For compatibility with earlier
+versions of this method, which used \pkg{dbarts}, the following arguments are
+translated to their \code{bartisan_control()} equivalents when supplied: \code{n.trees}
+to \code{num_trees}, \code{n.samples} to \code{num_draws}, \code{n.burn} to \code{num_burn}, and
+\code{n.chains} to \code{chains}. A natively named argument takes precedence over its
+translation. \code{n.threads} is ignored (see \emph{Parallel Processing} below), and
+\code{seed} is ignored with a warning (see \emph{Reproducibility} below).
 
-When the model \code{formula} contains random effects terms, \pkgfun{stan4bart}{stan4bart}
-is used instead of \code{bart2()}, and the arguments it accepts differ; see
-\emph{Multilevel Treatment Models} below.
+For binary and multi-category treatments and for censoring weights, only the
+link of the model described above can be changed, using \code{link}; \code{family} is
+ignored. For continuous treatments, the model is set by \code{family}, described
+below.
 
-See also the \emph{Reproducibility} section below for information on using the \code{seed} argument.
-
-The following additional argument may be supplied:
+The following additional arguments may be supplied:
 \describe{
-\item{\code{use.offset}}{\code{logical}; whether to use the linear predictor resulting from a generalized linear model as an offset to the BART model. If \code{TRUE}, this fits a probit regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predictor to the \code{offset} argument of \code{bart2()} or \code{stan4bart()}, overriding any supplied argument to \code{offset}. Default is \code{FALSE} to omit this offset. Only allowed for binary and continuous treatments.
+\item{\code{use.offset}}{\code{logical}; whether to use the linear predictor resulting from a generalized linear model as an offset to the BART model. If \code{TRUE}, this fits a binomial regression model with the link specified by \code{link} (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predictor to the \code{offset} argument of \code{bartisan()}, overriding any supplied argument to \code{offset}. With \code{missing = "mia"}, this model uses missingness indicators for the covariates with missing values. Default is \code{FALSE} to omit this offset. Only allowed for binary and continuous treatments.
 }
 }
 
 For binary and multi-category treatments, the following arguments may be supplied:
 \describe{
+\item{\code{link}}{for binary treatments and censoring weights, the link function of the binomial model. Allowable options include \code{"logit"} (the default), \code{"probit"}, and \code{"cloglog"}. For multi-category treatments, the link function of the multinomial model, which can be \code{"logit"} (the default) or \code{"probit"}; with \code{"probit"}, the probabilities have no closed form and are computed by simulation (see \pkgfun{bartisan}{multinomial}).}
 \item{\code{subclass}}{\code{integer}; the number of subclasses to use for computing
 weights using marginal mean weighting through stratification (MMWS). If \code{NULL},
 standard inverse probability weights (and their extensions) will be
@@ -182,25 +206,29 @@ details and references.}
 
 For continuous treatments, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
-
-Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
+\item{\code{family}}{the model for the conditional density of the treatment, given as a family object or the name of one; see \code{\link[bartisan:bartisan-families]{bartisan-families}}. Default is \pkgfun{bartisan}{dpm}, which estimates the shape of the error distribution from the data but does not accept sampling weights. Other options include \pkgfun{bartisan}{gaussian_ls} for a normal density whose mean and standard deviation both depend on the covariates and \code{gaussian()} for a normal density with a single standard deviation; both accept sampling weights. \code{gaussian_ls()} can capture a variance that differs across units but takes several times as long to fit as \code{dpm()}, and, like \code{gaussian()}, it assumes the conditional density is normal, which can yield extreme weights when the treatment is skewed. With \code{family = "ordinal"} (\pkgfun{bartisan}{ordinal}), each observed value of the treatment is a category of an ordinal model, and the weights are the ratio of the proportion of units with each unit's treatment value (weighted by the sampling weights) to the probability of that value given the covariates, as for a discrete treatment.}
 }
+
+The \code{density}, \code{bw}, \code{adjust}, \code{kernel}, and \code{n} arguments that other methods
+use to specify the conditional density are not used by this method and are
+ignored with a warning, since the density is estimated by the model specified
+by \code{family}.
 }
 
 \section{Additional Outputs}{
 
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the predicted values (or the \pkgfun{stan4bart}{stan4bart} fit(s) when the model \code{formula} contains random effects terms). With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
+When \code{include.obj = TRUE}, the \code{bartisan_fit} object used to generate the predicted values. For multi-category treatments, this is a single fit, since one multinomial model is fit for all treatment levels. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun{bartisan}{predict.bartisan_fit} with \code{type = "prob"}, and the conditional density of a continuous treatment with \code{type = "density"}.
 }
 }
 }
 
 \examples{
-\dontshow{if (rlang::is_installed("dbarts")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("bartisan")) withAutoprint(\{ # examplesIf}
 \donttest{data("lalonde", package = "cobalt")
+
+set.seed(123)
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
@@ -221,25 +249,44 @@ summary(W2)
 cobalt::bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
-#with kernel density estimation for GPS
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "bart", density = "kernel"))
+                method = "bart"))
 
 summary(W3)
 
-cobalt::bal.tab(W3)}
+cobalt::bal.tab(W3)
+
+#Using a normal model whose variance depends on the
+#covariates for the conditional density
+(W4 <- weightit(re75 ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "bart",
+                family = "gaussian_ls"))
+
+summary(W4)
+
+cobalt::bal.tab(W4)}
 \dontshow{\}) # examplesIf}
 }
 \references{
+Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian
+additive regression trees. \emph{The Annals of Applied Statistics}, 4(1), 266–298.
+\doi{10.1214/09-AOAS285}
+
 Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With
 Propensity Score Strategies in a High-Dimensional Setting and a Potential
 Alternative. \emph{Multivariate Behavioral Research}, 46(3), 477–513.
 \doi{10.1080/00273171.2011.570161}
 
-Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian
-additive regression trees. \emph{The Annals of Applied Statistics}, 4(1), 266–298.
-\doi{10.1214/09-AOAS285}
+Linero, A. R. (2025). Generalized Bayesian additive regression trees models: beyond conditional conjugacy. \emph{Journal of the American Statistical Association}, 120(549), 356–369. \doi{10.1080/01621459.2024.2337156}
+
+Linero, A. R., & Yang, Y. (2018). Bayesian regression tree ensembles that adapt to smoothness and sparsity. \emph{Journal of the Royal Statistical Society Series B}, 80(5), 1087–1110. \doi{10.1111/rssb.12293}
+\itemize{
+\item Continuous treatments
+}
+
+George, E., Laud, P., Logan, B., McCulloch, R., & Sparapani, R. (2019). Fully Nonparametric Bayesian Additive Regression Trees. In \emph{Topics in Identification, Limited Dependent Variables, Partial Observability, Experimentation, and Flexible Modeling: Part B} (Advances in Econometrics, Vol. 40B, pp. 89–110). Emerald Publishing Limited. \doi{10.1108/S0731-90532019000040B006}
 
 Note that many references that deal with BART for causal inference focus on
 estimating potential outcomes with BART, not the propensity scores, and so

@@ -95,7 +95,7 @@ test_that("msm_valid methods fit without error: glm, gbm, cbps, ipt, super, bart
       super = list(method = "super",
                    args = list(SL.library = c("SL.mean", "SL.glm", "SL.step"))),
       bart = list(method = "bart",
-                  args = list(n.trees = 20L, n.threads = 1L, seed = 123))
+                  args = list(num_trees = 20L, num_draws = 100L, num_burn = 100L))
     )
   )
 })
@@ -267,21 +267,27 @@ test_that("s.weights works with method = 'glm'", {
   expect_not_equal(W1$weights, W0$weights)
 })
 
-test_that("s.weights errors for a s.weights_ok = FALSE method: bart", {
-  skip_if_not_installed("dbarts")
+test_that("s.weights works with method = 'bart'", {
+  skip_if_not_installed("bartisan")
 
   msmdata_sw <- msmdata
   set.seed(123)
   msmdata_sw$sw <- runif(nrow(msmdata_sw), 0.5, 1.5)
 
-  # `.weightit_methods[["bart"]]$s.weights_ok` is FALSE, and
-  # `.check_method_s.weights()` is called directly inside weightitMSM(), so
-  # supplying non-constant s.weights errors immediately -- it is neither
-  # silently ignored nor merely warned about.
-  expect_error({
-    weightitMSM(msm_formulas, data = msmdata_sw, method = "bart",
-               s.weights = "sw", n.trees = 20L, n.threads = 1L, seed = 123)
-  }, "sampling weights cannot be used", ignore.case = TRUE)
+  set.seed(123)
+  W0 <- weightitMSM(msm_formulas, data = msmdata_sw, method = "bart",
+                    num_trees = 20L, num_draws = 100L, num_burn = 100L)
+
+  set.seed(123)
+  expect_no_condition({
+    W1 <- weightitMSM(msm_formulas, data = msmdata_sw, method = "bart",
+                      s.weights = "sw",
+                      num_trees = 20L, num_draws = 100L, num_burn = 100L)
+  })
+
+  expect_true(all(is.finite(W1$weights) & W1$weights > 0))
+  expect_equal(unname(W1$s.weights), msmdata_sw$sw)
+  expect_not_equal(W1$weights, W0$weights)
 })
 
 test_that("Non-binary treatment time point: continuous A_2, method = 'glm', 'cbps'", {

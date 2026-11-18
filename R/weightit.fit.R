@@ -6,12 +6,16 @@
 #' should probably not be used except in special cases. Unlike `weightit()`,
 #' `weightit.fit()` does not accept a formula and data frame interface and
 #' instead requires the covariates and treatment to be supplied as a numeric
-#' matrix and atomic vector, respectively. In this way, `weightit.fit()` is to
+#' matrix (or a data frame) and atomic vector, respectively. In this way, `weightit.fit()` is to
 #' `weightit()` what [lm.fit()] is to [lm()]: a thinner, slightly faster
 #' interface that performs minimal argument checking.
 #'
 #' @inheritParams weightit
-#' @param covs a numeric matrix of covariates. May have zero columns, in which case
+#' @param covs a numeric matrix or a data frame of covariates. A data frame is
+#'   converted to a matrix as [weightit()] converts the covariates named in its
+#'   `formula`, with each factor or character variable split into dummy
+#'   variables for its levels; methods that can use the covariates as they are,
+#'   such as `"bart"`, receive the data frame itself. May have zero columns, in which case
 #'   the weights are computed with an intercept-only generalized linear model
 #'   whatever `method` is supplied and any method-specific arguments are ignored; see
 #'   *Empty model formulas* in Details at [weightit()].
@@ -43,7 +47,8 @@
 #'   ignored and set to `"glm"`.
 #' @param missing `character`; how missing data should be handled. The options
 #'   depend on the `method` used. If `NULL`, `covs` will be checked for `NA`
-#'   values, and if present, `missing` will be set to `"ind"`. If `""`, `covs`
+#'   values, and if present, `missing` will be set to the default for `method`,
+#'   which is `"ind"` for all methods except `"bart"`. If `""`, `covs`
 #'   will not be checked for `NA` values; this can be faster when it is known
 #'   there are none.
 #' @param subset a `logical` vector with length equal to that of `treat`
@@ -143,6 +148,13 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   }
   else {
     arg::arg_supplied(covs)
+
+    if (is.data.frame(covs)) {
+      t.c <- .process_covs_df(covs)
+      A[[".covs"]] <- A[[".covs"]] %or% t.c[["reported.covs"]]
+      covs <- t.c[["model.covs"]]
+    }
+
     arg::arg_matrix(covs)
     arg::arg_numeric(covs)
 
@@ -228,8 +240,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     if (is_null(missing)) {
       missing <- {
-        if (is_not_null(method) && anyNA(covs)) "ind"
-        else ""
+        if (is_null(method) || !anyNA(covs)) ""
+        else if (is.character(method)) .weightit_methods[[method]]$missing[1L] %or% "ind"
+        else "ind"
       }
     }
     else if (nzchar(missing) && anyNA(covs)) {

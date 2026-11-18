@@ -22,7 +22,11 @@ weightit.fit(
 )
 }
 \arguments{
-\item{covs}{a numeric matrix of covariates. May have zero columns, in which case
+\item{covs}{a numeric matrix or a data frame of covariates. A data frame is
+converted to a matrix as \code{\link[=weightit]{weightit()}} converts the covariates named in its
+\code{formula}, with each factor or character variable split into dummy
+variables for its levels; methods that can use the covariates as they are,
+such as \code{"bart"}, receive the data frame itself. May have zero columns, in which case
 the weights are computed with an intercept-only generalized linear model
 whatever \code{method} is supplied and any method-specific arguments are ignored; see
 \emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}.}
@@ -69,7 +73,8 @@ ignored and set to \code{"glm"}.}
 
 \item{missing}{\code{character}; how missing data should be handled. The options
 depend on the \code{method} used. If \code{NULL}, \code{covs} will be checked for \code{NA}
-values, and if present, \code{missing} will be set to \code{"ind"}. If \code{""}, \code{covs}
+values, and if present, \code{missing} will be set to the default for \code{method},
+which is \code{"ind"} for all methods except \code{"bart"}. If \code{""}, \code{covs}
 will not be checked for \code{NA} values; this can be faster when it is known
 there are none.}
 
@@ -116,7 +121,7 @@ determined by \code{method}. It is an internal function called by \code{\link[=w
 should probably not be used except in special cases. Unlike \code{weightit()},
 \code{weightit.fit()} does not accept a formula and data frame interface and
 instead requires the covariates and treatment to be supplied as a numeric
-matrix and atomic vector, respectively. In this way, \code{weightit.fit()} is to
+matrix (or a data frame) and atomic vector, respectively. In this way, \code{weightit.fit()} is to
 \code{weightit()} what \code{\link[=lm.fit]{lm.fit()}} is to \code{\link[=lm]{lm()}}: a thinner, slightly faster
 interface that performs minimal argument checking.
 }

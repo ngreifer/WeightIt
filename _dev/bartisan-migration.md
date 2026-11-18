@@ -1,5 +1,7 @@
 # Migrating `method = "bart"` from dbarts to bartisan
 
+**Status (2026-11-03): done, against bartisan 0.1.0 from CRAN.** Changes from the plan below: for binary and multi-category treatments and censoring, the family is fixed (`binomial()` and `multinomial()`) but `link` is kept, and the draft's `reference` and `replicates` arguments were removed. For continuous treatments, `family` is kept, with `dpm()` the default (2026-11-18, after `_dev/bart-continuous-family.R` compared `dpm()` and `gaussian_ls()`: `gaussian_ls()` takes 3 to 5 times as long and gave extreme weights with skewed errors, though it balanced better with heteroskedastic errors and on lalonde). The marginal density now interpolates the log of the density, since a spline through the density itself dipped below 0 for lalonde's `re75`, and `predict(type = "density")` is given unit prior weights explicitly. The draft, injection, timing, and test scripts were deleted; their content now lives in `R/weightit2bart.R` and `tests/testthat/test-method_bart*.R`. The *Follow-ups* section at the end is still open.
+
 A guide for replacing the dbarts-based BART weighting method with the bartisan-based one once *bartisan* is on CRAN. Written 2026-10-08 against WeightIt 2.1.0.9000 and bartisan 0.1.0 (development). Read it start to finish before changing anything; the steps are ordered so the package stays buildable after each one.
 
 ## What exists already
@@ -125,6 +127,6 @@ For comparison, the dbarts implementation fits lalonde (614 units) in .2, .5, an
 ## Follow-ups worth considering after the migration
 
 - Expose `max_draws` and `max_units` of the marginal-density computation, or compute the marginal density without re-evaluating the trees: the grid rows have the same predictors as the fitted data, so their additive predictor is already in `fit$eta`, and only the error density at `a - eta` is needed. For `dpm()` that is one shifted error density per draw, which `error_density()` reports only as a posterior average; a bartisan function returning the per-draw mixture density at given values, or `predict(type = "density")` accepting a response vector for the fitted rows, would make the numerator nearly free. The same applies to `gaussian()` (`fit$aux` has the sigma draws) but not to `gaussian_ls()`, whose scale varies with the predictors.
-- Offer bartisan's native missing-value handling as `missing = "mia"` (or similar).
+- ~~Offer bartisan's native missing-value handling as `missing = "mia"` (or similar).~~ Done 2026-11-18, and made the default.
 - Decide whether `gate = "hard"` should be the default for speed, with soft rules opt-in; the current default follows bartisan.
 - Decide whether to add the two references the roxygen page cites (Linero 2025; Linero and Yang 2018; George et al. 2019) to `vignettes/references.bib` for the weighting-methods vignette.

@@ -407,15 +407,14 @@ test_that("an empty censoring formula gives a marginal censoring model", {
 })
 
 test_that("bart censoring weights zero out the censored and invert P(C = 0 | X)", {
-  skip_if_not_installed("dbarts")
+  skip_if_not_installed("bartisan")
 
   # `weightit2bart.cens()` was the one `.cens` method with no test at all
   d <- make_cens_data()
 
   set.seed(123)
   W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "bart",
-                n.trees = 20, n.samples = 50, n.burn = 50, n.chains = 1,
-                n.threads = 1)
+                num_trees = 20L, num_draws = 100L, num_burn = 100L)
 
   expect_identical(get_treat_type(W$treat), "censoring")
   expect_true(all(W$weights[d$C == 1L] == 0))

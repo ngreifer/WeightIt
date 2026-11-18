@@ -179,12 +179,24 @@
 #' of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004)
 #' were innovative in using covariate balance to select this value rather than
 #' traditional machine learning performance metrics such as cross-validation
-#' accuracy. GBM is particularly effective for fitting nonlinear treatment
-#' models characterized by curves and interactions, but performs worse for
-#' simpler treatment models. It is unclear which balance measure should be used
-#' to select the number of trees, though research has indicated that balance
+#' accuracy. Research has indicated that balance
 #' measures tend to perform better than cross-validation accuracy for estimating
-#' effective propensity score weights.
+#' effective propensity score weights. GBM is particularly effective for fitting nonlinear treatment
+#' models characterized by curves and interactions, but can perform worse for
+#' simpler treatment models.
+#'
+#' The covariates are supplied to \pkgfun{gbm}{gbm.fit} as they appear in the
+#' model formula rather than as a model matrix, so a categorical covariate
+#' remains a single variable whose levels a tree can split into any two groups.
+#' At each split, the levels are ordered by the mean of the current residuals
+#' within each level, and the best split along that ordering is chosen, so the
+#' result does not depend on the order of the levels. Transformed terms (e.g.,
+#' `I(x^2)`) are included as given, and an interaction term is represented by
+#' its component variables, since the trees can find interactions among them
+#' without one being specified. Balance is assessed on the same covariates,
+#' with each factor split into dummy variables as [cobalt::bal.tab()] would
+#' split it, so an interaction term in the model formula contributes its
+#' components to the balance criterion rather than the interaction itself.
 #'
 #' \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the
 #' first package to implement this method. Compared to the current version of
@@ -335,6 +347,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   covs <- .make_covs_closer_to_1(covs)
 
+  #The trees use the covariates as they appear in the model formula, with factors
+  #kept as factors and missing values left in place for gbm, which sends them down
+  #a branch of their own at each split. Balance is assessed on the same
+  #covariates, with missingness indicators for missing values, and `bal.init()`
+  #splits each factor into dummies as `bal.tab()` does. `covs` is kept for the
+  #offset.
+  X <- .make_covs_df(covs, ...get(".covs"), subset)
+
   criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
@@ -437,12 +457,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         #subset is encoded by the zero weights supplied to `bal.compute()`, so
         #`covs` must be the whole at-risk sample here.
         cobalt::bal.init(
-          if (!anyNA(covs)) covs else add_missing_indicators(covs),
+          .add_missing_indicators_df(X),
           stat = criterion, s.weights = s.weights, ...)
       }
       else {
         cobalt::bal.init(
-          if (!anyNA(covs)) covs else add_missing_indicators(covs),
+          .add_missing_indicators_df(X),
           treat = treat, stat = criterion,
           estimand = estimand, s.weights = s.weights,
           focal = focal, ...)
@@ -450,7 +470,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
 
-  A[["x"]] <- covs
+  A[["x"]] <- X
   A[["y"]] <- treat
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
@@ -484,7 +504,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     }
 
     rlang::try_fetch({
-      fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
+      fit <- glm.fit(x = as.matrix(cbind(1, add_missing_indicators(covs))), y = treat,
                      weights = s.weights, family = quasibinomial())
     },
     warning = function(w) {
@@ -552,9 +572,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
       ps <- {
         if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.grid,
-                                                                type = "link", newdata = covs))
+                                                                type = "link", newdata = X))
         else gbm::predict.gbm(fit, n.trees = iters.grid,
-                              type = "response", newdata = covs)
+                              type = "response", newdata = X)
       }
 
       w <- {
@@ -600,9 +620,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
         ps <- {
           if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.to.check,
-                                                                  type = "link", newdata = covs))
+                                                                  type = "link", newdata = X))
           else gbm::predict.gbm(fit, n.trees = iters.to.check,
-                                type = "response", newdata = covs)
+                                type = "response", newdata = X)
         }
 
         w <- {
@@ -656,7 +676,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         tune[["best.error"]] <- NA_real_
         tune[["best.tree"]] <- NA_integer_
 
-        A["data"] <- list(data.frame(treat, covs))
+        A["data"] <- list(data.frame(treat, X))
         A[["cv.folds"]] <- cv
         A["n.cores"] <- list(...get("n.cores", 1L))
         A["var.names"] <- list(NULL)
@@ -688,9 +708,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
         best.ps <- {
           if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(best.fit, n.trees = best.tree,
-                                                                  type = "link", newdata = covs))
+                                                                  type = "link", newdata = X))
           else gbm::predict.gbm(best.fit, n.trees = best.tree,
-                                type = "response", newdata = covs)
+                                type = "response", newdata = X)
         }
 
         best.w <- {
@@ -778,6 +798,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   covs <- .make_covs_closer_to_1(covs)
 
+  #The trees use the covariates as they appear in the model formula, with factors
+  #kept as factors and missing values left in place for gbm, which sends them down
+  #a branch of their own at each split. Balance is assessed on the same
+  #covariates, with missingness indicators for missing values, and `bal.init()`
+  #splits each factor into dummies as `bal.tab()` does. `covs` is kept for the
+  #offset.
+  X <- .make_covs_df(covs, ...get(".covs"), subset)
+
   criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
@@ -846,12 +874,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     arg::arg_between(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
-      if (!anyNA(covs)) covs else add_missing_indicators(covs),
+      .add_missing_indicators_df(X),
       treat = treat, stat = criterion,
       s.weights = s.weights, ...)
   }
 
-  A[["x"]] <- covs
+  A[["x"]] <- X
   A[["y"]] <- treat
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
@@ -879,7 +907,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   arg::arg_no_NA(use.offset)
 
   if (any(use.offset)) {
-    fit <- lm.wfit(x = as.matrix(cbind(1, covs)), y = treat,
+    fit <- lm.wfit(x = as.matrix(cbind(1, add_missing_indicators(covs))), y = treat,
                    w = s.weights)
     offset <- fit$fitted.values
   }
@@ -958,7 +986,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         arg::err("a problem has occurred")
       }
 
-      gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
+      gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = X)
       if (use.offset) {
         gps <- gps + A[["offset"]]
       }
@@ -996,7 +1024,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
           arg::err("a problem has occurred")
         }
 
-        gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
+        gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = X)
         if (use.offset) {
           gps <- gps + A[["offset"]]
         }
@@ -1044,7 +1072,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         tune[["best.error"]] <- NA_real_
         tune[["best.tree"]] <- NA_integer_
 
-        A["data"] <- list(data.frame(treat, covs))
+        A["data"] <- list(data.frame(treat, X))
         A[["cv.folds"]] <- cv
         A["n.cores"] <- list(...get("n.cores", 1L))
         A["var.names"] <- list(A[["var.names"]])
@@ -1073,7 +1101,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       if (best.loss < current.best.loss) {
         best.fit <- fit
-        best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
+        best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = X)
         if (use.offset) {
           best.gps <- best.gps + A[["offset"]]
         }

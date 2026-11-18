@@ -47,8 +47,7 @@ Suggests:
     adrftools,
     MASS,
     gbm (>= 2.1.9),
-    dbarts (>= 0.9-29),
-    stan4bart,
+    bartisan (>= 0.1.0),
     misaem (>= 1.0.1),
     GPBayes,
     mlogit,
@@ -70,4 +69,4 @@ VignetteBuilder: knitr
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

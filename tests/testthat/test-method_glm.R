@@ -197,6 +197,27 @@ test_that("Binary treatment: estimands", {
   )
 })
 
+test_that("weightit.fit() accepts a data frame of covariates", {
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  d <- test_data
+  d$Xf <- factor(cut(d$X2, c(-Inf, -1, 0, 1, Inf)), labels = c("a", "b", "c", "d"))
+  d$Xc <- ifelse(d$X3 > 0, "hi", "lo")
+
+  # The data frame is converted to the same model matrix `weightit()` builds from
+  # a formula naming each variable, character variables included
+  W <- weightit(A ~ X1 + Xf + Xc + X4, data = d, method = "glm")
+  W.fit <- weightit.fit(d[c("X1", "Xf", "Xc", "X4")], treat = d$A, method = "glm")
+
+  expect_equal(unname(W.fit$weights), unname(W$weights))
+
+  # A zero-column data frame is the empty model
+  W0 <- weightit(A ~ 1, data = d, method = "glm")
+  W0.fit <- weightit.fit(d[0L], treat = d$A, method = "glm")
+
+  expect_equal(unname(W0.fit$weights), unname(W0$weights))
+})
+
 test_that("Binary treatment: links", {
   skip_on_cran()
   skip_if_not_installed("rootSolve")
