@@ -60,6 +60,8 @@
   [`summary(`*`<coxph_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   [`print(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   [`vcov(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
+  [`hatvalues(`*`<multinom_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
+  [`hatvalues(`*`<ordinal_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   [`estfun(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   [`update(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   :

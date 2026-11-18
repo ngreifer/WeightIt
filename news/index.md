@@ -15,6 +15,72 @@
   assessing balance, estimating effects with a marginal structural
   model, and accounting for loss to follow-up with censoring weights.
 
+- Added [`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html)
+  methods for `ordinal_weightit` and `multinom_weightit` objects, which
+  compute the generalized leverage of each unit. These allow HC2 robust
+  standard errors to be computed for these models, e.g., by *adrftools*.
+  See `?glm_weightit-methods` for details.
+
+- `method = "bart"` now fits the BART model using
+  [`bartisan::bartisan()`](https://ngreifer.github.io/bartisan/reference/bartisan.html)
+  from the *bartisan* package instead of using *dbarts* and *stan4bart*,
+  which are no longer used. Binary treatments are modeled with a logit
+  link by default (previously always a probit link), multi-category
+  treatments with a single multinomial model whose probabilities sum to
+  1 (previously one model per category), and continuous treatments by
+  default with a model for the conditional density whose error
+  distribution is a Dirichlet process mixture of normals. The trees use
+  soft decision rules by default. Results will differ from those of
+  previous versions; see
+  [`?method_bart`](https://ngreifer.github.io/WeightIt/reference/method_bart.md)
+  for details.
+
+- With `method = "bart"`, the new `link` argument sets the link function
+  of the model for binary and multi-category treatments and censoring
+  weights, as it does with `method = "glm"`.
+
+- With `method = "bart"` and a continuous treatment, the new `family`
+  argument sets the model for the conditional density of the treatment,
+  replacing `density`, which no longer applies. For example,
+  `family = bartisan::gaussian_ls()` fits a normal model whose variance
+  depends on the covariates.
+
+- With `method = "bart"`, missing covariate values are now handled by
+  default by the trees themselves using missingness incorporated in
+  attributes, requested with `missing = "mia"`, rather than with
+  missingness indicators, which are still available with
+  `missing = "ind"`.
+
+- With `method = "bart"`, sampling weights are now supported (except
+  with the default `family` for continuous treatments), only random
+  intercepts are allowed in `formula`, and
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) must be called for
+  reproducibility (`seed` is ignored with a warning). The arguments that
+  control the sampler are those of
+  [`bartisan::bartisan_control()`](https://ngreifer.github.io/bartisan/reference/bartisan_control.html)
+  (e.g., `num_trees`), and `n.trees`, `n.samples`, `n.burn`, and
+  `n.chains` are translated to their equivalents. With
+  `include.obj = TRUE`, a single `bartisan_fit` object is returned for
+  all treatment types.
+
+- With `method = "gbm"` and `method = "bart"`, the covariates are now
+  supplied to the trees as they appear in the model formula, so a factor
+  is a single variable whose levels a tree can split into any two groups
+  rather than a set of dummy variables. With `method = "gbm"`, balance
+  is also assessed on these covariates, so a two-level factor counts
+  once in the balance criterion rather than twice, and an interaction
+  term contributes its components rather than the interaction itself.
+  Results with `method = "gbm"` can change when the formula contains a
+  factor or character variable with two levels or more than three, or an
+  interaction term.
+
+- [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  now accepts a data frame for `covs`, which is converted to a matrix as
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  converts the covariates in its formula. Methods that use the
+  covariates as they are, such as `"gbm"` and `"bart"`, receive the data
+  frame itself.
+
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   gains a `br` argument, which, when set to `TRUE`, maximizes the
   partial likelihood penalized by the Jeffreys invariant prior as
@@ -67,6 +133,10 @@
 - Fixed a bug when using `method = "optweight"` with *clarabel* as the
   solver (e.g., with `norm = "entropy"` when *scs* is not installed), in
   which the solver’s output was printed even with `verbose = FALSE`.
+
+- Fixed a bug when using `method = "gbm"` with `use.offset = TRUE`, in
+  which any missing covariate value caused an error. The generalized
+  linear model that supplies the offset now uses missingness indicators.
 
 - Fixed a bug in
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
@@ -305,9 +375,8 @@ CRAN release: 2026-09-30
   of increasing it.
 
 - With `method = "bart"`, `samplerOnly` is now ignored as documented
-  rather than passed on to
-  [`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html), where
-  it would cause an error.
+  rather than passed on to `dbarts::bart2()`, where it would cause an
+  error.
 
 - `method = "gbm"` no longer accepts `estimand = "ATOS"`, which was
   listed as available but too slow to be practical.
@@ -504,10 +573,9 @@ propensity score models.
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   contains `lme4`-style random effects terms (e.g.,
   `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit
-  using
-  [`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html),
-  which combines a BART sum-of-trees for the covariates with a
-  Stan-estimated random-effects component. The full flexibility of
+  using `stan4bart::stan4bart()`, which combines a BART sum-of-trees for
+  the covariates with a Stan-estimated random-effects component. The
+  full flexibility of
   [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) random
   effects is available, including multiple grouping factors and random
   slopes. `bart2()`-style control arguments are translated to their

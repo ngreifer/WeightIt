@@ -727,14 +727,30 @@ a weak learner, so that the sum captures complex functions without
 overfitting ([Chipman et al.
 2010](#ref-chipmanBARTBayesianAdditive2010)). For propensity score
 estimation, the posterior mean of the predicted probability of treatment
-(or of the conditional mean of a continuous treatment) is used as the
+(or of the conditional density of a continuous treatment) is used as the
 propensity score ([Hill et al.
 2011](#ref-hillChallengesPropensityScore2011)). Unlike GBM and
 SuperLearner, BART does not optimize a loss function or require tuning
 by cross-validation or balance; the default priors tend to work well
 with little modification, which makes it the simplest of the machine
 learning methods to use. The implementation in *WeightIt* uses the
-*dbarts* package, and all of its arguments can be passed through
+*bartisan* package, which fits BART models with likelihoods beyond the
+normal ([Linero 2025](#ref-lineroGeneralizedBayesianAdditive2025)).
+Binary treatments are modeled with a logistic model and multi-category
+treatments with a multinomial model, though the link can be changed with
+`link`. For continuous treatments, the model for the conditional density
+of the treatment is set by the `family` argument; by default, its error
+distribution is a Dirichlet process mixture of normals ([George et al.
+2019](#ref-georgeFullyNonparametricBayesian2019)), so no form for the
+density needs to be assumed, and other families allow, for example, a
+variance that depends on the covariates
+(`family = bartisan::gaussian_ls()`) or the use of sampling weights in
+the fit, which the default family does not accept. By default, the
+decision rules in the trees are soft rather than hard, so the fitted
+propensity score is a smooth function of the covariates rather than a
+step function ([Linero and Yang
+2018](#ref-lineroBayesianRegressionTree2018)). The arguments that
+control the sampler and the priors can be passed through
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 See
 [`?method_bart`](https://ngreifer.github.io/WeightIt/reference/method_bart.md)
@@ -743,17 +759,16 @@ for the documentation for
 with `method = "bart"`.
 
 As with GBM, `use.offset = TRUE` adds the linear predictor of a
-generalized linear model as an offset. Random effects terms can be
-included in `formula` to fit a multilevel BART model using the
-*stan4bart* package. BART has a random component, so the `seed` argument
-should be supplied (or
-[`set.seed()`](https://rdrr.io/r/base/Random.html) called with
-`n.threads = 1`) to make the results reproducible. Sampling weights are
-not supported, and, as with the other machine learning methods,
-M-estimation is not available. Note that much of the literature on BART
-for causal inference concerns modeling the outcome rather than the
-treatment, so the evidence specific to BART-estimated propensity scores
-is thinner than for GBM.
+generalized linear model as an offset. Random intercept terms can be
+included in `formula` to fit a multilevel BART model. BART has a random
+component, so [`set.seed()`](https://rdrr.io/r/base/Random.html) should
+be called before
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+to make the results reproducible. As with the other machine learning
+methods, M-estimation is not available. Note that much of the literature
+on BART for causal inference concerns modeling the outcome rather than
+the treatment, so the evidence specific to BART-estimated propensity
+scores is thinner than for GBM.
 
 ### Optimization-Based Methods
 
@@ -1226,7 +1241,7 @@ lists those available for multi-category treatments.
 | `"ipt"` | Inverse probability tilting | B, M | ATE, ATT, ATC | Exact means | Yes | *rootSolve* | Exact mean balance; double robustness for the ATE | Some loss of precision relative to entropy balancing and CBPS | The ATE is the target and theoretical guarantees are valued |
 | `"gbm"` | Propensity score weighting using GBM | B, M, C | ATE, ATT, ATC, ATO, ATM | Tuned to a balance criterion | No | *gbm* | Captures nonlinearity and interactions; balance-based tuning; well studied | Slow; must be tuned; can overfit | Many covariates with an unknown functional form |
 | `"super"` | Propensity score weighting using SuperLearner | B, M, C | ATE, ATT, ATC, ATO, ATM, ATOS | None guaranteed (or tuned to a balance criterion) | No | *SuperLearner* | Combines several models; oracle property; balance-based option | Slow; results depend on the library | The appropriate model is uncertain and the sample is large |
-| `"bart"` | Propensity score weighting using BART | B, M, C | ATE, ATT, ATC, ATO, ATM, ATOS | None guaranteed | No | *dbarts* | Flexible with little tuning; random effects available | No sampling weights; less studied for propensity scores | A flexible model is wanted without a tuning search |
+| `"bart"` | Propensity score weighting using BART | B, M, C | ATE, ATT, ATC, ATO, ATM, ATOS | None guaranteed | No | *bartisan* | Flexible with little tuning; smooth propensity scores; random intercepts available | Less studied for propensity scores | A flexible model is wanted without a tuning search |
 | `"ebal"` | Entropy balancing | B, M, C | ATE, ATT, ATC | Exact (or approximate) means | Yes (with `tols = 0`) | None | Exact mean balance; fast; doubly robust for the ATT | Balance only on the specified moments; ESS can be low with many constraints | Mean imbalance remains after `"glm"`; the default among optimization-based methods |
 | `"optweight"` | Stable balancing weights | B, M, C | ATE, ATT, ATC | Approximate means | No | *optweight* | Maximizes the ESS for a chosen balance tolerance; dual variables | The tolerance must be chosen | The ESS is too low under exact balance; precision is a priority |
 | `"npcbps"` | Nonparametric CBPS weighting | B, M, C | ATE | Exact means | No | *CBPS* | Empirical likelihood weights with exact balance | Nonconvex and slow; no sampling weights | Reproducing an analysis that used the *CBPS* package; otherwise use `"optweight"` with `norm = "log"` |
@@ -1370,6 +1385,13 @@ Balancing Propensity Score for a Continuous Treatment: Application to
 the Efficacy of Political Advertisements.” *The Annals of Applied
 Statistics* 12 (1): 156–77. <https://doi.org/10.1214/17-AOAS1101>.
 
+George, Edward, Purushottam Laud, Brent Logan, Robert McCulloch, and
+Rodney Sparapani. 2019. “Fully Nonparametric Bayesian Additive
+Regression Trees.” In *Topics in Identification, Limited Dependent
+Variables, Partial Observability, Experimentation, and Flexible
+Modeling: Part B*. Emerald Publishing Limited.
+<https://doi.org/10.1108/S0731-90532019000040B006>.
+
 Graham, Bryan S., Cristine Campos De Xavier Pinto, and Daniel Egel.
 2012. “Inverse Probability Tilting for Moment Condition Models with
 Missing Data.” *The Review of Economic Studies* 79 (3): 1053–79.
@@ -1507,6 +1529,16 @@ Score Weighting with Multilevel Data.” *Statistics in Medicine* 32 (19):
 Li, Liang, and Tom Greene. 2013. “A Weighting Analogue to Pair Matching
 in Propensity Score Analysis.” *The International Journal of
 Biostatistics* 9 (2). <https://doi.org/10.1515/ijb-2012-0030>.
+
+Linero, Antonio R. 2025. “Generalized Bayesian Additive Regression Trees
+Models: Beyond Conditional Conjugacy.” *Journal of the American
+Statistical Association* 120 (549): 356–69.
+<https://doi.org/10.1080/01621459.2024.2337156>.
+
+Linero, Antonio R., and Yun Yang. 2018. “Bayesian Regression Tree
+Ensembles That Adapt to Smoothness and Sparsity.” *Journal of the Royal
+Statistical Society Series B: Statistical Methodology* 80 (5): 1087–110.
+<https://doi.org/10.1111/rssb.12293>.
 
 Lunceford, Jared K., and Marie Davidian. 2004. “Stratification and
 Weighting via the Propensity Score in Estimation of Causal Treatment

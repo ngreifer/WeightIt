@@ -7,8 +7,8 @@ and should probably not be used except in special cases. Unlike
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 `weightit.fit()` does not accept a formula and data frame interface and
 instead requires the covariates and treatment to be supplied as a
-numeric matrix and atomic vector, respectively. In this way,
-`weightit.fit()` is to
+numeric matrix (or a data frame) and atomic vector, respectively. In
+this way, `weightit.fit()` is to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 what [`lm.fit()`](https://rdrr.io/r/stats/lmfit.html) is to
 [`lm()`](https://rdrr.io/r/stats/lm.html): a thinner, slightly faster
@@ -39,10 +39,16 @@ weightit.fit(
 
 - covs:
 
-  a numeric matrix of covariates. May have zero columns, in which case
-  the weights are computed with an intercept-only generalized linear
-  model whatever `method` is supplied and any method-specific arguments
-  are ignored; see *Empty model formulas* in Details at
+  a numeric matrix or a data frame of covariates. A data frame is
+  converted to a matrix as
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  converts the covariates named in its `formula`, with each factor or
+  character variable split into dummy variables for its levels; methods
+  that can use the covariates as they are, such as `"bart"`, receive the
+  data frame itself. May have zero columns, in which case the weights
+  are computed with an intercept-only generalized linear model whatever
+  `method` is supplied and any method-specific arguments are ignored;
+  see *Empty model formulas* in Details at
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 - treat:
@@ -113,7 +119,8 @@ weightit.fit(
 
   `character`; how missing data should be handled. The options depend on
   the `method` used. If `NULL`, `covs` will be checked for `NA` values,
-  and if present, `missing` will be set to `"ind"`. If `""`, `covs` will
+  and if present, `missing` will be set to the default for `method`,
+  which is `"ind"` for all methods except `"bart"`. If `""`, `covs` will
   not be checked for `NA` values; this can be faster when it is known
   there are none.
 

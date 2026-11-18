@@ -137,7 +137,7 @@ pak::pak("lme4/lme4")
 software installed on your computer to install it from source. For
 multi-category treatments, the *mclogit* package is used instead (see
 above). With `method = "bart"`, multilevel models are fit using the
-*stan4bart* package instead of *lme4* (see below).
+*bartisan* package instead of *lme4* (see below).
 
 ### Multi-category treatments with `multi.method = "mnp"`
 
@@ -300,49 +300,26 @@ source("https://raw.githubusercontent.com/ecpolley/SuperLearnerExtra/master/SL/S
 
 ## Propensity score weighting using BART (`method = "bart"`)
 
-*WeightIt* uses the R package *dbarts* to estimate propensity score
-weights using BART. To install *dbarts* from CRAN, run
+*WeightIt* uses the R package *bartisan* to estimate propensity score
+weights using BART, including when the model `formula` contains
+`lme4`-style random intercept terms. To install *bartisan* from CRAN,
+run
 
 ``` r
 
-pak::pak("dbarts")
+pak::pak("bartisan")
 ```
 
-If *dbarts* is not on CRAN, or if you want to install the development
-version from source, you can do so from the developer, Vincent Dorie’s,
-[GitHub repo](https://github.com/vdorie/dbarts) using the following
-code:
+If *bartisan* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer’s [GitHub
+repo](https://github.com/ngreifer/bartisan) using the following code:
 
 ``` r
 
-pak::pak("vdorie/dbarts")
+pak::pak("ngreifer/bartisan")
 ```
 
-*dbarts* requires compilation, which means you may need additional
-software installed on your computer to install it from source.
-
-When the model `formula` supplied to
-[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-with `method = "bart"` contains `lme4`-style random effects terms (e.g.,
-`treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using
-the *stan4bart* package instead. To install *stan4bart* from CRAN, run
-
-``` r
-
-pak::pak("stan4bart")
-```
-
-If *stan4bart* is not on CRAN, or if you want to install the development
-version from source, you can do so from the developer, Vincent Dorie’s,
-[GitHub repo](https://github.com/vdorie/stan4bart) using the following
-code:
-
-``` r
-
-pak::pak("vdorie/stan4bart")
-```
-
-*stan4bart* requires compilation, which means you may need additional
+*bartisan* requires compilation, which means you may need additional
 software installed on your computer to install it from source.
 
 ## Energy balancing (`method = "energy"`)

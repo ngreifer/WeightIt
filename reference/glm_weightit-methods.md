@@ -43,6 +43,12 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
 # S3 method for class 'glm_weightit'
 vcov(object, complete = TRUE, vcov = NULL, ...)
 
+# S3 method for class 'multinom_weightit'
+hatvalues(model, ...)
+
+# S3 method for class 'ordinal_weightit'
+hatvalues(model, ...)
+
 # S3 method for class 'glm_weightit'
 estfun(x, asympt = TRUE, ...)
 
@@ -118,6 +124,14 @@ update(object, formula. = NULL, ..., evaluate = TRUE)
   [`vcov()`](https://rdrr.io/r/stats/vcov.html) is compatible with
   [`coef()`](https://rdrr.io/r/stats/coef.html) also in this singular
   case.
+
+- model:
+
+  for [`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html),
+  an output from
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  or
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md).
 
 - asympt:
 
@@ -205,6 +219,27 @@ See
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 and [`vcov()`](https://rdrr.io/r/stats/vcov.html) above for more
 details.
+
+[`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html)
+computes the generalized leverage of each unit for `ordinal_weightit`
+and `multinom_weightit` objects, \\h_i = \text{tr}(F^{-1} F_i)\\, where
+\\F_i\\ is the unit's contribution to the expected information matrix
+\\F\\ (including its weight). This is the trace of the unit's block of
+the hat matrix of the model written as a vector generalized linear
+model, i.e., the sum across columns of what
+[`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html) returns
+for `vglm` objects in VGAM, and it is equal to the usual hat value when
+the outcome has two categories. The leverages sum to the number of
+estimated coefficients, and units with a weight of 0 have a leverage of
+0. Unlike in a generalized linear model, a leverage can exceed 1, though
+it cannot exceed the number of outcome categories minus 1. The leverages
+can be used to compute an HC2 robust covariance matrix, which scales
+each unit's estimating function by \\1/\sqrt{1 - h_i}\\; note that with
+more than two outcome categories, this is an approximation to the exact
+HC2 adjustment, which applies a matrix correction to each unit's vector
+of residuals. For `glm_weightit` objects, the
+[`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html) method
+for `glm` objects is used.
 
 ## See also
 

@@ -134,13 +134,29 @@ the last, minimizing a loss function that depends on the distribution
 chosen. The optimal number of trees is a tuning parameter that must be
 chosen; McCaffrey et al. (2004) were innovative in using covariate
 balance to select this value rather than traditional machine learning
-performance metrics such as cross-validation accuracy. GBM is
-particularly effective for fitting nonlinear treatment models
-characterized by curves and interactions, but performs worse for simpler
-treatment models. It is unclear which balance measure should be used to
-select the number of trees, though research has indicated that balance
-measures tend to perform better than cross-validation accuracy for
-estimating effective propensity score weights.
+performance metrics such as cross-validation accuracy. Research has
+indicated that balance measures tend to perform better than
+cross-validation accuracy for estimating effective propensity score
+weights. GBM is particularly effective for fitting nonlinear treatment
+models characterized by curves and interactions, but can perform worse
+for simpler treatment models.
+
+The covariates are supplied to
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+as they appear in the model formula rather than as a model matrix, so a
+categorical covariate remains a single variable whose levels a tree can
+split into any two groups. At each split, the levels are ordered by the
+mean of the current residuals within each level, and the best split
+along that ordering is chosen, so the result does not depend on the
+order of the levels. Transformed terms (e.g., `I(x^2)`) are included as
+given, and an interaction term is represented by its component
+variables, since the trees can find interactions among them without one
+being specified. Balance is assessed on the same covariates, with each
+factor split into dummy variables as
+[`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
+would split it, so an interaction term in the model formula contributes
+its components to the balance criterion rather than the interaction
+itself.
 
 WeightIt offers almost identical functionality to twang, the first
 package to implement this method. Compared to the current version of
