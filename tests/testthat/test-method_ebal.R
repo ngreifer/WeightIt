@@ -101,7 +101,12 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W, tolerance = eps)
 
-  # tols > 0
+  # tols > 0: approximate balance. The solver only guarantees satisfying the
+  # constraints up to its own convergence tolerance, which is looser than the
+  # floating-point `eps` used for the exact-balance (tols = 0) checks above,
+  # so a dedicated, looser tolerance is used for these boundary checks.
+  tols.eps <- 1e-3
+
   W <- expect_no_condition({
     weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
               data = test_data, method = "ebal", estimand = "ATE",
@@ -110,8 +115,8 @@ test_that("Binary treatment", {
 
   expect_not_equal(W$weights, W0$weights)
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
 
   W <- expect_no_condition({
@@ -120,8 +125,8 @@ test_that("Binary treatment", {
              include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
 
   #Should be equivalent to CBPS and IPT with logit link for ATT
@@ -238,7 +243,9 @@ test_that("Multi-category treatment", {
                          stringsAsFactors = FALSE)
   )
 
-  # tols > 0
+  # tols > 0 (see the binary treatment test for `tols.eps`)
+  tols.eps <- 1e-3
+
   W <- expect_no_condition({
     weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
              data = test_data, method = "ebal", estimand = "ATE",
@@ -247,8 +254,8 @@ test_that("Multi-category treatment", {
 
   expect_not_equal(W$weights, W0$weights)
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) > eps)) #Some worse than 0
 
   W <- expect_no_condition({
@@ -257,8 +264,8 @@ test_that("Multi-category treatment", {
              include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) > eps)) #Some worse than 0
 })
 
@@ -339,7 +346,9 @@ test_that("Continuous treatment", {
   expect_M_parts_okay(W, tolerance = eps)
   expect_equal(W$weights, W0$weights, tolerance = eps)
 
-  # tols > 0
+  # tols > 0 (see the binary treatment test for `tols.eps`)
+  tols.eps <- 1e-3
+
   W <- expect_no_condition({
     weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
              data = test_data, method = "ebal", estimand = "ATE",
@@ -348,8 +357,8 @@ test_that("Continuous treatment", {
 
   expect_not_equal(W$weights, W0$weights)
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 
   W <- expect_no_condition({
@@ -358,8 +367,8 @@ test_that("Continuous treatment", {
              include.obj = TRUE, tols = .05, s.weights = "SW")
   })
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 })
 

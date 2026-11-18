@@ -84,18 +84,25 @@ test_that("weights give the same fit as glm(), lm(), and survival::coxph()", {
 
   fit <- glm_weightit(Y_B ~ A + X1, data = test_data, family = binomial, weights = SW)
 
-  #Warnings are about the non-integer weights
+  #Warnings are about the non-integer weights. `sandwich()` takes the bread of a
+  #`glm()` fit from the working weights of its last iteration, which are computed
+  #from the previous coefficients, so the reference model is fit to a tighter
+  #convergence criterion than the `glm()` default for the comparison to hold to `eps`
   fit_g <- suppressWarnings({
-    glm(Y_B ~ A + X1, data = test_data, family = binomial, weights = SW)
+    glm(Y_B ~ A + X1, data = test_data, family = binomial, weights = SW,
+        control = list(epsilon = 1e-12))
   })
 
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
   expect_equal(vcov(fit), sandwich::sandwich(fit_g), tolerance = eps)
 
-  # With fixed weights, the model-based variance is valid, so it gives no warning
+  # With fixed weights, the model-based variance is valid, so it gives no warning.
+  # Both models are fit to the same convergence criterion so their model-based
+  # variances use the same working weights.
   expect_no_warning({
     fit_const <- glm_weightit(Y_B ~ A + X1, data = test_data, family = binomial,
-                              weights = SW, vcov = "const")
+                              weights = SW, vcov = "const",
+                              control = list(epsilon = 1e-12))
   })
 
   expect_equal(vcov(fit_const), vcov(fit_g), tolerance = eps)

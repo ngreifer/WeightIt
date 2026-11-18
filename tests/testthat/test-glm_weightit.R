@@ -21,8 +21,13 @@ test_that("No weights", {
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
+  #`sandwich()` takes the bread of a `glm()` fit from the working weights of its last
+  #iteration, which are computed from the previous coefficients, so the reference
+  #models are fit to a tighter convergence criterion than the `glm()` default for the
+  #comparison to hold to `eps`
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-               data = test_data, family = binomial)
+               data = test_data, family = binomial,
+               control = list(epsilon = 1e-12))
   expect_equal(coef(fit0), coef(fit_g), tolerance = eps)
   expect_equal(vcov(fit0), sandwich::sandwich(fit_g),
                tolerance = eps)
@@ -39,7 +44,8 @@ test_that("No weights", {
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9) + offset(off),
-               data = test_data, family = binomial)
+               data = test_data, family = binomial,
+               control = list(epsilon = 1e-12))
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
                tolerance = eps)
@@ -55,7 +61,8 @@ test_that("No weights", {
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
 
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-               data = test_data, family = binomial)
+               data = test_data, family = binomial,
+               control = list(epsilon = 1e-12))
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
   expect_equal(vcov(fit), sandwich::vcovCL(fit_g, cluster = clus, type = "HC0"),
                tolerance = eps)
@@ -71,12 +78,16 @@ test_that("No weights", {
                method = brglm2::brglmFit)
 
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
+
+  #`vcov()` uses the adjusted score that the bias-reduced estimates solve, whereas
+  #`sandwich()` and `vcovCL()` use the score of the likelihood, so the two agree only
+  #approximately (to within about 2% and 4% here)
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-               tolerance = eps * 1e3)
+               tolerance = .05)
 
   expect_equal(vcov(fit, cluster = clus),
                sandwich::vcovCL(fit_g, cluster = clus, type = "HC0"),
-               tolerance = eps * 1e3)
+               tolerance = .1)
 
   #Test error for missingness
   expect_error({

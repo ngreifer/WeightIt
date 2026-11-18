@@ -141,6 +141,10 @@ test_that("Binary treatment", {
                expected.label = "all 0s",
                tolerance = eps)
 
+  # optweight solves the linf problem with highs, falling back to osqp, which does
+  # not reliably reach exact balance on it, when highs is not installed
+  skip_if_not_installed("highs")
+
   # norm: the objective function minimized when selecting weights (see the "norm"
   # section of ?optweight::optweight). "l2" (the default, used by W0 above)
   # minimizes the variance of the weights, equivalently maximizing the ESS;
@@ -427,6 +431,11 @@ test_that("Multi-category treatment: configurations", {
   patrick::with_parameters_test_that(
     "Optweight: {config}",
     {
+      # As in the binary treatment test, linf needs highs to reach exact balance
+      if (identical(args$norm, "linf")) {
+        skip_if_not_installed("highs")
+      }
+
       W <- do.call("weightit",
                    c(list(Am ~ X1 + X2 + X3 + X4 + X5, data = quote(test_data),
                           method = "optweight", estimand = "ATE", include.obj = TRUE),
@@ -599,6 +608,11 @@ test_that("Continuous treatment: configurations", {
   patrick::with_parameters_test_that(
     "Optweight: {config}",
     {
+      # As in the binary treatment test, linf needs highs to reach exact balance
+      if (identical(args$norm, "linf")) {
+        skip_if_not_installed("highs")
+      }
+
       W <- do.call("weightit",
                    c(list(Ac ~ X1 + X2 + X3 + X4 + X5, data = quote(test_data),
                           method = "optweight", include.obj = TRUE),

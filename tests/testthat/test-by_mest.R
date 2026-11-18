@@ -62,11 +62,20 @@ test_that("by-stratified M-estimation matches interacted model", {
         else list(link = link)
       }
 
+      # glm() stops once the deviance changes by less than `epsilon`, which with the
+      # cloglog link leaves the coefficients about 1e-5 from the root of the
+      # estimating equations, too close to the tolerance of the comparison in
+      # expect_M_parts_okay()
+      control_arg <- {
+        if (method == "glm" && identical(link, "cloglog")) list(epsilon = 1e-12)
+        else list()
+      }
+
       do.call("expect_by_equiv",
               c(list(method,
                      outcome = as.formula(sprintf("Y_B ~ %s * G", treat)),
                      treat = treat),
-                link_arg))
+                link_arg, control_arg))
     },
     .cases = rbind(
       data.frame(method = "glm", treat = "A",

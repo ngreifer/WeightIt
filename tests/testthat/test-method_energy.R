@@ -38,7 +38,12 @@ test_that("Binary treatment", {
   expect_true(all(is.finite(W$weights)))
 
   # tols > 0 (requires moments > 0 for tols to have any effect; tols is
-  # documented as "Ignored when moments = 0")
+  # documented as "Ignored when moments = 0"). The solver only guarantees
+  # satisfying the constraints up to its own convergence tolerance, which is
+  # looser than the floating-point `eps` used for the exact-balance checks, so a
+  # dedicated, looser tolerance is used for these boundary checks.
+  tols.eps <- 1e-3
+
   W <- expect_no_condition({
     weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
              data = test_data, method = "energy", estimand = "ATE",
@@ -58,7 +63,7 @@ test_that("Binary treatment", {
   # the boundary. So we only check the constraint is respected and that
   # relaxing it changed the solution (already checked above), not that any
   # covariate sits exactly at the boundary.
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + tols.eps)) #None worse than tols
 
   # Spot-check: int (interactions). Restricted to continuous covariates only
   # -- combining int = TRUE with a dummy-coded multi-level factor (X6) and
@@ -239,7 +244,9 @@ test_that("Multi-category treatment", {
                              W0$weights[W0$treat %in% c("T", "C1")])
   expect_true(max(abs(smd_w)) < max(abs(smd_unw)))
 
-  # tols > 0
+  # tols > 0 (see the binary treatment test for `tols.eps`)
+  tols.eps <- 1e-3
+
   expect_no_condition({
     W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                   data = test_data, method = "energy", estimand = "ATE",
@@ -254,7 +261,7 @@ test_that("Multi-category treatment", {
 
   # As in the binary case, the relaxed constraint is not saturated for any
   # covariate on this dataset -- only that it is respected is checked here.
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + tols.eps)) #None worse than tols
 
   # Spot-check: improved
   W_imp_false <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
@@ -367,7 +374,9 @@ test_that("Continuous treatment", {
   expect_true(max(abs(cobalt::col_w_cov(W0$covs, W0$treat, W0$weights, std = TRUE))) <
                 max(abs(cobalt::col_w_cov(W0$covs, W0$treat, std = TRUE))))
 
-  # tols > 0
+  # tols > 0 (see the binary treatment test for `tols.eps`)
+  tols.eps <- 1e-3
+
   expect_no_condition({
     W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "energy",
@@ -380,8 +389,8 @@ test_that("Continuous treatment", {
 
   expect_not_equal(W$weights, Wexact$weights)
 
-  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols
-  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + tols.eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= tols.eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 
   # Spot-check: dimension.adj

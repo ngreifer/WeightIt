@@ -248,7 +248,11 @@ test_that("vcov = 'const' returns the model-based variance", {
   expect_equal(coef(fit), coef(fit0), tolerance = eps)
 
   #With a 2-level outcome, a multinomial logit is a reparametrization of a
-  #binomial logit, so the model-based variance matches glm_weightit()'s
+  #binomial logit, so the model-based variance matches glm_weightit()'s. For a
+  #`glm()` fit, that variance comes from the working weights of the last iteration,
+  #which are computed from the previous coefficients, so the binomial models are fit
+  #to a tighter convergence criterion than the `glm()` default for the comparison to
+  #hold to `eps`
   test_data$Y_B2 <- factor(test_data$Y_B, labels = c("no", "yes"))
 
   expect_no_condition({
@@ -257,7 +261,8 @@ test_that("vcov = 'const' returns the model-based variance", {
   })
 
   fit_glm <- glm_weightit(Y_B ~ A + X1 + X2 + X3, data = test_data,
-                          family = binomial, vcov = "const")
+                          family = binomial, vcov = "const",
+                          control = list(epsilon = 1e-12))
 
   expect_equal(unname(vcov(fit_b)), unname(vcov(fit_glm)), tolerance = eps)
 
@@ -278,7 +283,8 @@ test_that("vcov = 'const' returns the model-based variance", {
 
   expect_warning({
     fit_glm_w <- glm_weightit(Y_B ~ A + X1 + X2 + X3, data = test_data,
-                              weightit = W, family = binomial, vcov = "const")
+                              weightit = W, family = binomial, vcov = "const",
+                              control = list(epsilon = 1e-12))
   }, "const.*should not be used", ignore.case = TRUE)
 
   expect_equal(unname(vcov(fit_b_w)), unname(vcov(fit_glm_w)), tolerance = eps)
