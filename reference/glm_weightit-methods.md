@@ -50,7 +50,7 @@ hatvalues(model, ...)
 hatvalues(model, ...)
 
 # S3 method for class 'glm_weightit'
-estfun(x, asympt = TRUE, ...)
+estfun(x, asympt = NULL, ...)
 
 # S3 method for class 'glm_weightit'
 update(object, formula. = NULL, ..., evaluate = TRUE)
@@ -83,13 +83,19 @@ update(object, formula. = NULL, ..., evaluate = TRUE)
 
 - vcov:
 
-  either a string indicating the method used to compute the variance of
-  the estimated parameters for `object`, a function used to extract the
-  variance, or the variance matrix itself. Default is to use the
-  variance matrix already present in `object`. If a string or function,
-  arguments passed to `...` are supplied to the method or function.
-  (Note: for [`vcov()`](https://rdrr.io/r/stats/vcov.html), can also be
-  supplied as `type`.)
+  a string indicating the method used to compute the variance of the
+  estimated parameters for `object`; see the `vcov` argument of
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  for the allowable options. Default is to use the variance matrix
+  already present in `object`, unless `cluster`, `R`, or `fwb.args` is
+  supplied through `...`, in which case the variance matrix is
+  recomputed using the method used to fit `object` with the new
+  arguments. A variance matrix computed another way can be supplied to
+  functions in other packages that accept one (e.g., through the `vcov`
+  argument of
+  [marginaleffects](https://CRAN.R-project.org/package=marginaleffects)
+  functions). (Note: for [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  can also be supplied as `type`.)
 
 - ...:
 
@@ -137,9 +143,16 @@ update(object, formula. = NULL, ..., evaluate = TRUE)
 
   `logical`; for `estfun()`, whether to use the asymptotic empirical
   estimating functions that account for estimation of the weights (when
-  `Mparts` is available). Default is `TRUE`. Set to `FALSE` to ignore
-  estimation of the weights. Ignored when `Mparts` is not available or
-  no argument was supplied to `weightit` in the fitting function.
+  `Mparts` is available). Set to `FALSE` to ignore estimation of the
+  weights. The default follows the variance the model was fit with:
+  `FALSE` when `vcov` was `"HC0"` or `"const"` and `TRUE` otherwise, so
+  that
+  [`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html)
+  and
+  [`sandwich::vcovCL()`](https://zeileis.codeberg.page/sandwich/reference/vcovCL.html)
+  agree with [`vcov()`](https://rdrr.io/r/stats/vcov.html). Ignored when
+  `Mparts` is not available or no argument was supplied to `weightit` in
+  the fitting function.
 
 - formula.:
 
@@ -154,7 +167,7 @@ update(object, formula. = NULL, ..., evaluate = TRUE)
 ## Value
 
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a
-`summary.glm_weightit()` object, which has its own
+`summary.glm_weightit` object, which has its own
 [`print()`](https://rdrr.io/r/base/print.html) method. For
 [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
 objects, the [`print()`](https://rdrr.io/r/base/print.html) and
@@ -168,26 +181,27 @@ Otherwise, all methods return the same type of object as their generics.
 [`vcov()`](https://rdrr.io/r/stats/vcov.html) by default extracts the
 parameter covariance matrix already computed by the fitting function,
 and [`summary()`](https://rdrr.io/r/base/summary.html) and
-[`confint()`](https://rdrr.io/r/stats/confint.html) uses this covariance
+[`confint()`](https://rdrr.io/r/stats/confint.html) use this covariance
 matrix to compute standard errors and Wald confidence intervals
 (internally calling
 [`confint.lm()`](https://rdrr.io/r/stats/confint.html)), respectively.
-Supplying arguments to `vcov` or `...` will compute a new covariance
-matrix. If `cluster` was supplied to the original fitting function, it
-will be incorporated into any newly computed covariance matrix unless
-`cluster = NULL` is specified in
+Supplying `vcov`, or `cluster`, `R`, or `fwb.args` through `...`, will
+compute a new covariance matrix; when `vcov` is not supplied, the method
+used to fit `object` is used. If `cluster` was supplied to the original
+fitting function, it will be incorporated into any newly computed
+covariance matrix unless `cluster = NULL` is specified in
 [`vcov()`](https://rdrr.io/r/stats/vcov.html),
 [`summary()`](https://rdrr.io/r/base/summary.html), or
-[`confint()`](https://rdrr.io/r/stats/confint.html). For other arguments
-(e.g., `R` and `fwb.args`), the defaults are those used by
-[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
-Note that for `vcov = "BS"` and `vcov = "FWB"` (and `vcov = "const"` for
-`multinom_weightit` or `ordinal_weightit` objects), the environment for
-the fitting function is used, so any changes to that environment may
-affect calculation. It is always safer to simply recompute the fitted
-object with a new covariance matrix than to modify it with the `vcov`
-argument, but it can be quicker to just request a new covariance matrix
-when refitting the model is slow.
+[`confint()`](https://rdrr.io/r/stats/confint.html). `R` and `fwb.args`
+likewise default to the values used to fit `object`, or to the defaults
+of
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+when the original fit was not bootstrapped. Note that for `vcov = "BS"`
+and `vcov = "FWB"`, the environment for the fitting function is used, so
+any changes to that environment may affect calculation. It is always
+safer to simply recompute the fitted object with a new covariance matrix
+than to modify it with the `vcov` argument, but it can be quicker to
+just request a new covariance matrix when refitting the model is slow.
 
 [`update()`](https://rdrr.io/r/stats/update.html) updates a fitted model
 object with new arguments, e.g., a new model formula, dataset, or

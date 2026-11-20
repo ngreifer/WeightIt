@@ -25,9 +25,10 @@ for each treatment group.
 
 For multi-category treatments, this method estimates the weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html). The following estimands
-are allowed: ATE and ATT. When the ATE is requested, the optimization is
-run once for each treatment group. When the ATT is requested, the
-optimization is run once for each non-focal (i.e., control) group.
+are allowed: ATE, ATT, and ATC. When the ATE is requested, the
+optimization is run once for each treatment group. When the ATT is
+requested, the optimization is run once for each non-focal (i.e.,
+control) group.
 
 ### Continuous Treatments
 
@@ -156,8 +157,10 @@ solved using the Fast Iterative Shrinkage-Thresholding Algorithm
   [`stats::optim()`](https://rdrr.io/r/stats/optim.html). `"multiroot"`
   is the default when rootSolve is installed, as it tends to be much
   faster and more accurate; otherwise, `"optim"` is the default and
-  requires no dependencies. The output of whichever solver was used is
-  returned when `include.obj = TRUE` (see below).
+  requires no dependencies. When `tols` is greater than 0, the default
+  is `"FISTA"`, and `"multiroot"` is not available. The output of
+  whichever solver was used is returned when `include.obj = TRUE` (see
+  below).
 
 - `moments`:
 
@@ -300,7 +303,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                   │              1.   
+#> Treated 1.                 │                1.   
 #> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -470,7 +473,7 @@ summary(W1b)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                       │          1.   
+#> Treated 1.                     │            1.   
 #> Control 0.023 ╞═══════════════════════════╡ 1.739
 #> 
 #> ─ Units with the 5 most extreme weights by group:

@@ -60,12 +60,12 @@ coxph_weightit(
   parameters. Allowable options include `"asympt"`, which uses the
   asymptotically correct M-estimation-based method that accounts for
   estimation of the weights when available; `"const"`, which uses the
-  usual maximum likelihood estimates (only available when `weightit` is
-  not supplied); `"HC0"`, which computes the robust sandwich variance
-  treating weights (if supplied) as fixed; `"BS"`, which uses the
-  traditional bootstrap (including re-estimation of the weights, if
-  supplied); `"FWB"`, which uses the fractional weighted bootstrap as
-  implemented in
+  usual maximum likelihood estimates (not recommended when `weightit` is
+  supplied, in which case a warning is issued); `"HC0"`, which computes
+  the robust sandwich variance treating weights (if supplied) as fixed;
+  `"BS"`, which uses the traditional bootstrap (including re-estimation
+  of the weights, if supplied); `"FWB"`, which uses the fractional
+  weighted bootstrap as implemented in
   [`fwb::fwb()`](https://ngreifer.github.io/fwb/reference/fwb.html)
   (including re-estimation of the weights, if supplied); and `"none"` to
   omit calculation of a variance matrix. If `NULL` (the default), will

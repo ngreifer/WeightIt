@@ -49,7 +49,7 @@ for details.
 
 For continuous treatments, weights are estimated as \\w_i = f_A(a_i) /
 f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
-is the unconditional density of treatment evaluated the observed
+is the unconditional density of treatment evaluated at the observed
 treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -201,7 +201,7 @@ For continuous treatments, the following arguments may be supplied:
   the latter splits will be supplied as arguments to the second argument
   and beyond. For example, if `density = "dt_2"` is specified, the
   density used will be that of a t-distribution with 2 degrees of
-  freedom. Using a t-distribution can be useful when extreme outcome
+  freedom. Using a t-distribution can be useful when extreme treatment
   values are observed (Naimi et al., 2014).
 
   Can also be `"kernel"` to use kernel density estimation, which calls
@@ -232,12 +232,12 @@ be set with the `criterion` argument, described below.
   a string describing the balance criterion used to select the best
   weights. See
   [`cobalt::bal.compute()`](https://ngreifer.github.io/cobalt/reference/bal.compute.html)
-  for allowable options for each treatment type. For binary and
-  multi-category treatments, the default is `"smd.mean"`, which
-  minimizes the average absolute standard mean difference among the
-  covariates between treatment groups. For continuous treatments, the
-  default is `"p.mean"`, which minimizes the average absolute Pearson
-  correlation between the treatment and covariates.
+  for allowable options for each treatment type. For binary treatments
+  and censoring weights, the default is `"smd.mean"`, which minimizes
+  the average absolute standardized mean difference among the covariates
+  between treatment groups. For continuous treatments, the default is
+  `"p.mean"`, which minimizes the average absolute Pearson correlation
+  between the treatment and covariates.
 
 Note that this implementation differs from that of Pirracchio and Carone
 (2018) in that here, balance is measured only on the terms included in
@@ -245,8 +245,8 @@ the model formula (i.e., not their interactions unless specifically
 included), and balance results from a sample weighted using the
 estimated predicted values as propensity scores, not a sample matched
 using propensity score matching on the predicted values. Binary and
-continuous treatments are supported, but currently multi-category
-treatments are not.
+continuous treatments and censoring weights are supported, but currently
+multi-category treatments are not.
 
 ## Additional Outputs
 
@@ -353,7 +353,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.             │                    1.   
+#> Treated 1.           │                      1.   
 #> Control 0.009 ╞═══════════════════════════╡ 4.388
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -410,45 +410,45 @@ summary(W2)
 #> ─ Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.408 ╞══════════════════╡          12.754
-#> hispan 2.115   ╞═════════════════════════╡ 17.956
-#> white  1.088 ╞═══╡                          4.357
+#> black  1.472 ╞════════════════╡            12.084
+#> hispan 1.813  ╞══════════════════════════╡ 19.017
+#> white  1.082 ╞═══╡                          4.523
 #> 
 #> ─ Units with the 5 most extreme weights by group:
 #>                                           
 #>            190    184    485    182    181
-#>   black  7.202  7.754  9.764 12.146 12.754
-#>            564    512    346    392    345
-#>  hispan 13.945 14.189 14.313 14.551 17.956
-#>             23    296    457    531    589
-#>   white  3.919  4.017  4.018  4.021  4.357
+#>   black  7.309  8.017  9.653 11.979 12.084
+#>            512    269    346    392    345
+#>  hispan 14.212 15.298 15.608 15.901 19.017
+#>            531     23    457    296    589
+#>   white  4.005  4.021  4.115  4.243  4.523
 #> 
 #> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.62  0.386   0.132       0
-#> hispan       0.42  0.351   0.09        0
-#> white        0.384 0.317   0.069       0
+#> black        0.611 0.384   0.129       0
+#> hispan       0.443 0.353   0.098       0
+#> white        0.386 0.318   0.069       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
-#> Weighted   175.68  61.32 260.69
+#> Weighted   177.14  60.33 260.37
 
 cobalt::bal.tab(W2)
 #> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.1612
-#> educ     Contin.       0.0730
-#> married   Binary       0.0265
-#> nodegree  Binary       0.0117
-#> re74     Contin.       0.0411
+#> age      Contin.       0.1329
+#> educ     Contin.       0.0667
+#> married   Binary       0.0393
+#> nodegree  Binary       0.0229
+#> re74     Contin.       0.0355
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  
-#> Adjusted   175.68  61.32 260.69
+#> Adjusted   177.14  60.33 260.37
 
 # Balancing covariates with respect to re75 (continuous)
 # assuming t(8) conditional density for treatment
@@ -469,38 +469,38 @@ summary(W3)
 #> 
 #> ─ Weight ranges:
 #> 
-#>       Min                                  Max
-#> All 0.035 ╞═══════════════════════════╡ 18.683
+#>       Min                                 Max
+#> All 0.036 ╞═══════════════════════════╡ 19.65
 #> 
 #> ─ Units with the 5 most extreme weights:
-#>                                       
-#>        431    483    484    485    354
-#>  All 8.499 14.607 16.611 18.248 18.683
+#>                                      
+#>        431    483    484    485   354
+#>  All 8.608 14.408 16.848 19.098 19.65
 #> 
 #> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> All       1.419 0.508   0.366       0
+#> All       1.451 0.513   0.375       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   203.88
+#> Weighted   197.91
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0238
-#> educ     Contin.   0.0317
-#> married   Binary   0.0431
-#> nodegree  Binary  -0.0673
-#> re74     Contin.   0.0201
+#> age      Contin.   0.0259
+#> educ     Contin.   0.0332
+#> married   Binary   0.0428
+#> nodegree  Binary  -0.0692
+#> re74     Contin.   0.0203
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   203.88
+#> Adjusted   197.91
 
 # Balancing covariates between treatment groups (binary)
 # using balance SuperLearner to minimize the maximum
@@ -526,15 +526,15 @@ summary(W4)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
-#> Control 0.022 ╞═══════════════════════════╡ 2.044
+#> Treated 1.                  │               1.   
+#> Control 0.022 ╞═══════════════════════════╡ 2.043
 #> 
 #> ─ Units with the 5 most extreme weights by group:
 #>                                    
 #>             5     4   3     2     1
 #>  Treated    1     1   1     1     1
 #>           411   595 269   409   296
-#>  Control 1.33 1.436 1.5 1.637 2.044
+#>  Control 1.33 1.436 1.5 1.636 2.043
 #> 
 #> ─ Weight statistics:
 #> 
@@ -546,14 +546,14 @@ summary(W4)
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted    255.99     185
+#> Weighted    256.01     185
 
 cobalt::bal.tab(W4, stats = c("m", "ks"))
 #> Balance Measures
 #>                Type Diff.Adj KS.Adj
 #> prop.score Distance   0.0199 0.0944
 #> age         Contin.   0.0460 0.2764
-#> educ        Contin.  -0.0360 0.0601
+#> educ        Contin.  -0.0360 0.0600
 #> married      Binary   0.0044 0.0044
 #> nodegree     Binary   0.0080 0.0080
 #> re74        Contin.  -0.0275 0.2839
@@ -561,5 +561,5 @@ cobalt::bal.tab(W4, stats = c("m", "ks"))
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.       185
-#> Adjusted    255.99     185
+#> Adjusted    256.01     185
 ```

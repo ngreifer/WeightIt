@@ -27,7 +27,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the generalized
 propensity scores and weights using optim() using formulas described by
-Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, and ATO.
+Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, ATC, and ATO.
 
 
 
@@ -119,7 +119,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the generalized
 propensity scores and weights using optim() using formulas described by
-Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, and ATO.
+Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, ATC, and ATO.
 
 
 
@@ -197,7 +197,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -259,7 +259,7 @@ The following estimands are allowed: ATE, ATT, ATC, and ATO.</p>
 
 <p>For multi-category treatments, this method estimates the generalized
 propensity scores and weights using <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> using formulas described by
-Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, and ATO.</p>
+Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, ATC, and ATO.</p>
 </div>
 
 <div class="section">
@@ -414,7 +414,7 @@ essentially 0 when the conditions were solved.</p>
 <dd><p><code>logical</code>; when <code>over = TRUE</code>, whether to use the two-step approximation to the generalized method of moments variance. Default is <code>TRUE</code>. Setting to <code>FALSE</code> increases computation time but may improve estimation. Ignored with a warning when <code>over = FALSE</code>.</p></dd>
 
 <dt><code>link</code></dt>
-<dd><p>the link used in the generalized linear model for the propensity scores when treatment is binary. Default is <code>"logit"</code> for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, <code>"softplus"</code>, and <code>"identity"</code>. Note that negative weights are possible with these last three and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>. Ignored for multi-category, continuous, and longitudinal treatments.</p></dd>
+<dd><p>the link used in the generalized linear model for the propensity scores when treatment is binary. Default is <code>"logit"</code> for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, <code>"softplus"</code>, and <code>"identity"</code>. Note that negative weights are possible with these last four and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>. Ignored for multi-category, continuous, and longitudinal treatments.</p></dd>
 
 <dt><code>reltol</code></dt>
 <dd><p>the relative tolerance for convergence of the optimization. Passed to the <code>control</code> argument of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. Default is <code>1e-10</code>.</p></dd>
@@ -518,7 +518,7 @@ tilting, which work similarly.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                   │              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                 │                1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.017 ╞═══════════════════════════╡ 2.263</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
@@ -575,7 +575,7 @@ tilting, which work similarly.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                  │               1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.012 ╞═══════════════════════════╡ 2.053</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

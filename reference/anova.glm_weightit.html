@@ -19,7 +19,7 @@ estimating the weights (if any)."><meta property="og:image" content="https://ngr
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,12 +104,15 @@ are symbolically nested.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
-<dd><p>either a string indicating the method used to compute the
-variance of the estimated parameters for <code>object</code>, a function used to
-extract the variance, or the variance matrix itself. Default is to use the
-variance matrix already present in <code>object</code>. If a string or function,
-arguments passed to <code>...</code> are supplied to the method or function. (Note:
-for <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, can also be supplied as <code>type</code>.)</p></dd>
+<dd><p>a string indicating the method used to compute the variance of
+the estimated parameters for <code>object</code>; see the <code>vcov</code> argument of
+<code><a href="glm_weightit.html">glm_weightit()</a></code> for the allowable options. Default is to use the variance
+matrix already present in <code>object</code>, unless <code>cluster</code>, <code>R</code>, or <code>fwb.args</code>
+is supplied through <code>...</code>, in which case the variance matrix is recomputed
+using the method used to fit <code>object</code> with the new arguments. A variance
+matrix computed another way can be supplied to functions in other packages
+that accept one (e.g., through the <code>vcov</code> argument of <a href="https://CRAN.R-project.org/package=marginaleffects" class="external-link"><span class="pkg">marginaleffects</span></a>
+functions). (Note: for <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, can also be supplied as <code>type</code>.)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

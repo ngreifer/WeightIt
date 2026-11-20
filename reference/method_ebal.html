@@ -27,7 +27,7 @@ Multi-Category Treatments
 
 
 For multi-category treatments, this method estimates the weights using
-optim(). The following estimands are allowed: ATE and ATT. When the ATE is
+optim(). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is
 requested, the optimization is run once for each treatment group. When the ATT is
 requested, the optimization is run once for each non-focal (i.e., control) group.
 
@@ -108,7 +108,7 @@ Multi-Category Treatments
 
 
 For multi-category treatments, this method estimates the weights using
-optim(). The following estimands are allowed: ATE and ATT. When the ATE is
+optim(). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is
 requested, the optimization is run once for each treatment group. When the ATT is
 requested, the optimization is run once for each non-focal (i.e., control) group.
 
@@ -175,7 +175,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -237,7 +237,7 @@ run twice, once for each treatment group.</p>
 
 
 <p>For multi-category treatments, this method estimates the weights using
-<code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. The following estimands are allowed: ATE and ATT. When the ATE is
+<code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. The following estimands are allowed: ATE, ATT, and ATC. When the ATE is
 requested, the optimization is run once for each treatment group. When the ATT is
 requested, the optimization is run once for each non-focal (i.e., control) group.</p>
 </div>
@@ -337,7 +337,7 @@ included terms unless an imbalance tolerance is requested with <code>tols</code>
 
 <dt><code>solver</code></dt>
 <dd><p>the solver to use to estimate the parameters. Allowable options include <code>"multiroot"</code> to use <code><a href="https://rdrr.io/pkg/rootSolve/man/multiroot.html" class="external-link">rootSolve::multiroot()</a></code>
- and <code>"optim"</code> to use <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>. <code>"multiroot"</code> is the default when <span class="pkg">rootSolve</span> is installed, as it tends to be much faster and more accurate; otherwise, <code>"optim"</code> is the default and requires no dependencies. The output of whichever solver was used is returned when <code>include.obj = TRUE</code> (see below).</p></dd>
+ and <code>"optim"</code> to use <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>. <code>"multiroot"</code> is the default when <span class="pkg">rootSolve</span> is installed, as it tends to be much faster and more accurate; otherwise, <code>"optim"</code> is the default and requires no dependencies. When <code>tols</code> is greater than 0, the default is <code>"FISTA"</code>, and <code>"multiroot"</code> is not available. The output of whichever solver was used is returned when <code>include.obj = TRUE</code> (see below).</p></dd>
 
 <dt><code>moments</code></dt>
 <dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
@@ -432,7 +432,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                   │              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                 │                1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.017 ╞═══════════════════════════╡ 2.263</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
@@ -602,7 +602,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                       │          1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                     │            1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.023 ╞═══════════════════════════╡ 1.739</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

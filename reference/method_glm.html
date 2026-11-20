@@ -51,7 +51,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -110,8 +110,8 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios except
-for multi-category treatments with multi.method = &quot;mnp&quot; and for binary and
-continuous treatments with missing = &quot;saem&quot; (see below). Warning messages
+for multi-category treatments with multi.method = &quot;mnp&quot; and with
+missing = &quot;saem&quot; (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 
 
@@ -196,7 +196,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -255,8 +255,8 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios except
-for multi-category treatments with multi.method = &quot;mnp&quot; and for binary and
-continuous treatments with missing = &quot;saem&quot; (see below). Warning messages
+for multi-category treatments with multi.method = &quot;mnp&quot; and with
+missing = &quot;saem&quot; (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 
 
@@ -303,7 +303,7 @@ methods are.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -389,7 +389,7 @@ generalized propensity score (e.g., ordinal logistic regression).</p>
 
 <p>For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -448,8 +448,8 @@ estimated at each time point.</p>
 
 
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios except
-for multi-category treatments with <code>multi.method = "mnp"</code> and for binary and
-continuous treatments with <code>missing = "saem"</code> (see below). Warning messages
+for multi-category treatments with <code>multi.method = "mnp"</code> and with
+<code>missing = "saem"</code> (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.</p>
 </div>
 
@@ -494,7 +494,7 @@ methods are.</p>
 
 
 
-<p>The following additional argument can be specified for all treatment types:</p><dl><dt><code>quick</code></dt>
+<p>The following additional argument can be specified for binary and continuous treatments:</p><dl><dt><code>quick</code></dt>
 <dd><p><code>logical</code>; whether to fit the model with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm.fit()</a></code> rather than <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. This skips construction of the model frame and returns a smaller fit object, which can be worthwhile when fitting many models (e.g., in a simulation) but means the object returned by <code>include.obj = TRUE</code> lacks the components that require it. Default is <code>FALSE</code>. Ignored when a fitting function other than <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> is used (e.g., with random effects terms or <code>missing = "saem"</code>).</p></dd>
 
 
@@ -523,7 +523,7 @@ methods are.</p>
 
 </dl><p>For continuous treatments, the following additional arguments may be
 supplied:</p><dl><dt><code>density</code></dt>
-<dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
+<dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).</p>
 <p>Can also be <code>"kernel"</code> to use kernel density estimation, which calls <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> to estimate the denominator density for the weights. (This used to be requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.)</p></dd>
 
 <dt><code>bw</code>, <code>adjust</code>, <code>kernel</code>, <code>n</code></dt>
@@ -538,7 +538,8 @@ supplied:</p><dl><dt><code>density</code></dt>
 as those implemented in the <a href="https://CRAN.R-project.org/package=glm2" class="external-link"><span class="pkg">glm2</span></a> package; it is ignored for
 multi-category and continuous treatments. Arguments matching those of
 <code><a href="https://rdrr.io/r/stats/glm.control.html" class="external-link">glm.control()</a></code> are collected and passed to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> as its <code>control</code>
-argument; a <code>control</code> list can also be supplied directly. Other arguments
+argument; a <code>control</code> list can also be supplied directly. For continuous
+treatments, only a <code>control</code> list is used. Other arguments
 are not forwarded to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>.</p>
 <p>In the presence of missing data with <code>link = "logit"</code> and
 <code>missing = "saem"</code>, a <code>control</code> argument is passed to
@@ -558,8 +559,9 @@ binary treatments, <code><a href="https://melff.github.io/mclogit/reference/mblo
 and <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
  or <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
  for continuous treatments.
-For multi-category treatments, <code>random</code>, <code>estimator</code>, <code>dispersion</code>, and
-<code>groups</code> are passed on to <code>mblogit()</code>; for continuous treatments, a
+For multi-category treatments, <code>estimator</code>, <code>dispersion</code>, and <code>groups</code> are
+passed on to <code>mblogit()</code> (the random effects structure comes from
+<code>formula</code>); for continuous treatments, a
 <code>control</code> argument is passed on. Binary treatments accept no additional
 arguments on this path.</p>
     </div>
@@ -657,7 +659,7 @@ joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                      │           1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.018 ╞═══════════════════════════╡ 1.834</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

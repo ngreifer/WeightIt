@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 2.2.0
 
 - Added a new vignette,
   [`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md),
@@ -41,7 +41,8 @@
 
 - With `method = "bart"` and a continuous treatment, the new `family`
   argument sets the model for the conditional density of the treatment,
-  replacing `density`, which no longer applies. For example,
+  replacing `density`, which, along with `bw`, `adjust`, `kernel`, and
+  `n`, is now ignored with a warning. For example,
   `family = bartisan::gaussian_ls()` fits a normal model whose variance
   depends on the covariates.
 
@@ -53,10 +54,10 @@
 
 - With `method = "bart"`, sampling weights are now supported (except
   with the default `family` for continuous treatments), only random
-  intercepts are allowed in `formula`, and
-  [`set.seed()`](https://rdrr.io/r/base/Random.html) must be called for
-  reproducibility (`seed` is ignored with a warning). The arguments that
-  control the sampler are those of
+  intercepts are allowed in `formula` (previously, random slopes were
+  too), and [`set.seed()`](https://rdrr.io/r/base/Random.html) must be
+  called for reproducibility (`seed` is ignored with a warning). The
+  arguments that control the sampler are those of
   [`bartisan::bartisan_control()`](https://ngreifer.github.io/bartisan/reference/bartisan_control.html)
   (e.g., `num_trees`), and `n.trees`, `n.samples`, `n.burn`, and
   `n.chains` are translated to their equivalents. With
@@ -71,8 +72,8 @@
   once in the balance criterion rather than twice, and an interaction
   term contributes its components rather than the interaction itself.
   Results with `method = "gbm"` can change when the formula contains a
-  factor or character variable with two levels or more than three, or an
-  interaction term.
+  factor or character variable with two levels or with four or more, or
+  an interaction term.
 
 - [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
   now accepts a data frame for `covs`, which is converted to a matrix as
@@ -81,12 +82,73 @@
   covariates as they are, such as `"gbm"` and `"bart"`, receive the data
   frame itself.
 
+- [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  now accepts factor and character treatments, so it can be used with
+  multi-category treatments. Previously, only numeric treatments were
+  allowed, and a numeric treatment with more than two values was always
+  treated as continuous.
+
+- The weighting methods no longer stabilize the weights themselves;
+  stabilization is applied by
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  as before, and, with `stabilize = TRUE` in
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md),
+  by
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  after the method has estimated the weights.
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  stabilizes the weights of every method that estimates propensity
+  scores (including `method = "ipt"`, which previously ignored
+  `stabilize`), and its stabilized weights no longer carry the
+  components used for M-estimation, which did not account for
+  stabilization. User-defined methods no longer receive a `stabilize`
+  argument.
+
+- The quantiles balanced when `quantile` is supplied (e.g., with
+  `method = "ebal"`) are now computed as the weighted version of
+  `quantile(type = 2)`, i.e., the inverse of the weighted empirical
+  distribution function, averaging over a flat region of it. Previously,
+  when the requested quantile fell between two values (e.g., the median
+  of an even number of units), the larger value was used, so the
+  proportion of units below the balanced cutpoint did not equal the
+  requested quantile. Results with `quantile` may change.
+
+- With `method = "energy"` and a continuous treatment, the penalty on
+  the weights set by `lambda` is now scaled by the sample size, as it is
+  for binary and multi-category treatments and as it was before version
+  1.7.0. Previously, the default `lambda` penalized the variability of
+  the weights far more strongly than intended, yielding a larger
+  effective sample size but worse balance. With `method = "cfd"` and a
+  multi-category treatment, the penalty is now scaled as it is for
+  binary treatments, and a negative `lambda` adds the smallest penalty
+  that makes the problem convex, as it does elsewhere. Results will
+  change. See the `lambda` argument at
+  [`?method_energy`](https://ngreifer.github.io/WeightIt/reference/method_energy.md)
+  and
+  [`?method_cfd`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md).
+
+- In [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html), and
+  [`anova()`](https://rdrr.io/r/stats/anova.html) for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  fits, `vcov` must be a string. A function or a matrix was documented
+  as allowed but caused an error in all but
+  [`anova()`](https://rdrr.io/r/stats/anova.html); other packages, such
+  as *marginaleffects*, accept a variance matrix computed another way.
+
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   gains a `br` argument, which, when set to `TRUE`, maximizes the
   partial likelihood penalized by the Jeffreys invariant prior as
   described by Heinze and Schemper (2001). This yields estimates with
   smaller asymptotic bias that are finite even when the likelihood is
-  monotone and composes with M-estimation, cluster-robust standard
+  monotone, and it composes with M-estimation, cluster-robust standard
   errors, and bootstrapping. Without weights, estimates match those from
   [`coxphf::coxphf()`](https://rdrr.io/pkg/coxphf/man/coxphf.html).
 
@@ -154,7 +216,7 @@
   on objects fit with `br = TRUE` now computes the derivative of the
   outcome score with respect to the weighting model’s coefficients by
   numeric differentiation, as
-  [`vcov()`](https://rdrr.io/r/stats/vcov.html) has since version 2.1.0.
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) has since version 2.0.0.
   Previously the two gave slightly different results.
 
 - Fixed a bug in which
@@ -170,6 +232,40 @@
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   fits in which some weights were 0 (e.g., with censoring weights).
   [`vcov()`](https://rdrr.io/r/stats/vcov.html) was unaffected.
+
+- [`sandwich::estfun()`](https://zeileis.codeberg.page/sandwich/reference/estfun.html)
+  for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  fits now accounts for estimation of the weights by default only when
+  the model was fit with a `vcov` that does, i.e., not when `vcov` is
+  `"HC0"` or `"const"`. As a result,
+  [`sandwich::sandwich()`](https://zeileis.codeberg.page/sandwich/reference/sandwich.html)
+  and
+  [`sandwich::vcovCL()`](https://zeileis.codeberg.page/sandwich/reference/vcovCL.html)
+  now agree with [`vcov()`](https://rdrr.io/r/stats/vcov.html) for
+  models fit with `vcov = "HC0"`; previously they accounted for
+  estimation of the weights, contrary to the documentation. Supply
+  `asympt` to `estfun()` (or through `...` to the *sandwich* functions)
+  to override this.
+
+- Fixed a bug in which
+  [`sandwich::vcovHC()`](https://zeileis.codeberg.page/sandwich/reference/vcovHC.html)
+  returned `NaN` for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  and
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  fits whose `estfun()` accounted for estimation of the weights. For
+  such fits, `type = "HC0"` and `"HC1"` now account for estimation of
+  the weights, and the other types (including the default, `"HC3"`) give
+  an error, since they adjust for the leverage of the outcome model
+  alone. For fits that do not account for estimation of the weights
+  (e.g., with `vcov = "HC0"`), every type gives the same result as for
+  [`glm()`](https://rdrr.io/r/stats/glm.html).
 
 - Fixed a bug in
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
@@ -204,8 +300,11 @@
   after
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   in which `newdata` with a single row caused an error. Predictions for
-  a single row with `level` supplied now keep its row name, as they do
-  with more than one row.
+  a single row with `level` supplied, after
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  or
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  now keep its row name, as they do with more than one row.
 
 - [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md) now
   gives an informative error when `obj` is not the output of a call to
@@ -226,6 +325,227 @@
   and
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   began with an empty function name, as in `(from ):`.
+
+- Fixed a bug when using `method = "energy"` with a multi-category
+  treatment and `estimand = "ATC"`, in which an error occurred.
+
+- Fixed a bug in which
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  failed with an uninformative error when `method` was a user-defined
+  function and some covariate values were missing.
+
+- Fixed a bug in which
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  with `by` failed with an uninformative error, rather than the intended
+  one, when a group formed by `by` did not contain all levels of a
+  multi-category treatment.
+
+- Fixed a bug in which
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  failed with an error when `method` was an alias (e.g., `"ps"`) or not
+  written in lowercase.
+
+- Fixed a bug when supplying propensity scores to `ps` with a continuous
+  treatment and `by`, in which the weights were computed incorrectly.
+
+- Fixed a bug when using `method = "ebal"` with some sampling weights
+  equal to 0, in which the weights were scaled incorrectly and
+  M-estimation-based standard errors were incorrect.
+
+- Fixed a bug when using `method = "glm"` with `multi.method = "glm"`,
+  in which an error from [`glm()`](https://rdrr.io/r/stats/glm.html) was
+  replaced by an uninformative one. With `multi.method = "mnp"`,
+  supplying sampling weights is now an error; previously they were
+  silently ignored.
+
+- Fixed a bug when using `method = "gbm"` with a binary treatment not
+  coded as 0 and 1, `estimand = "ATT"` or `"ATC"`, and `focal` supplied,
+  in which an error occurred.
+
+- Fixed a bug when using `method = "gbm"` with a cross-validation
+  `criterion` and several values of a tuning parameter, in which the
+  cross-validation errors stored for a combination that did not improve
+  on the previous best were those of the earlier combination, so
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) displayed
+  them incorrectly.
+
+- With `method = "super"` and a multi-category treatment,
+  cross-validation is now stratified on the treatment by default, as it
+  is for binary treatments and as documented. Results may change.
+
+- Fixed bugs in
+  [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  in which `NA`s were displayed among the largest weights when a group
+  had fewer units than `top`, `digits` was ignored for the weight
+  statistics, and the weight range of a group with identical weights was
+  drawn too far to the right.
+
+- Fixed a bug in [`anova()`](https://rdrr.io/r/stats/anova.html) for
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  fits, in which the first covariate was left out of the test.
+
+- [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  now gives an error when `link` is not `"logit"`. Previously, `link`
+  was silently ignored.
+
+- Fixed bugs in
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  in which an intercept-only model failed when its Hessian had to be
+  recomputed (e.g., in
+  [`summary()`](https://rdrr.io/r/base/summary.html) with a new `vcov`),
+  and in which supplied starting values for the thresholds were not
+  checked when some coefficients were aliased.
+
+- Fixed a bug in [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html), and
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  fits in which supplying any other argument (e.g., `conf.int = TRUE` in
+  [`summary()`](https://rdrr.io/r/base/summary.html) or `cluster`
+  without `vcov`) recomputed the variance matrix using the default
+  method rather than the one used to fit the model.
+
+- Fixed a bug in which the `offset` argument of
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  was ignored; an [`offset()`](https://rdrr.io/r/stats/offset.html) term
+  in the model formula was unaffected.
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  now gives an error when an offset is supplied, through `offset` or in
+  the model formula, since an offset that shifts the linear predictor of
+  every category by the same amount has no clear interpretation.
+  Previously, `offset` was ignored and an
+  [`offset()`](https://rdrr.io/r/stats/offset.html) term was used.
+
+- Fixed a bug in which arguments supplied through `...` to
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  and
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  to control the fit (e.g., `maxit`) were ignored. They are now
+  collected into `control`, as
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  does.
+
+- Supplying `subset` to
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  or
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  along with `weightit` or `weights` is now an error. Previously, it
+  produced warnings and incorrect standard errors or an error. To
+  estimate an effect within a subgroup, fit the model in the full sample
+  and use *marginaleffects*.
+
+- Fixed a bug in which recomputing the variance matrix (e.g., with
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) or
+  [`summary()`](https://rdrr.io/r/base/summary.html) with a new `vcov`),
+  [`sandwich::estfun()`](https://zeileis.codeberg.page/sandwich/reference/estfun.html),
+  [`sandwich::bread()`](https://zeileis.codeberg.page/sandwich/reference/bread.html),
+  [`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html), and
+  [`anova()`](https://rdrr.io/r/stats/anova.html) gave missing values
+  when units with a weight of 0 had missing covariate values (e.g.,
+  censored units).
+
+- Fixed bugs with
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  and
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  fits with aliased coefficients, in which
+  [`summary()`](https://rdrr.io/r/base/summary.html) output for
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  fits failed to print or printed the wrong values, and
+  [`predict()`](https://rdrr.io/r/stats/predict.html) with `newdata`
+  returned missing values.
+
+- Fixed a bug in
+  [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
+  in which, with a binary treatment not coded as 0 and 1 whose treated
+  level was not the second level, the probability of being in the
+  control group was calibrated (with `method = "platt"`) or an error
+  occurred (with `method = "isoreg"`).
+  [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
+  gains a `treated` argument for propensity scores supplied as a vector,
+  which works as it does in
+  [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md).
+
+- Fixed a bug in
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  in which a matrix or data frame of propensity scores supplied to `ps`
+  with one column per treatment level, as documented at
+  [`?method_ps`](https://ngreifer.github.io/WeightIt/reference/method_ps.md),
+  caused an error. Columns named for the treatment levels are now
+  matched by name; otherwise, they are taken in the order of the levels.
+
+- Fixed a bug in
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  with `method = "cbps"` and a multi-category treatment in which the
+  balance conditions were often reported as unsolved and the weights
+  depended slightly on the order of the treatment levels. The conditions
+  are now solved exactly whenever a solution exists.
+
+- Fixed a bug in which
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  warned that all weights were equal when that was correct by
+  construction, e.g., with a covariate-free model and
+  `stabilize = TRUE`, or with covariate-free models for continuous
+  treatments at every time point.
+
+- Fixed a bug with user-defined methods in which a parameter of the
+  user’s function whose name matched an object internal to *WeightIt*
+  (e.g., `A` or `i`) received that object instead of its default or the
+  supplied value.
+
+- Fixed a bug in
+  [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md) with
+  a multi-category treatment and `estimand = "ATC"`, in which the
+  standard deviation of the wrong group was used to standardize the mean
+  differences.
+
+- Fixed a bug in which a variance matrix recomputed with
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html), or
+  [`confint()`](https://rdrr.io/r/stats/confint.html) for a model fit
+  with multiway clustering (e.g., `cluster = ~c1 + c2`) used redundant
+  clustering variables. Analytic standard errors were unaffected, but
+  bootstrapped ones were computed from more bootstrap runs than needed.
+
+- [`confint()`](https://rdrr.io/r/stats/confint.html) on a model fit
+  with `vcov = "none"` now warns once and returns `NA` confidence limits
+  for each coefficient. Previously, it warned twice and returned an
+  empty matrix.
+
+- [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
+  with `method = "isoreg"` is much faster with large samples, and it no
+  longer fails when some sampling weights are 0.
+
+- Fixed a bug in which
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  failed when a covariate in the model formula, or a variable in the
+  formula supplied to `stabilize` or `num.formula`, was not in `data`
+  but was an object in the function from which they were called. Such
+  variables are now found in the environment in which the formula was
+  created, and the error for a variable found nowhere suggests supplying
+  all variables in `data`.
+
+- With `method = "cfd"`, `kernel = "t"` is much faster.
+
+- With `method = "super"`, `SL.method = "method.balance"`, and two
+  learners in `SL.library`, the combination of the learners is now found
+  with [`optimize()`](https://rdrr.io/r/stats/optimize.html).
+  Previously, one-dimensional Nelder-Mead optimization was used, which
+  is unreliable and raised a warning each time a model was fit. Results
+  may change.
 
 ## `WeightIt` 2.1.0
 

@@ -364,12 +364,12 @@ and the residual variance estimated from the fit, as recommended by
 Robins et al. ([2000](#ref-robinsMarginalStructuralModels2000)). The
 `density` argument can be used to request other densities, such as a
 \\t\\-distribution, which Naimi et al.
-([2014](#ref-naimiConstructingInverseProbability2014)) found to perform
-better when the treatment has heavy tails, or a kernel density estimate
-of the residuals. The weights are highly sensitive to this choice and to
-the specification of the conditional mean, and even small departures can
-produce extreme weights ([Naimi et al.
-2014](#ref-naimiConstructingInverseProbability2014); [Zhu et al.
+([2014](#ref-naimiConstructingInverseProbability2014)) considered as a
+way to limit the influence of outlying treatment values on the weights,
+or a kernel density estimate of the residuals. The weights are highly
+sensitive to this choice and to the specification of the conditional
+mean, and even small departures can produce extreme weights ([Naimi et
+al. 2014](#ref-naimiConstructingInverseProbability2014); [Zhu et al.
 2015](#ref-zhuBoostingAlgorithmEstimating2015); [Huling et al.
 2024](#ref-hulingIndependenceWeightsCausal2024)). The optimization-based
 methods avoid specifying a density altogether: entropy balancing and
@@ -472,9 +472,10 @@ stochastic approximation EM algorithm of Jiang et al.
 ([2019](#ref-jiangLogisticRegressionMissing2019)) rather than adding
 missingness indicators. Supplying a number to `subclass` requests
 marginal mean weighting through stratification, described under
-Additional Options below. M-estimation is supported except with the
-Firth-corrected links, multilevel models, `missing = "saem"`,
-`subclass`, or a kernel density estimate.
+Additional Options below. M-estimation is supported except with
+`link = "flic"` or `"flac"`, a `multi.method` other than `"weightit"` or
+`"glm"`, multilevel models, `missing = "saem"`, `subclass`, or a kernel
+density estimate.
 
 Because the model is specified by the analyst, its specification should
 be chosen with balance in mind rather than with prediction of the
@@ -602,7 +603,8 @@ balancing the covariates and reducing bias ([Setoguchi et al.
 2010](#ref-westreichPropensityScoreEstimation2010); [Cannas and Arpino
 2019](#ref-cannasComparisonMachineLearning2019a)). These methods can be
 used with binary, multi-category, and continuous treatments and can
-target all the estimands available to `method = "glm"`.
+target all the estimands available to `method = "glm"`, except that GBM
+does not allow the ATOS.
 
 The flexibility has costs. A model that fits the treatment too well
 produces propensity scores near 0 and 1, and therefore extreme weights,
@@ -737,10 +739,11 @@ learning methods to use. The implementation in *WeightIt* uses the
 *bartisan* package, which fits BART models with likelihoods beyond the
 normal ([Linero 2025](#ref-lineroGeneralizedBayesianAdditive2025)).
 Binary treatments are modeled with a logistic model and multi-category
-treatments with a multinomial model, though the link can be changed with
-`link`. For continuous treatments, the model for the conditional density
-of the treatment is set by the `family` argument; by default, its error
-distribution is a Dirichlet process mixture of normals ([George et al.
+treatments with a multinomial logistic model, though the link can be
+changed with `link`. For continuous treatments, the model for the
+conditional density of the treatment is set by the `family` argument; by
+default, its error distribution is a Dirichlet process mixture of
+normals ([George et al.
 2019](#ref-georgeFullyNonparametricBayesian2019)), so no form for the
 density needs to be assumed, and other families allow, for example, a
 variance that depends on the covariates
@@ -969,7 +972,13 @@ thousand units. M-estimation is not supported. Energy balancing is a
 good choice when balance on the full joint distribution of the
 covariates is desired, for example when the outcome model is expected to
 be nonlinear or to involve interactions and it is unclear which terms to
-balance.
+balance. In a simulation study, Peyrot et al.
+([2026](#ref-peyrotChoosingCovariateBalancing2026)) found that energy
+balancing gave more stable effect estimates than propensity score
+weighting with a logistic regression model as confounding grew more
+complex and overlap worsened, and they suggested it as a way to check
+the sensitivity of results to the weighting method when overlap is
+limited.
 
 #### Characteristic Function Distance Balancing (`method = "cfd"`)
 
@@ -1159,9 +1168,9 @@ al. 2024](#ref-hulingIndependenceWeightsCausal2024)). If a modeling
 method is used for a continuous treatment, the `density` argument should
 be varied, the weights trimmed, and balance assessed on the
 treatment-covariate correlations and the distance covariance. For
-multi-category treatments, all methods except IPT and CFD balancing (for
-the ATC) and nonparametric CBPS (for anything but the ATE) are
-available, and the considerations are the same as for binary treatments.
+multi-category treatments, all methods are available (nonparametric CBPS
+for the ATE only), and the considerations are the same as for binary
+treatments.
 
 The need for standard errors that account for the estimation of the
 weights favors the methods that support M-estimation: `"glm"`, `"cbps"`
@@ -1430,7 +1439,7 @@ Balance to Test Causal Associations in Psychological Research.”
 
 Hazlett, Chad. 2020. “Kernel Balancing: A Flexible Non-Parametric
 Weighting Procedure for Estimating Causal Effects.” *Statistica Sinica*
-30: 1155–89. <https://doi.org/10.5705/ss.202017.0555>.
+30: 1155–89.
 
 Hernán, Miguel A, and James M Robins. 2020. *Causal Inference: What If*.
 Chapman & Hall/CRC.
@@ -1565,6 +1574,11 @@ Naimi, Ashley I., Erica E. M. Moodie, Nathalie Auger, and Jay S.
 Kaufman. 2014. “Constructing Inverse Probability Weights for Continuous
 Exposures: A Comparison of Methods.” *Epidemiology* 25 (2): 292–99.
 <https://doi.org/10.1097/EDE.0000000000000053>.
+
+Peyrot, Etienne, Raphaël Porcher, and François Petit. 2026. “Choosing
+Covariate Balancing Methods for Causal Inference: Practical Insights
+From a Simulation Study.” *Statistics in Medicine* 45 (15-17): e70672.
+<https://doi.org/10.1002/sim.70672>.
 
 Pirracchio, Romain, and Marco Carone. 2018. “The Balance Super Learner:
 A Robust Adaptation of the *Super Learner* to Improve Estimation of the

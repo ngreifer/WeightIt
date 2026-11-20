@@ -11,7 +11,15 @@ predictor. Weights are computed using this new propensity score.
 calibrate(x, ...)
 
 # Default S3 method
-calibrate(x, treat, s.weights = NULL, data = NULL, method = "platt", ...)
+calibrate(
+  x,
+  treat,
+  s.weights = NULL,
+  data = NULL,
+  method = "platt",
+  treated = NULL,
+  ...
+)
 
 # S3 method for class 'weightit'
 calibrate(x, method = "platt", ...)
@@ -49,6 +57,16 @@ calibrate(x, method = "platt", ...)
   `"platt"` (default) for Platt scaling as described by Gutman et
   al. (2024) and `"isoreg"` for isotonic regression as described by van
   der Laan et al. (2024).
+
+- treated:
+
+  when `x` is a vector of propensity scores, the value of `treat` that
+  is considered the "treated" group (i.e., the group for which the
+  propensity scores are the probability of being in). If `NULL`,
+  `calibrate()` will attempt to figure it out on its own using the same
+  heuristics as
+  [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md).
+  This only matters when `treat` has values other than 0 and 1.
 
 ## Value
 
@@ -103,7 +121,7 @@ summary(W)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.         │                         1.  
+#> Treated 1.       │                           1.  
 #> Control 0.004 ╞═══════════════════════════╡ 10.61
 #> 
 #> ─ Units with the 5 most extreme weights by group:

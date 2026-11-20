@@ -203,7 +203,7 @@ summary(S)
 #> ─ Weight ranges:
 #> 
 #>           Min                                Max
-#> Treated 1.           │                      1.  
+#> Treated 1.         │                        1.  
 #> Control 0.466 ╞═══════════════════════════╡ 3.59
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -360,7 +360,7 @@ summary(S_)
 #> ─ Weight ranges:
 #> 
 #>           Min                                Max
-#> Treated 1.           │                      1.  
+#> Treated 1.         │                        1.  
 #> Control 0.465 ╞═══════════════════════════╡ 3.57
 #> 
 #> ─ Units with the 5 most extreme weights by group:

@@ -21,7 +21,7 @@ calls; these packages must be installed to use the desired method."><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -196,7 +196,8 @@ standard errors will not be computed using <code><a href="glm_weightit.html">glm
 <dd><p><code>logical</code>; whether the method estimates weights for multiple time
 points all at once (<code>TRUE</code>) or by estimating weights at each time point and
 then multiplying them together (<code>FALSE</code>). This is only relevant for
-user-specified functions.</p></dd>
+methods that can estimate the weights for all time points at once, currently
+<code>method = "cbps"</code>; user-defined functions must use <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-weightit-force">weightit.force<a class="anchor" aria-label="anchor" href="#arg-weightit-force"></a></dt>
@@ -233,8 +234,23 @@ attempted. Set to <code>TRUE</code> to bypass this error message.</p></dd>
 <dt>by</dt>
 <dd><p>A data frame containing the <code>by</code> variable when specified.</p></dd>
 
+<dt>call</dt>
+<dd><p>The function call.</p></dd>
+
+<dt>formula.list</dt>
+<dd><p>The list of formulas supplied to <code>formula.list</code>.</p></dd>
+
 <dt>stabilization</dt>
 <dd><p>The stabilization factors, if any.</p></dd>
+
+<dt>missing</dt>
+<dd><p>The method used to handle missing covariate values, when any are present.</p></dd>
+
+<dt>env</dt>
+<dd><p>The environment from which <code>weightitMSM()</code> was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in <code><a href="glm_weightit.html">glm_weightit()</a></code>).</p></dd>
+
+<dt>obj</dt>
+<dd><p>When <code>include.obj = TRUE</code>, a list of the fit objects, one for each time point (or a single fit object when the weights for all time points are estimated at once).</p></dd>
 
 
 </dl><p>When censoring is modeled (i.e., when any entry of <code>formula.list</code> has its left

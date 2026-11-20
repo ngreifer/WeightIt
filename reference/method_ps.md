@@ -36,10 +36,13 @@ are available: `"ATE"`, `"ATT"`, `"ATC"`, `"ATO"`, `"ATM"`, and
 
 ### Multi-Category Treatments
 
-`ps` may be a matrix or data frame with one column per treatment level,
-or a numeric vector (or one-column matrix) giving each unit's
-probability of being in the treatment group it is actually in. The
-estimands `"ATE"`, `"ATT"`, `"ATC"`, `"ATO"`, and `"ATM"` are available.
+`ps` may be a matrix or data frame with one column per treatment level
+(when the column names match the treatment levels, those names determine
+which column is which; otherwise the columns are assumed to be in the
+order of the treatment levels), or a numeric vector (or one-column
+matrix) giving each unit's probability of being in the treatment group
+it is actually in. The estimands `"ATE"`, `"ATT"`, `"ATC"`, `"ATO"`, and
+`"ATM"` are available.
 
 ### Continuous Treatments
 
@@ -66,7 +69,9 @@ the units still under observation and exactly 0 for the censored units.
 ### Sampling Weights
 
 Sampling weights are supported and are applied to the resulting weights,
-but they play no part in computing them, since no model is fit.
+but they play no part in computing them, since no model is fit, except
+for continuous treatments, where they are used to estimate the residual
+standard deviation and the marginal density of the treatment.
 
 ## Additional Arguments
 
@@ -176,7 +181,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
+#> Treated 1.                  │               1.   
 #> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -217,7 +222,7 @@ summary(W2)
 #> ─ Weight ranges:
 #> 
 #>           Min                               Max
-#> Treated 1.          │                         1
+#> Treated 1.        │                           1
 #> Control 0.083 ╞═══════════════════════════╡   8
 #> 
 #> ─ Units with the 5 most extreme weights by group:

@@ -44,18 +44,22 @@ weightit.fit(
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   converts the covariates named in its `formula`, with each factor or
   character variable split into dummy variables for its levels; methods
-  that can use the covariates as they are, such as `"bart"`, receive the
-  data frame itself. May have zero columns, in which case the weights
-  are computed with an intercept-only generalized linear model whatever
-  `method` is supplied and any method-specific arguments are ignored;
-  see *Empty model formulas* in Details at
+  that can use the covariates as they are, such as `"gbm"` and `"bart"`,
+  receive the data frame itself. May have zero columns, in which case
+  the weights are computed with an intercept-only generalized linear
+  model whatever `method` is supplied and any method-specific arguments
+  are ignored; see *Empty model formulas* in Details at
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 - treat:
 
-  a vector of treatment statuses. To request inverse probability of
-  censoring weights, supply a 0/1 censoring indicator (1 = censored)
-  tagged with
+  a vector of treatment statuses. A factor or character vector is
+  treated as binary or multi-category, depending on its number of unique
+  values, and a numeric vector with more than two unique values as
+  continuous, as in
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
+  To request inverse probability of censoring weights, supply a 0/1
+  censoring indicator (1 = censored) tagged with
   [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
   as in `treat = .cens(C)`; `NA` values are then allowed outside
   `subset`, since a unit censored at an earlier time point has no later
@@ -104,16 +108,19 @@ weightit.fit(
 
 - stabilize:
 
-  `logical`; whether or not to stabilize the weights. For the methods
-  that involve estimating propensity scores, this involves multiplying
-  each unit's weight by the proportion of units in their treatment
-  group. Default is `FALSE`. Note this differs from its use with
-  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
+  `logical`; whether or not to stabilize the weights. For binary and
+  multi-category treatments with methods that estimate propensity scores
+  (or when `ps` is supplied), this involves multiplying each unit's
+  weight by the proportion of units in their treatment group (within
+  each level of `by.factor`); it is ignored otherwise. Stabilized
+  weights do not support M-estimation. Default is `FALSE`. Note this
+  differs from its use with
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
+  which estimates a model for the numerator.
 
 - ps:
 
-  a vector of propensity scores. If specified, `method` will be ignored
-  and set to `"glm"`.
+  a vector of propensity scores. If specified, `method` will be ignored.
 
 - missing:
 
@@ -314,7 +321,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.              │                   1.   
+#> Treated 1.            │                     1.   
 #> Control 0.009 ╞═══════════════════════════╡ 3.743
 #> 
 #> ─ Units with the 5 most extreme weights by group:

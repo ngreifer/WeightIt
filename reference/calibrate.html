@@ -19,7 +19,7 @@ predictor. Weights are computed using this new propensity score."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,15 @@ predictor. Weights are computed using this new propensity score.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calibrate</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
-<span><span class="fu">calibrate</span><span class="op">(</span><span class="va">x</span>, <span class="va">treat</span>, s.weights <span class="op">=</span> <span class="cn">NULL</span>, data <span class="op">=</span> <span class="cn">NULL</span>, method <span class="op">=</span> <span class="st">"platt"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">calibrate</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">treat</span>,</span>
+<span>  s.weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"platt"</span>,</span>
+<span>  treated <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'weightit'</span></span>
 <span><span class="fu">calibrate</span><span class="op">(</span><span class="va">x</span>, method <span class="op">=</span> <span class="st">"platt"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -109,6 +117,15 @@ treatments are supported.</p></dd>
 include <code>"platt"</code> (default) for Platt scaling as described by Gutman et al.
 (2024) and <code>"isoreg"</code> for isotonic regression as described by van der Laan
 et al. (2024).</p></dd>
+
+
+<dt id="arg-treated">treated<a class="anchor" aria-label="anchor" href="#arg-treated"></a></dt>
+<dd><p>when <code>x</code> is a vector of propensity scores, the value of
+<code>treat</code> that is considered the "treated" group (i.e., the group for which
+the propensity scores are the probability of being in). If <code>NULL</code>,
+<code>calibrate()</code> will attempt to figure it out on its own using the same
+heuristics as <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>. This only matters when <code>treat</code> has values
+other than 0 and 1.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -158,7 +175,7 @@ arXiv. <a href="https://arxiv.org/abs/2411.06342" class="external-link">https://
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.         │                         1.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.       │                           1.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.004 ╞═══════════════════════════╡ 10.61</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

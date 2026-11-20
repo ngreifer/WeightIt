@@ -56,7 +56,7 @@ for details.
 
 For continuous treatments, weights are estimated as \\w_i = f_A(a_i) /
 f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
-is the unconditional density of treatment evaluated the observed
+is the unconditional density of treatment evaluated at the observed
 treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -110,9 +110,11 @@ are allowed:
   created which takes the value 1 if the original covariate is `NA` and
   0 otherwise. The missingness indicators are included as covariates to
   balance. The missing values in the covariates are then replaced with
-  the covariate medians. Balance assessment then proceeds with this new
-  set of covariates. The covariates output in the resulting `weightit`
-  object will be the original covariates with the `NA`s.
+  the covariate medians; for a factor, the missing values instead become
+  a category of their own, `"<NA>"`. Balance assessment then proceeds
+  with this new set of covariates. The covariates output in the
+  resulting `weightit` object will be the original covariates with the
+  `NA`s.
 
 ### M-estimation
 
@@ -207,7 +209,7 @@ The following additional arguments can be specified:
   representing the number of cross-validation folds used (e.g., `"cv5"`
   for 5-fold cross-validation). For binary and multi-category
   treatments, the default is `"smd.mean"`, which minimizes the average
-  absolute standard mean difference among the covariates between
+  absolute standardized mean difference among the covariates between
   treatment groups. For continuous treatments, the default is
   `"p.mean"`, which minimizes the average absolute Pearson correlation
   between the treatment and covariates.
@@ -316,9 +318,9 @@ The following additional arguments can be specified:
 
 All other arguments take on the defaults of those in
 [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
-, and some are not used at all. For binary and multi-category treatments
-with cross-validation used as the criterion, `class.stratify.cv` is set
-to `TRUE` by default.
+(except `keep.data`, which is `FALSE` by default), and some are not used
+at all. For binary and multi-category treatments with cross-validation
+used as the criterion, `class.stratify.cv` is set to `TRUE` by default.
 
 The `w` argument in `gbm.fit()` is ignored because sampling weights are
 passed using `s.weights`.
@@ -336,7 +338,7 @@ For continuous treatments only, the following arguments may be supplied:
   the latter splits will be supplied as arguments to the second argument
   and beyond. For example, if `density = "dt_2"` is specified, the
   density used will be that of a t-distribution with 2 degrees of
-  freedom. Using a t-distribution can be useful when extreme outcome
+  freedom. Using a t-distribution can be useful when extreme treatment
   values are observed (Naimi et al., 2014).
 
   Can also be `"kernel"` to use kernel density estimation, which calls
@@ -431,6 +433,11 @@ Estimation for Multiple Treatments Using Generalized Boosted Models.
 [doi:10.1002/sim.5753](https://doi.org/10.1002/sim.5753)
 
 ### Continuous treatments
+
+Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014).
+Constructing Inverse Probability Weights for Continuous Exposures: A
+Comparison of Methods. *Epidemiology*, 25(2), 292–299.
+[doi:10.1097/EDE.0000000000000053](https://doi.org/10.1097/EDE.0000000000000053)
 
 Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
 Estimating Generalized Propensity Scores with Continuous Treatments.
@@ -539,7 +546,7 @@ summary(W2)
 #> 
 #>          Min                                 Max
 #> black  0.067  ╞════════════════════════╡   1.059
-#> hispan 1.                               │  1.   
+#> hispan 1.                             │    1.   
 #> white  0.037 ╞═══════════════════════════╡ 1.152
 #> 
 #> ─ Units with the 5 most extreme weights by group:

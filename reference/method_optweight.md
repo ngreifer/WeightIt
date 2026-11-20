@@ -33,8 +33,8 @@ are taken from the output of the `optweight.fit` fit object.
 
 For multi-category treatments, this method estimates the weights using
 [`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
-. The following estimands are allowed: ATE and ATT. The weights are
-taken from the output of the `optweight.fit` fit object.
+. The following estimands are allowed: ATE, ATT, and ATC. The weights
+are taken from the output of the `optweight.fit` fit object.
 
 ### Continuous Treatments
 
@@ -287,7 +287,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>         Min                                 Max
-#> Treated   1        │                      1.   
+#> Treated   1      │                        1.   
 #> Control   0 ╞═══════════════════════════╡ 6.174
 #> 
 #> ─ Units with the 5 most extreme weights by group:

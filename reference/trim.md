@@ -5,8 +5,8 @@ than that at a given quantile to the weight at the quantile or to 0.
 This can be useful in controlling extreme weights, which can reduce
 effective sample size by enlarging the variability of the weights. Note
 that by default, no observations are fully discarded when using
-`trim()`, which may differ from the some uses of the word "trim" (see
-the `drop` argument below).
+`trim()`, which may differ from some uses of the word "trim" (see the
+`drop` argument below).
 
 ## Usage
 
@@ -62,12 +62,13 @@ trim(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, ...)
 
 If the input is a `weightit` object, the output will be a `weightit`
 object with the weights replaced by the trimmed weights (or 0) and will
-have an additional attribute, `"trim"`, equal to the quantile of
-trimming.
+have an additional attribute, `"trim"`, a list containing the values of
+`at`, `lower`, and `drop` used.
 
 If the input is a numeric vector of weights, the output will be a
-numeric vector of the trimmed weights, again with the aforementioned
-attribute.
+numeric vector of the trimmed weights with an attribute `"trim"` equal
+to `at` (the quantile or the number of weights trimmed) and an attribute
+`"trim.lower"` equal to `lower`.
 
 ## Details
 
@@ -144,7 +145,7 @@ summary(W)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
+#> Treated 1.                  │               1.   
 #> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -278,27 +279,27 @@ summary(W)
 #> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> Treated 0.033 ╞═══════════════════╡         10.234
-#> Control 0.006 ╞═══════════════════════════╡ 13.963
+#> Treated 0.006 ╞═══════════════════════════╡ 13.963
+#> Control 0.006 ╞═══════════════════════╡     12.111
 #> 
 #> ─ Units with the 5 most extreme weights by group:
 #>                                         
-#>            130   396   350    141    413
-#>  Treated 8.168 8.684 8.812  9.067 10.234
-#>            100   462   363    129    291
-#>  Control 8.895 9.291 9.429 12.111 13.963
+#>             80   472   129    362    290
+#>  Treated 6.676 7.409 8.168  9.429 13.963
+#>             99   140   461    412    128
+#>  Control 8.895 9.067 9.291 10.234 12.111
 #> 
 #> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> Treated       1.047 0.793   0.463       0
-#> Control       1.032 0.731   0.434       0
+#> Treated       1.11  0.788   0.489       0
+#> Control       1.003 0.729   0.423       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  343.    157.  
-#> Weighted    166.38   75.12
+#> Unweighted  343.     157. 
+#> Weighted    171.25    70.6
 
 summary(trim(W, at = .95))
 #> Trimming weights to 95%.
@@ -307,25 +308,25 @@ summary(trim(W, at = .95))
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 0.033 ╞═══════════════════════════╡ 6.548
+#> Treated 0.006 ╞═══════════════════════════╡ 6.548
 #> Control 0.006 ╞═══════════════════════════╡ 6.548
 #> 
 #> ─ Units with the 5 most extreme weights by group:
 #>                                       
-#>            350   281   141   130    81
+#>            362   290   129    92    80
 #>  Treated 6.548 6.548 6.548 6.548 6.548
-#>            127   100    93    85    27
+#>            128   126    99    84    26
 #>  Control 6.548 6.548 6.548 6.548 6.548
 #> 
 #> ─ Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> Treated       0.955 0.768   0.418       0
-#> Control       0.905 0.705   0.382       0
+#> Treated       0.982 0.766   0.438       0
+#> Control       0.893 0.703   0.374       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  343.    157.  
-#> Weighted    188.82   82.35
+#> Unweighted   343.   157.  
+#> Weighted     191.1   80.14
 ```

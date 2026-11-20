@@ -118,12 +118,11 @@ correlation between the treatment and covariates allowed.
   quantile(s) for all continuous covariates. Only allowed with binary
   and multi-category treatments.
 
-All arguments to `npCBPS()` can be passed through
+`corprior` can be passed through
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 or
-[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-
-All arguments take on the defaults of those in `npCBPS()`.
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md);
+its default is that of `npCBPS()` (.01).
 
 ## Additional Outputs
 

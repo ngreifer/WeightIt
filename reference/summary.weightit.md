@@ -42,8 +42,8 @@ plot(x, binwidth = NULL, bins = NULL, which.time = 1L, ..., time)
 
 - top:
 
-  how many of the largest and smallest weights to display. Default is 5.
-  Ignored when `weight.range = FALSE`.
+  how many of the largest weights to display in each group. Default
+  is 5. Ignored when `weight.range = FALSE`.
 
 - ignore.s.weights:
 

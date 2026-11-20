@@ -49,13 +49,19 @@ anova(
 
 - vcov:
 
-  either a string indicating the method used to compute the variance of
-  the estimated parameters for `object`, a function used to extract the
-  variance, or the variance matrix itself. Default is to use the
-  variance matrix already present in `object`. If a string or function,
-  arguments passed to `...` are supplied to the method or function.
-  (Note: for [`vcov()`](https://rdrr.io/r/stats/vcov.html), can also be
-  supplied as `type`.)
+  a string indicating the method used to compute the variance of the
+  estimated parameters for `object`; see the `vcov` argument of
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  for the allowable options. Default is to use the variance matrix
+  already present in `object`, unless `cluster`, `R`, or `fwb.args` is
+  supplied through `...`, in which case the variance matrix is
+  recomputed using the method used to fit `object` with the new
+  arguments. A variance matrix computed another way can be supplied to
+  functions in other packages that accept one (e.g., through the `vcov`
+  argument of
+  [marginaleffects](https://CRAN.R-project.org/package=marginaleffects)
+  functions). (Note: for [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  can also be supplied as `type`.)
 
 - ...:
 

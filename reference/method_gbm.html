@@ -53,7 +53,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -97,7 +97,7 @@ Missing Data
 
 In the presence of missing data, the following value(s) for missing are allowed:
 &quot;ind&quot; (default)
-Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
+Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians; for a factor, the missing values instead become a category of their own, &quot;&amp;lt;NA&amp;gt;&quot;. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
 
 
 
@@ -165,7 +165,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -209,7 +209,7 @@ Missing Data
 
 In the presence of missing data, the following value(s) for missing are allowed:
 &quot;ind&quot; (default)
-Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
+Missing variables are automatically handled by the boosting model. When using a criterion targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is NA and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians; for a factor, the missing values instead become a category of their own, &quot;&amp;lt;NA&amp;gt;&quot;. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting weightit object will be the original covariates with the NAs.
 
 
 
@@ -237,7 +237,7 @@ Parallelization is supported; when a future plan is specified with more than one
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -325,7 +325,7 @@ mean weighting through stratification for the ATE, ATT, and ATC. See
 
 <p>For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -368,7 +368,7 @@ estimated at each time point.</p>
 
 
 <p>In the presence of missing data, the following value(s) for <code>missing</code> are allowed:</p><dl><dt><code>"ind"</code> (default)</dt>
-<dd><p>Missing variables are automatically handled by the boosting model. When using a <code>criterion</code> targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
+<dd><p>Missing variables are automatically handled by the boosting model. When using a <code>criterion</code> targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians; for a factor, the missing values instead become a category of their own, <code>"&lt;NA&gt;"</code>. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
 
 
 </dl></div>
@@ -449,7 +449,7 @@ backward compatibility.</p>
 
 
 <p>The following additional arguments can be specified:</p><dl><dt><code>criterion</code></dt>
-<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}"</code>, where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
+<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}"</code>, where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standardized mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 <dt><code>trim.at</code></dt>
 <dd><p>A number supplied to <code>at</code> in <code><a href="trim.html">trim()</a></code> which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).</p></dd>
@@ -488,14 +488,14 @@ backward compatibility.</p>
 
 
 </dl><p>All other arguments take on the defaults of those in <code><a href="https://gbm-developers.github.io/gbm/reference/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>
-,
-and some are not used at all. For binary and multi-category treatments with
+
+(except <code>keep.data</code>, which is <code>FALSE</code> by default), and some are not used at all. For binary and multi-category treatments with
 cross-validation used as the criterion, <code>class.stratify.cv</code> is set
 to <code>TRUE</code> by default.</p>
 <p>The <code>w</code> argument in <code>gbm.fit()</code> is ignored because sampling weights are
 passed using <code>s.weights</code>.</p>
 <p>For continuous treatments only, the following arguments may be supplied:</p><dl><dt><code>density</code></dt>
-<dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
+<dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).</p>
 <p>Can also be <code>"kernel"</code> to use kernel density estimation, which calls <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> to estimate the numerator and denominator densities for the weights. (This used to be requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.)</p>
 <p>If unspecified, a density corresponding to the argument passed to <code>distribution</code> is used. If <code>"gaussian"</code> (the default), <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used. If <code>"tdist"</code>, a t-distribution with 4 degrees of freedom is used. If <code>"laplace"</code>, a Laplace distribution is used.</p></dd>
 
@@ -561,6 +561,7 @@ no random components in the model.</p>
 <h3 id="continuous-treatments-1">Continuous treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments-1"></a></h3>
 
 
+<p>Naimi, A. I., Moodie, E. E. M., Auger, N., &amp; Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. <em>Epidemiology</em>, 25(2), 292–299. <a href="https://doi.org/10.1097/EDE.0000000000000053" class="external-link">doi:10.1097/EDE.0000000000000053</a></p>
 <p>Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. <em>Journal of Causal Inference</em>, 3(1). <a href="https://doi.org/10.1515/jci-2014-0022" class="external-link">doi:10.1515/jci-2014-0022</a></p>
 </div>
 
@@ -662,7 +663,7 @@ no random components in the model.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black  0.067  ╞════════════════════════╡   1.059</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.                               │  1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.                             │    1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white  0.037 ╞═══════════════════════════╡ 1.152</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

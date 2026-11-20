@@ -29,7 +29,7 @@ estimands are allowed: ATE, ATT, and ATC.
 
 For multi-category treatments, this method estimates the weights using
 `osqp()` using formulas described by Santra, Chen, and Park (2026). The
-following estimands are allowed: ATE and ATT.
+following estimands are allowed: ATE, ATT, and ATC.
 
 ### Continuous Treatments
 
@@ -125,12 +125,12 @@ for details.
 ## Note
 
 Sometimes the optimization can fail to converge because the problem is
-not convex. A warning will be displayed if so. In these cases, try
-simply re-fitting the weights without changing anything (but see the
-*Reproducibility* section above). If the method repeatedly fails, you
-should try another method or change the supplied parameters (though this
-is uncommon). Increasing `max_iter` or changing `adaptive_rho_interval`
-might help.
+not convex. A warning will be displayed if so. Because the optimization
+is deterministic (see the *Reproducibility* section above), re-fitting
+without changing anything will reproduce the failure; increasing
+`max_iter` or changing `adaptive_rho_interval` may help instead. If the
+method repeatedly fails, you should try another method or change the
+supplied parameters (though this is uncommon).
 
 If it seems like the weights are balancing the covariates but you still
 get a failure to converge, this usually indicates that more iterations
@@ -176,10 +176,13 @@ The following additional arguments can be specified:
 - `lambda`:
 
   a positive numeric scalar used to penalize the square of the weights.
-  This value divided by the square of the total sample size is added to
-  the diagonal of the quadratic part of the loss function. Higher values
-  favor weights with less variability. Default is .0001, which is
-  essentially 0.
+  The penalty added to the loss function is `lambda` times half the sum
+  of the squared normalized weights, \\(s_i w_i / n_g)^2\\, where
+  \\s_i\\ is the sampling weight of unit \\i\\ and \\n_g\\ is the size
+  of its treatment group (or of the sample, for continuous treatments).
+  Higher values favor weights with less variability. A negative value
+  adds the smallest penalty that makes the problem convex. Default is
+  .0001, which is essentially 0.
 
 - `moments`:
 
@@ -360,7 +363,7 @@ summary(W1b)
 #>            185    44   181    82    184
 #>  Treated 6.959 7.514 7.831 8.376 11.198
 #>            303   222   511   600    608
-#>  Control 5.627  5.73  5.74 5.919  8.343
+#>  Control 5.626  5.73  5.74 5.919  8.343
 #> 
 #> ─ Weight statistics:
 #> 
@@ -407,37 +410,37 @@ summary(W2)
 #> ─ Weight ranges:
 #> 
 #>        Min                                  Max
-#> black    1     │                          1.   
-#> hispan   0 ╞═════════════════╡           10.955
-#> white    0 ╞═══════════════════════════╡ 16.951
+#> black    1   │                            1.   
+#> hispan   0 ╞══════════════════╡          10.952
+#> white    0 ╞═══════════════════════════╡ 15.951
 #> 
 #> ─ Units with the 5 most extreme weights by group:
-#>                                         
-#>              6      5      4    3      1
-#>   black      1      1      1    1      1
-#>            269     28    570  512    424
-#>  hispan  5.033  5.133  5.336 6.45 10.955
-#>             76    166     23  140     42
-#>   white 10.795 11.883 12.356 12.8 16.951
+#>                                           
+#>              6      5      4      3      1
+#>   black      1      1      1      1      1
+#>            269     28    570    512    424
+#>  hispan  5.027   5.18  5.342  6.446 10.952
+#>            422    599    140     23     42
+#>   white 10.525 10.744 11.976 12.436 15.951
 #> 
 #> ─ Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.    0.      0.          0
-#> hispan       1.963 1.356   1.337       0
-#> white        2.342 1.414   1.546       0
+#> hispan       1.956 1.346   1.329       0
+#> white        2.262 1.394   1.491       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>            black hispan  white
 #> Unweighted   243  72.   299.  
-#> Weighted     243  15.01  46.24
+#> Weighted     243  15.09  49.03
 
 cobalt::bal.tab(W2)
 #> 
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.0843
+#> age      Contin.       0.0842
 #> educ     Contin.       0.0426
 #> married   Binary       0.0042
 #> nodegree  Binary       0.0098
@@ -445,5 +448,5 @@ cobalt::bal.tab(W2)
 #> Effective sample sizes
 #>            hispan  white black
 #> Unadjusted  72.   299.     243
-#> Adjusted    15.01  46.24   243
+#> Adjusted    15.09  49.03   243
 ```

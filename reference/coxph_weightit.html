@@ -19,7 +19,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,8 +112,8 @@ supplied, an unweighted model will be fit.</p></dd>
 parameters. Allowable options include <code>"asympt"</code>, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; <code>"const"</code>, which uses the usual
-maximum likelihood estimates (only available when <code>weightit</code> is not
-supplied); <code>"HC0"</code>, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when <code>weightit</code> is
+supplied, in which case a warning is issued); <code>"HC0"</code>, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; <code>"BS"</code>, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); <code>"FWB"</code>,
 which uses the fractional weighted bootstrap as implemented in

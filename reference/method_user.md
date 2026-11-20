@@ -22,7 +22,7 @@ function, which should have named parameters corresponding to them:
   and so will have its type (e.g., numeric, factor, etc.), which may
   need to be converted.
 
-- `covs`: a data frame of covariate values for each unit. This comes
+- `covs`: a numeric matrix of covariate values for each unit. This comes
   directly from the right hand side of the formula passed to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
   The covariates are processed so that all columns are numeric; all
@@ -45,20 +45,17 @@ function, which should have named parameters corresponding to them:
 
 - `estimand`: a character vector of length 1 containing the desired
   estimand. The characters will have been converted to uppercase. If
-  "ATC" was supplied to estimand,
+  "ATC" was supplied to `estimand`,
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   sets `focal` to the control level (usually 0 or the lowest level of
-  `treat`) and sets `estimand` to "ATT".
+  `treat`); for binary treatments, `estimand` remains "ATC", and for
+  multi-category treatments, it is set to "ATT".
 
 - `focal`: a character vector of length 1 containing the focal level of
   the treatment when the estimand is the ATT (or the ATC as detailed
   above).
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   ensures the value of focal is a level of `treat`.
-
-- `stabilize`: a logical vector of length 1. It is not processed by
-  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-  before it reaches the fitting function.
 
 - `missing`: a character vector of length 1 containing the missingness
   method in effect, or `""` when no missing data are present. See the
@@ -68,8 +65,9 @@ function, which should have named parameters corresponding to them:
 - `verbose`: a logical vector of length 1 indicating whether the fitting
   function should print additional output.
 
-None of these parameters are required to be in the fitting function.
-These are simply those that are automatically available.
+The fitting function must have parameters named `covs` and `treat`; the
+others are optional and are simply those that are automatically
+available.
 
 In addition, any additional arguments supplied to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
@@ -142,7 +140,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
+#> Treated 1.                  │               1.   
 #> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
 #> ─ Units with the 5 most extreme weights by group:

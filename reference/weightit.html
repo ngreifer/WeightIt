@@ -21,7 +21,7 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,8 +96,7 @@ method.</p>
 <dd><p>a formula with a treatment variable on the left hand side and
 the covariates to be balanced on the right hand side. See <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for more
 details. Interactions and functions of covariates are allowed. A formula may have an empty
-right hand side (e.g., <code>A ~ 1</code>), which requests a marginal model at that
-time point; see <em>Empty model formulas</em> in Details. The
+right hand side (e.g., <code>A ~ 1</code>), which requests a marginal model; see <em>Empty model formulas</em> in Details. The
 formulas may also contain <a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms (e.g.,
 <code>A ~ X1 + (1 | school)</code>) for methods that accept them, in which case a
 multilevel model is fit. To estimate censoring weights, use <code><a href="dot-cens.html">.cens()</a></code> on the left hand side variable.</p></dd>
@@ -232,7 +231,7 @@ Details.</p></dd>
 <dd><p>The weight estimation method specified.</p></dd>
 
 <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details for how the treated group is determined.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models and only when <code>method</code> is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details for how the treated group is determined.</p></dd>
 
 <dt>s.weights</dt>
 <dd><p>The provided sampling weights, or a vector of 1s if none are provided.</p></dd>
@@ -242,6 +241,21 @@ Details.</p></dd>
 
 <dt>by</dt>
 <dd><p>A data frame containing the <code>by</code> variable when specified.</p></dd>
+
+<dt>call</dt>
+<dd><p>The function call.</p></dd>
+
+<dt>formula</dt>
+<dd><p>The formula supplied to <code>formula</code>.</p></dd>
+
+<dt>stabilization</dt>
+<dd><p>When the weights are stabilized, the right hand side of the formula of the model for the numerator of the weights.</p></dd>
+
+<dt>missing</dt>
+<dd><p>The method used to handle missing covariate values, when any are present.</p></dd>
+
+<dt>env</dt>
+<dd><p>The environment from which <code>weightit()</code> was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in <code><a href="glm_weightit.html">glm_weightit()</a></code>).</p></dd>
 
 <dt>obj</dt>
 <dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
@@ -403,7 +417,7 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                  │               1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.022 ╞═══════════════════════════╡ 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

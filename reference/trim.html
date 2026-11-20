@@ -10,12 +10,12 @@ higher than that at a given quantile to the weight at the quantile or to 0.
 This can be useful in controlling extreme weights, which can reduce effective
 sample size by enlarging the variability of the weights. Note that by
 default, no observations are fully discarded when using trim(), which may
-differ from the some uses of the word &quot;trim&quot; (see the drop argument below)."><meta property="og:description" content="Trims (i.e., winsorizes) large weights by setting all weights
+differ from some uses of the word &quot;trim&quot; (see the drop argument below)."><meta property="og:description" content="Trims (i.e., winsorizes) large weights by setting all weights
 higher than that at a given quantile to the weight at the quantile or to 0.
 This can be useful in controlling extreme weights, which can reduce effective
 sample size by enlarging the variability of the weights. Note that by
 default, no observations are fully discarded when using trim(), which may
-differ from the some uses of the word &quot;trim&quot; (see the drop argument below)."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
+differ from some uses of the word &quot;trim&quot; (see the drop argument below)."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -23,7 +23,7 @@ differ from the some uses of the word &quot;trim&quot; (see the drop argument be
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@ higher than that at a given quantile to the weight at the quantile or to 0.
 This can be useful in controlling extreme weights, which can reduce effective
 sample size by enlarging the variability of the weights. Note that by
 default, no observations are fully discarded when using <code>trim()</code>, which may
-differ from the some uses of the word "trim" (see the <code>drop</code> argument below).</p>
+differ from some uses of the word "trim" (see the <code>drop</code> argument below).</p>
     </div>
 
     <div class="section level2">
@@ -125,9 +125,12 @@ multi-category treatments.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If the input is a <code>weightit</code> object, the output will be a <code>weightit</code>
 object with the weights replaced by the trimmed weights (or 0) and will have
-an additional attribute, <code>"trim"</code>, equal to the quantile of trimming.</p>
+an additional attribute, <code>"trim"</code>, a list containing the values of <code>at</code>,
+<code>lower</code>, and <code>drop</code> used.</p>
 <p>If the input is a numeric vector of weights, the output will be a numeric
-vector of the trimmed weights, again with the aforementioned attribute.</p>
+vector of the trimmed weights with an attribute <code>"trim"</code> equal to <code>at</code> (the
+quantile or the number of weights trimmed) and an attribute <code>"trim.lower"</code>
+equal to <code>lower</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -185,7 +188,7 @@ which all the weights are the same will not be considered in the trimming.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                  │               1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.022 ╞═══════════════════════════╡ 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
@@ -319,27 +322,27 @@ which all the weights are the same will not be considered in the trimming.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 0.033 ╞═══════════════════╡         10.234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.006 ╞═══════════════════════════╡ 13.963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 0.006 ╞═══════════════════════════╡ 13.963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.006 ╞═══════════════════════╡     12.111</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            130   396   350    141    413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 8.168 8.684 8.812  9.067 10.234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            100   462   363    129    291</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 8.895 9.291 9.429 12.111 13.963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             80   472   129    362    290</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 6.676 7.409 8.168  9.429 13.963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             99   140   461    412    128</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 8.895 9.067 9.291 10.234 12.111</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       1.047 0.793   0.463       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.032 0.731   0.434       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       1.11  0.788   0.489       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       1.003 0.729   0.423       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  343.    157.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    166.38   75.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  343.     157. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    171.25    70.6</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">trim</span><span class="op">(</span><span class="va">W</span>, at <span class="op">=</span> <span class="fl">.95</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Trimming weights to 95%.</span>
@@ -348,27 +351,27 @@ which all the weights are the same will not be considered in the trimming.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 0.033 ╞═══════════════════════════╡ 6.548</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 0.006 ╞═══════════════════════════╡ 6.548</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.006 ╞═══════════════════════════╡ 6.548</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            350   281   141   130    81</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            362   290   129    92    80</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 6.548 6.548 6.548 6.548 6.548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            127   100    93    85    27</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            128   126    99    84    26</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control 6.548 6.548 6.548 6.548 6.548</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.955 0.768   0.418       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.905 0.705   0.382       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated       0.982 0.766   0.438       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control       0.893 0.703   0.374       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  343.    157.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    188.82   82.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   343.   157.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     191.1   80.14</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

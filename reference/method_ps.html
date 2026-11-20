@@ -34,8 +34,10 @@ levels. All estimands allowed by get_w_from_ps() are available: &quot;ATE&quot;,
 Multi-Category Treatments
 
 
-ps may be a matrix or data frame with one column per treatment level, or a
-numeric vector (or one-column matrix) giving each unit's probability of being
+ps may be a matrix or data frame with one column per treatment level (when
+the column names match the treatment levels, those names determine which
+column is which; otherwise the columns are assumed to be in the order of the
+treatment levels), or a numeric vector (or one-column matrix) giving each unit's probability of being
 in the treatment group it is actually in. The estimands &quot;ATE&quot;, &quot;ATT&quot;,
 &quot;ATC&quot;, &quot;ATO&quot;, and &quot;ATM&quot; are available.
 
@@ -73,7 +75,9 @@ Sampling Weights
 
 
 Sampling weights are supported and are applied to the resulting weights, but
-they play no part in computing them, since no model is fit.
+they play no part in computing them, since no model is fit, except for
+continuous treatments, where they are used to estimate the residual standard
+deviation and the marginal density of the treatment.
 
 "><meta property="og:description" content="This page explains the details of computing weights from propensity scores
 that have already been estimated, requested by supplying them to the ps
@@ -104,8 +108,10 @@ levels. All estimands allowed by get_w_from_ps() are available: &quot;ATE&quot;,
 Multi-Category Treatments
 
 
-ps may be a matrix or data frame with one column per treatment level, or a
-numeric vector (or one-column matrix) giving each unit's probability of being
+ps may be a matrix or data frame with one column per treatment level (when
+the column names match the treatment levels, those names determine which
+column is which; otherwise the columns are assumed to be in the order of the
+treatment levels), or a numeric vector (or one-column matrix) giving each unit's probability of being
 in the treatment group it is actually in. The estimands &quot;ATE&quot;, &quot;ATT&quot;,
 &quot;ATC&quot;, &quot;ATO&quot;, and &quot;ATM&quot; are available.
 
@@ -143,7 +149,9 @@ Sampling Weights
 
 
 Sampling weights are supported and are applied to the resulting weights, but
-they play no part in computing them, since no model is fit.
+they play no part in computing them, since no model is fit, except for
+continuous treatments, where they are used to estimate the residual standard
+deviation and the marginal density of the treatment.
 
 "><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -153,7 +161,7 @@ they play no part in computing them, since no model is fit.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -222,8 +230,10 @@ levels. All estimands allowed by <code><a href="get_w_from_ps.html">get_w_from_p
 <h3 id="multi-category-treatments">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments"></a></h3>
 
 
-<p><code>ps</code> may be a matrix or data frame with one column per treatment level, or a
-numeric vector (or one-column matrix) giving each unit's probability of being
+<p><code>ps</code> may be a matrix or data frame with one column per treatment level (when
+the column names match the treatment levels, those names determine which
+column is which; otherwise the columns are assumed to be in the order of the
+treatment levels), or a numeric vector (or one-column matrix) giving each unit's probability of being
 in the treatment group it is actually in. The estimands <code>"ATE"</code>, <code>"ATT"</code>,
 <code>"ATC"</code>, <code>"ATO"</code>, and <code>"ATM"</code> are available.</p>
 </div>
@@ -261,7 +271,9 @@ weights are <code>1/P(C = 0 | X)</code> for the units still under observation an
 
 
 <p>Sampling weights are supported and are applied to the resulting weights, but
-they play no part in computing them, since no model is fit.</p>
+they play no part in computing them, since no model is fit, except for
+continuous treatments, where they are used to estimate the residual standard
+deviation and the marginal density of the treatment.</p>
 </div>
 
     </div>
@@ -339,7 +351,7 @@ instead of supplying them</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                    │             1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                  │               1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.022 ╞═══════════════════════════╡ 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
@@ -380,7 +392,7 @@ instead of supplying them</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                               Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.          │                         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.        │                           1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.083 ╞═══════════════════════════╡   8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>

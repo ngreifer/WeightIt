@@ -398,7 +398,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                  Max
-#> Treated 1.        │                          1.   
+#> Treated 1.      │                            1.   
 #> Control 0.006 ╞═══════════════════════════╡ 11.793
 #> 
 #> ─ Units with the 5 most extreme weights by group:

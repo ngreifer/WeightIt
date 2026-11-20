@@ -25,7 +25,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,8 +148,8 @@ supplied, an unweighted model will be fit.</p></dd>
 parameters. Allowable options include <code>"asympt"</code>, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; <code>"const"</code>, which uses the usual
-maximum likelihood estimates (only available when <code>weightit</code> is not
-supplied); <code>"HC0"</code>, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when <code>weightit</code> is
+supplied, in which case a warning is issued); <code>"HC0"</code>, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; <code>"BS"</code>, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); <code>"FWB"</code>,
 which uses the fractional weighted bootstrap as implemented in
@@ -234,7 +234,11 @@ bootstrapping holds the weights fixed rather than re-estimating them.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments to be used to form the default control argument if it
-is not supplied directly.</p></dd>
+is not supplied directly. A <code>subset</code> argument, as in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, can also be
+supplied, but not when <code>weightit</code> or <code>weights</code> is supplied, since the
+weights and their estimation involve the full sample; to estimate an
+effect within a subgroup, fit the model in the full sample and use
+<a href="https://CRAN.R-project.org/package=marginaleffects" class="external-link"><span class="pkg">marginaleffects</span></a> to compute the effect in the subgroup.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -284,15 +288,20 @@ error if it doesn't). Setting <code>vcov = "FWB"</code> and supplying <code>fwb.
 also performs the resampling-based bootstrap but
 with the additional features <span class="pkg">fwb</span> provides (e.g., a progress bar and
 parallelization).</p>
-<p>Functions in the <span class="pkg">sandwich</span> package can be used to compute standard errors
-after fitting, regardless of how <code>vcov</code> was specified, though these will
-ignore estimation of the weights, if any. When no adjustment is done for
-estimation of the weights (i.e., because no <code>weightit</code> argument was supplied
-or there was no <code>"Mparts"</code> component in the supplied object), the default
-variance matrix produced by <code>glm_weightit()</code> should align with that from
-<code>sandwich::vcovHC(. type = "HC0")</code> or <code>sandwich::vcovCL(., type = "HC0", cluster = cluster)</code>
-when <code>cluster</code> is supplied. Not all types are available
-for all models.</p>
+<p>Functions in the <span class="pkg">sandwich</span> package can also be used to compute standard
+errors after fitting. Whether they account for estimation of the weights
+follows the <code>vcov</code> the model was fit with: they do when <code>vcov</code> is <code>"asympt"</code>
+(or <code>"BS"</code> or <code>"FWB"</code>, for which the analytic adjustment is used) and do not
+when <code>vcov</code> is <code>"HC0"</code> or <code>"const"</code>. For a model fit with <code>vcov = "asympt"</code>
+or <code>"HC0"</code>, <code><a href="https://zeileis.codeberg.page/sandwich/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code> therefore agrees with <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, and
+<code>sandwich::vcovCL(., cluster = cluster, type = "HC0")</code> agrees with
+<code>vcov(., cluster = cluster)</code>. Supplying <code>asympt</code> to these functions
+overrides this (see <a href="glm_weightit-methods.html">sandwich::estfun()</a>). When they
+account for estimation of the weights, <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHC.html" class="external-link">sandwich::vcovHC()</a></code> is available only
+with <code>type = "HC0"</code> or <code>"HC1"</code>, because the other types adjust each unit's
+contribution by its leverage in the outcome model alone; for those, fit the
+model with <code>vcov = "HC0"</code> or supply <code>asympt = FALSE</code>, which treats the
+weights as fixed. Not all types are available for all models.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

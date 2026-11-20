@@ -32,7 +32,7 @@ estimands are allowed: ATE, ATT, and ATC.
 
 For multi-category treatments, this method estimates the weights using
 `osqp()` using formulas described by Huling and Mak (2024). The
-following estimands are allowed: ATE and ATT.
+following estimands are allowed: ATE, ATT, and ATC.
 
 ### Continuous Treatments
 
@@ -177,13 +177,16 @@ The following additional arguments can be specified:
 - `lambda`:
 
   a positive numeric scalar used to penalize the square of the weights.
-  This value divided by the square of the total sample size is added to
-  the diagonal of the quadratic part of the loss function. Higher values
-  favor weights with less variability. Note this is distinct from the
-  lambda value described in Huling and Mak (2024), which penalizes the
-  complexity of individual treatment rules rather than the weights, but
-  does correspond to lambda from Huling et al. (2024). Default is .0001,
-  which is essentially 0.
+  The penalty added to the loss function is `lambda` times half the sum
+  of the squared normalized weights, \\(s_i w_i / n_g)^2\\, where
+  \\s_i\\ is the sampling weight of unit \\i\\ and \\n_g\\ is the size
+  of its treatment group (or of the sample, for continuous treatments).
+  Higher values favor weights with less variability. A negative value
+  adds the smallest penalty that makes the problem convex. Note this is
+  distinct from the lambda value described in Huling and Mak (2024),
+  which penalizes the complexity of individual treatment rules rather
+  than the weights, but does correspond to lambda from Huling et al.
+  (2024). Default is .0001, which is essentially 0.
 
 - `moments`:
 
@@ -405,7 +408,7 @@ summary(W2)
 #> ─ Weight ranges:
 #> 
 #>        Min                                  Max
-#> black    1     │                          1.   
+#> black    1   │                            1.   
 #> hispan   0 ╞═════════╡                    4.685
 #> white    0 ╞═══════════════════════════╡ 12.674
 #> 
@@ -462,39 +465,39 @@ summary(W3)
 #> 
 #> ─ Weight ranges:
 #> 
-#>     Min                                 Max
-#> All   0 ╞═══════════════════════════╡ 5.364
+#>     Min                                Max
+#> All   0 ╞═══════════════════════════╡ 9.58
 #> 
 #> ─ Units with the 5 most extreme weights:
 #>                                 
-#>       202   166  171   178   180
-#>  All 4.27 4.306 4.36 4.399 5.364
+#>        486   501   180  166  171
+#>  All 6.728 6.734 7.461 9.25 9.58
 #> 
 #> ─ Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> All       0.695 0.488   0.217       0
+#> All       1.186 0.794   0.537       0
 #> 
 #> ─ Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   414.14
+#> Weighted   255.45
 
 cobalt::bal.tab(W3, poly = 2)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.  -0.0024
-#> educ     Contin.  -0.0100
+#> age      Contin.   0.0037
+#> educ     Contin.  -0.0025
 #> married   Binary   0.0100
-#> nodegree  Binary  -0.0100
+#> nodegree  Binary  -0.0050
 #> re74     Contin.   0.0100
-#> age²     Contin.  -0.0181
-#> educ²    Contin.   0.0089
-#> re74²    Contin.  -0.0622
+#> age²     Contin.  -0.0072
+#> educ²    Contin.   0.0096
+#> re74²    Contin.  -0.0348
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   414.14
+#> Adjusted   255.45
 ```

@@ -50,7 +50,7 @@ logistic regression).
 
 For continuous treatments, weights are estimated as \\w_i = f_A(a_i) /
 f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
-is the unconditional density of treatment evaluated the observed
+is the unconditional density of treatment evaluated at the observed
 treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -108,10 +108,9 @@ estimated at each time point.
 ### Sampling Weights
 
 Sampling weights are supported through `s.weights` in all scenarios
-except for multi-category treatments with `multi.method = "mnp"` and for
-binary and continuous treatments with `missing = "saem"` (see below).
-Warning messages may appear otherwise about non-integer successes, and
-these can be ignored.
+except for multi-category treatments with `multi.method = "mnp"` and
+with `missing = "saem"` (see below). Warning messages may appear
+otherwise about non-integer successes, and these can be ignored.
 
 ### Missing Data
 
@@ -162,8 +161,8 @@ whenever the underlying methods are.
 
 ## Additional Arguments
 
-The following additional argument can be specified for all treatment
-types:
+The following additional argument can be specified for binary and
+continuous treatments:
 
 - `quick`:
 
@@ -293,7 +292,7 @@ supplied:
   the latter splits will be supplied as arguments to the second argument
   and beyond. For example, if `density = "dt_2"` is specified, the
   density used will be that of a t-distribution with 2 degrees of
-  freedom. Using a t-distribution can be useful when extreme outcome
+  freedom. Using a t-distribution can be useful when extreme treatment
   values are observed (Naimi et al., 2014).
 
   Can also be `"kernel"` to use kernel density estimation, which calls
@@ -323,7 +322,8 @@ Arguments matching those of
 [`glm.control()`](https://rdrr.io/r/stats/glm.control.html) are
 collected and passed to [`glm()`](https://rdrr.io/r/stats/glm.html) as
 its `control` argument; a `control` list can also be supplied directly.
-Other arguments are not forwarded to
+For continuous treatments, only a `control` list is used. Other
+arguments are not forwarded to
 [`glm()`](https://rdrr.io/r/stats/glm.html).
 
 In the presence of missing data with `link = "logit"` and
@@ -344,10 +344,11 @@ treatments,
 for multi-category treatments, and
 [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) or
 [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for
-continuous treatments. For multi-category treatments, `random`,
-`estimator`, `dispersion`, and `groups` are passed on to `mblogit()`;
-for continuous treatments, a `control` argument is passed on. Binary
-treatments accept no additional arguments on this path.
+continuous treatments. For multi-category treatments, `estimator`,
+`dispersion`, and `groups` are passed on to `mblogit()` (the random
+effects structure comes from `formula`); for continuous treatments, a
+`control` argument is passed on. Binary treatments accept no additional
+arguments on this path.
 
 ## Additional Outputs
 
@@ -523,7 +524,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                      │           1.   
+#> Treated 1.                    │             1.   
 #> Control 0.018 ╞═══════════════════════════╡ 1.834
 #> 
 #> ─ Units with the 5 most extreme weights by group:

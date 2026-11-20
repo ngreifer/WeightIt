@@ -36,12 +36,11 @@ weightit(
   [`glm()`](https://rdrr.io/r/stats/glm.html) for more details.
   Interactions and functions of covariates are allowed. A formula may
   have an empty right hand side (e.g., `A ~ 1`), which requests a
-  marginal model at that time point; see *Empty model formulas* in
-  Details. The formulas may also contain
-  [lme4](https://CRAN.R-project.org/package=lme4)-style random effects
-  terms (e.g., `A ~ X1 + (1 | school)`) for methods that accept them, in
-  which case a multilevel model is fit. To estimate censoring weights,
-  use
+  marginal model; see *Empty model formulas* in Details. The formulas
+  may also contain [lme4](https://CRAN.R-project.org/package=lme4)-style
+  random effects terms (e.g., `A ~ X1 + (1 | school)`) for methods that
+  accept them, in which case a multilevel model is fit. To estimate
+  censoring weights, use
   [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
   on the left hand side variable.
 
@@ -196,10 +195,11 @@ A `weightit` object with the following elements:
 - ps:
 
   The estimated or provided propensity scores. Estimated propensity
-  scores are returned for binary treatments and only when `method` is
-  one that estimates propensity scores. The propensity score corresponds
-  to the predicted probability of being treated; see section *`estimand`
-  and `focal`* in Details for how the treated group is determined.
+  scores are returned for binary treatments and censoring models and
+  only when `method` is one that estimates propensity scores. The
+  propensity score corresponds to the predicted probability of being
+  treated; see section *`estimand` and `focal`* in Details for how the
+  treated group is determined.
 
 - s.weights:
 
@@ -212,6 +212,31 @@ A `weightit` object with the following elements:
 - by:
 
   A data frame containing the `by` variable when specified.
+
+- call:
+
+  The function call.
+
+- formula:
+
+  The formula supplied to `formula`.
+
+- stabilization:
+
+  When the weights are stabilized, the right hand side of the formula of
+  the model for the numerator of the weights.
+
+- missing:
+
+  The method used to handle missing covariate values, when any are
+  present.
+
+- env:
+
+  The environment from which `weightit()` was called, in which the call
+  is evaluated again to re-estimate the weights (e.g., when
+  bootstrapping in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)).
 
 - obj:
 
@@ -453,7 +478,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
+#> Treated 1.                  │               1.   
 #> Control 0.022 ╞═══════════════════════════╡ 2.044
 #> 
 #> ─ Units with the 5 most extreme weights by group:

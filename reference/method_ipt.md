@@ -27,8 +27,8 @@ is run twice, once for each treatment group.
 
 For multi-category treatments, this method estimates the weights using
 modifications of the formulas described by Graham, Pinto, and Egel
-(2012). The following estimands are allowed: ATE and ATT. When the ATE
-is requested, estimation is performed once for each treatment group.
+(2012). The following estimands are allowed: ATE, ATT, and ATC. When the
+ATE is requested, estimation is performed once for each treatment group.
 When the ATT is requested, estimation is performed once for each
 non-focal (i.e., control) group.
 
@@ -139,9 +139,9 @@ with some cost in precision.
   in the original description of the method by Graham, Pinto, and Egel
   (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`,
   `"clog"`, and `"softplus"` are also allowed. Note that negative
-  weights are possible with these last two and they should be used with
-  caution. An object of class `"link-glm"` can also be supplied. The
-  argument is passed to
+  weights are possible with these last three and they should be used
+  with caution. An object of class `"link-glm"` can also be supplied.
+  The argument is passed to
   [`quasibinomial()`](https://rdrr.io/r/stats/family.html).
 
 The `stabilize` argument is ignored.
@@ -210,7 +210,7 @@ summary(W1)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                   │              1.   
+#> Treated 1.                 │                1.   
 #> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
 #> ─ Units with the 5 most extreme weights by group:

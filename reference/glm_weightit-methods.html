@@ -21,7 +21,7 @@ anova.glm_weightit()."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,7 @@ described at <code><a href="predict.glm_weightit.html">predict.glm_weightit()</a
 <span><span class="fu"><a href="https://rdrr.io/r/stats/influence.measures.html" class="external-link">hatvalues</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'glm_weightit'</span></span>
-<span><span class="fu">estfun</span><span class="op">(</span><span class="va">x</span>, asympt <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">estfun</span><span class="op">(</span><span class="va">x</span>, asympt <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'glm_weightit'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">object</span>, formula. <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
@@ -137,12 +137,15 @@ transformation.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
-<dd><p>either a string indicating the method used to compute the
-variance of the estimated parameters for <code>object</code>, a function used to
-extract the variance, or the variance matrix itself. Default is to use the
-variance matrix already present in <code>object</code>. If a string or function,
-arguments passed to <code>...</code> are supplied to the method or function. (Note:
-for <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, can also be supplied as <code>type</code>.)</p></dd>
+<dd><p>a string indicating the method used to compute the variance of
+the estimated parameters for <code>object</code>; see the <code>vcov</code> argument of
+<code><a href="glm_weightit.html">glm_weightit()</a></code> for the allowable options. Default is to use the variance
+matrix already present in <code>object</code>, unless <code>cluster</code>, <code>R</code>, or <code>fwb.args</code>
+is supplied through <code>...</code>, in which case the variance matrix is recomputed
+using the method used to fit <code>object</code> with the new arguments. A variance
+matrix computed another way can be supplied to functions in other packages
+that accept one (e.g., through the <code>vcov</code> argument of <a href="https://CRAN.R-project.org/package=marginaleffects" class="external-link"><span class="pkg">marginaleffects</span></a>
+functions). (Note: for <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, can also be supplied as <code>type</code>.)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -180,9 +183,12 @@ singular case.</p></dd>
 <dt id="arg-asympt">asympt<a class="anchor" aria-label="anchor" href="#arg-asympt"></a></dt>
 <dd><p><code>logical</code>; for <code>estfun()</code>, whether to use the asymptotic
 empirical estimating functions that account for estimation of the weights
-(when <code>Mparts</code> is available). Default is <code>TRUE</code>. Set to <code>FALSE</code> to ignore
-estimation of the weights. Ignored when <code>Mparts</code> is not available or no
-argument was supplied to <code>weightit</code> in the fitting function.</p></dd>
+(when <code>Mparts</code> is available). Set to <code>FALSE</code> to ignore estimation of the
+weights. The default follows the variance the model was fit with: <code>FALSE</code>
+when <code>vcov</code> was <code>"HC0"</code> or <code>"const"</code> and <code>TRUE</code> otherwise, so that
+<code><a href="https://zeileis.codeberg.page/sandwich/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code> and <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovCL.html" class="external-link">sandwich::vcovCL()</a></code> agree with <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>. Ignored
+when <code>Mparts</code> is not available or no argument was supplied to <code>weightit</code> in
+the fitting function.</p></dd>
 
 
 <dt id="arg-formula-">formula.<a class="anchor" aria-label="anchor" href="#arg-formula-"></a></dt>
@@ -197,7 +203,7 @@ return it.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.glm_weightit()</code> object, which has its
+    <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.glm_weightit</code> object, which has its
 own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method. For <code><a href="coxph_weightit.html">coxph_weightit()</a></code> objects, the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods are more like those for <code>glm</code> objects than for <code>coxph</code>
 objects.</p>
@@ -206,16 +212,16 @@ objects.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> by default extracts the parameter covariance matrix already
-computed by the fitting function, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> uses this
+computed by the fitting function, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> use this
 covariance matrix to compute standard errors and Wald confidence intervals
-(internally calling <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint.lm()</a></code>), respectively. Supplying arguments to
-<code>vcov</code> or <code>...</code> will compute a new covariance matrix. If <code>cluster</code> was
-supplied to the original fitting function, it will be incorporated into any
-newly computed covariance matrix unless <code>cluster = NULL</code> is specified in
-<code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, or <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>. For other arguments (e.g., <code>R</code> and
-<code>fwb.args</code>), the defaults are those used by <code><a href="glm_weightit.html">glm_weightit()</a></code>. Note that for
-<code>vcov = "BS"</code> and <code>vcov = "FWB"</code> (and <code>vcov = "const"</code> for
-<code>multinom_weightit</code> or <code>ordinal_weightit</code> objects), the environment for the
+(internally calling <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint.lm()</a></code>), respectively. Supplying <code>vcov</code>, or
+<code>cluster</code>, <code>R</code>, or <code>fwb.args</code> through <code>...</code>, will compute a new covariance
+matrix; when <code>vcov</code> is not supplied, the method used to fit <code>object</code> is used.
+If <code>cluster</code> was supplied to the original fitting function, it will be
+incorporated into any newly computed covariance matrix unless <code>cluster = NULL</code> is specified in <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, or <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>. <code>R</code> and
+<code>fwb.args</code> likewise default to the values used to fit <code>object</code>, or to the
+defaults of <code><a href="glm_weightit.html">glm_weightit()</a></code> when the original fit was not bootstrapped. Note that for
+<code>vcov = "BS"</code> and <code>vcov = "FWB"</code>, the environment for the
 fitting function is used, so any changes to that environment may affect
 calculation. It is always safer to simply recompute the fitted object with a
 new covariance matrix than to modify it with the <code>vcov</code> argument, but it can

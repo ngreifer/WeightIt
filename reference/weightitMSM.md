@@ -156,7 +156,9 @@ weightitMSM(
   `logical`; whether the method estimates weights for multiple time
   points all at once (`TRUE`) or by estimating weights at each time
   point and then multiplying them together (`FALSE`). This is only
-  relevant for user-specified functions.
+  relevant for methods that can estimate the weights for all time points
+  at once, currently `method = "cbps"`; user-defined functions must use
+  `FALSE`.
 
 - weightit.force:
 
@@ -212,9 +214,35 @@ A `weightitMSM` object with the following elements:
 
   A data frame containing the `by` variable when specified.
 
+- call:
+
+  The function call.
+
+- formula.list:
+
+  The list of formulas supplied to `formula.list`.
+
 - stabilization:
 
   The stabilization factors, if any.
+
+- missing:
+
+  The method used to handle missing covariate values, when any are
+  present.
+
+- env:
+
+  The environment from which `weightitMSM()` was called, in which the
+  call is evaluated again to re-estimate the weights (e.g., when
+  bootstrapping in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)).
+
+- obj:
+
+  When `include.obj = TRUE`, a list of the fit objects, one for each
+  time point (or a single fit object when the weights for all time
+  points are estimated at once).
 
 When censoring is modeled (i.e., when any entry of `formula.list` has
 its left side wrapped in

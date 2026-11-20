@@ -26,7 +26,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
 osqp() using formulas described by Santra, Chen, and Park (2026). The following
-estimands are allowed: ATE and ATT.
+estimands are allowed: ATE, ATT, and ATC.
 
 
 
@@ -103,7 +103,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
 osqp() using formulas described by Santra, Chen, and Park (2026). The following
-estimands are allowed: ATE and ATT.
+estimands are allowed: ATE, ATT, and ATC.
 
 
 
@@ -167,7 +167,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -228,7 +228,7 @@ allowed: ATE, ATT, and ATC.</p>
 
 <p>For multi-category treatments, this method estimates the weights using
 <code>osqp()</code> using formulas described by Santra, Chen, and Park (2026). The following
-estimands are allowed: ATE and ATT.</p>
+estimands are allowed: ATE, ATT, and ATC.</p>
 </div>
 
 <div class="section">
@@ -321,12 +321,12 @@ the update schedule at a set number of iterations. See
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>Sometimes the optimization can fail to converge because the problem is
-not convex. A warning will be displayed if so. In these cases, try simply
-re-fitting the weights without changing anything (but see the
-<em>Reproducibility</em> section above). If the method repeatedly fails, you should
-try another method or change the supplied parameters (though this is
-uncommon). Increasing <code>max_iter</code> or changing <code>adaptive_rho_interval</code> might
-help.</p>
+not convex. A warning will be displayed if so. Because the optimization is
+deterministic (see the <em>Reproducibility</em> section above), re-fitting without
+changing anything will reproduce the failure; increasing <code>max_iter</code> or changing
+<code>adaptive_rho_interval</code> may help instead. If the method repeatedly fails, you
+should try another method or change the supplied parameters (though this is
+uncommon).</p>
 <p>If it seems like the weights are balancing the covariates but you still get a
 failure to converge, this usually indicates that more iterations are needed to
 find the optimal solution. This can occur when <code>moments</code> or <code>int</code> are
@@ -352,7 +352,7 @@ approaching convergence.</p>
 <dd><p>for <code>kernel = "t"</code>, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.</p></dd>
 
 <dt><code>lambda</code></dt>
-<dd><p>a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.</p></dd>
+<dd><p>a positive numeric scalar used to penalize the square of the weights. The penalty added to the loss function is <code>lambda</code> times half the sum of the squared normalized weights, \((s_i w_i / n_g)^2\), where \(s_i\) is the sampling weight of unit \(i\) and \(n_g\) is the size of its treatment group (or of the sample, for continuous treatments). Higher values favor weights with less variability. A negative value adds the smallest penalty that makes the problem convex. Default is .0001, which is essentially 0.</p></dd>
 
 <dt><code>moments</code></dt>
 <dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.</p></dd>
@@ -494,7 +494,7 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span>            185    44   181    82    184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Treated 6.959 7.514 7.831 8.376 11.198</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            303   222   511   600    608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 5.627  5.73  5.74 5.919  8.343</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Control 5.626  5.73  5.74 5.919  8.343</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -541,37 +541,37 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black    1     │                          1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 ╞═════════════════╡           10.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 ╞═══════════════════════════╡ 16.951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black    1   │                            1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 ╞══════════════════╡          10.952</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 ╞═══════════════════════════╡ 15.951</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              6      5      4    3      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black      1      1      1    1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            269     28    570  512    424</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan  5.033  5.133  5.336 6.45 10.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             76    166     23  140     42</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 10.795 11.883 12.356 12.8 16.951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              6      5      4      3      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black      1      1      1      1      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            269     28    570    512    424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan  5.027   5.18  5.342  6.446 10.952</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            422    599    140     23     42</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 10.525 10.744 11.976 12.436 15.951</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.    0.      0.          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.963 1.356   1.337       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        2.342 1.414   1.546       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.956 1.346   1.329       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        2.262 1.394   1.491       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   243  72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243  15.01  46.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243  15.09  49.03</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0843</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0842</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.0426</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0042</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0098</span>
@@ -579,7 +579,7 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            hispan  white black</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  72.   299.     243</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    15.01  46.24   243</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    15.09  49.03   243</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

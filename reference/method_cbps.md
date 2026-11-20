@@ -27,7 +27,7 @@ For multi-category treatments, this method estimates the generalized
 propensity scores and weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html) using formulas described
 by Imai and Ratkovic (2014). The following estimands are allowed: ATE,
-ATT, and ATO.
+ATT, ATC, and ATO.
 
 ### Continuous Treatments
 
@@ -220,8 +220,8 @@ The following additional arguments can be specified:
   Imai and Ratkovic (2014), but others are allowed, including
   `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`,
   `"softplus"`, and `"identity"`. Note that negative weights are
-  possible with these last three and they should be used with caution.
-  An object of class `"link-glm"` can also be supplied. The argument is
+  possible with these last four and they should be used with caution. An
+  object of class `"link-glm"` can also be supplied. The argument is
   passed to [`quasibinomial()`](https://rdrr.io/r/stats/family.html).
   Ignored for multi-category, continuous, and longitudinal treatments.
 
@@ -360,7 +360,7 @@ summary(W1a)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                   │              1.   
+#> Treated 1.                 │                1.   
 #> Control 0.017 ╞═══════════════════════════╡ 2.263
 #> 
 #> ─ Units with the 5 most extreme weights by group:
@@ -417,7 +417,7 @@ summary(W1b)
 #> ─ Weight ranges:
 #> 
 #>           Min                                 Max
-#> Treated 1.                    │             1.   
+#> Treated 1.                  │               1.   
 #> Control 0.012 ╞═══════════════════════════╡ 2.053
 #> 
 #> ─ Units with the 5 most extreme weights by group:

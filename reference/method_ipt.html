@@ -30,7 +30,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
 modifications of the formulas described by Graham, Pinto, and Egel (2012).
-The following estimands are allowed: ATE and ATT. When the ATE is requested,
+The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested,
 estimation is performed once for each treatment group. When the ATT is
 requested, estimation is performed once for each non-focal (i.e., control)
 group.
@@ -111,7 +111,7 @@ Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
 modifications of the formulas described by Graham, Pinto, and Egel (2012).
-The following estimands are allowed: ATE and ATT. When the ATE is requested,
+The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested,
 estimation is performed once for each treatment group. When the ATT is
 requested, estimation is performed once for each non-focal (i.e., control)
 group.
@@ -175,7 +175,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -240,7 +240,7 @@ run twice, once for each treatment group.</p>
 
 <p>For multi-category treatments, this method estimates the weights using
 modifications of the formulas described by Graham, Pinto, and Egel (2012).
-The following estimands are allowed: ATE and ATT. When the ATE is requested,
+The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested,
 estimation is performed once for each treatment group. When the ATT is
 requested, estimation is performed once for each non-focal (i.e., control)
 group.</p>
@@ -331,7 +331,7 @@ potentially with some cost in precision.</p>
 <dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5, .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates.</p></dd>
 
 <dt><code>link</code></dt>
-<dd><p>the link used to determine the inverse link for computing the (generalized) propensity scores. Default is <code>"logit"</code>, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, and <code>"softplus"</code> are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>.</p></dd>
+<dd><p>the link used to determine the inverse link for computing the (generalized) propensity scores. Default is <code>"logit"</code>, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, and <code>"softplus"</code> are also allowed. Note that negative weights are possible with these last three and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>.</p></dd>
 
 
 </dl><p>The <code>stabilize</code> argument is ignored.</p>
@@ -394,7 +394,7 @@ similarly.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                   │              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Treated 1.                 │                1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Control 0.017 ╞═══════════════════════════╡ 2.263</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ─ <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
