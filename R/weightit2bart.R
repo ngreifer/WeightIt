@@ -287,7 +287,7 @@
 #' cobalt::bal.tab(W4)}
 NULL
 
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal,
                           missing, .data, verbose, ...) {
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
   t.lev <- .recorded_treated_level(treat)
@@ -335,7 +335,12 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     offset <- fit$linear.predictors
   }
   else {
-    offset <- ...get("offset", rep.int(0, length(treat)))
+    offset <- ...get("offset")
+
+    offset <- {
+      if (is_null(offset)) rep.int(0, length(treat))
+      else offset[subset]
+    }
   }
 
   df <- .make_bartisan_data(X, as.numeric(treat), s.weights, offset,
@@ -349,13 +354,13 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   p.score <- unname(fitted(fit))
 
   w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
-                                   stabilize = stabilize, subclass = ...get("subclass"))
+                                   subclass = ...get("subclass"))
 
   list(w = w, ps = p.score, fit.obj = fit)
 }
 
 weightit2bart.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                               estimand = NULL, focal = NULL, ...) {
 
   C <- .make_cens_treat(treat)
 
@@ -369,13 +374,13 @@ weightit2bart.cens <- function(covs, treat, s.weights, subset, missing, verbose,
   #censored units as the focal group; see `weightit2glm.cens()`.
   out <- weightit2bart(covs = covs, treat = C, s.weights = s.weights,
                        subset = subset, estimand = "ATT", focal = 1,
-                       stabilize = FALSE, missing = missing,
+                       missing = missing,
                        verbose = verbose, ...)
 
   .att_out_to_cens(out, C[subset])
 }
 
-weightit2bart.multi <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
+weightit2bart.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                 missing, .data, verbose, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -417,12 +422,12 @@ weightit2bart.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #Computing weights
   w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat, estimand, focal,
-                                     stabilize = stabilize, subclass = ...get("subclass"))
+                                     subclass = ...get("subclass"))
 
   list(w = w, fit.obj = fit)
 }
 
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, .data, verbose, ...) {
+weightit2bart.cont <- function(covs, treat, s.weights, subset, missing, ps, .data, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -450,7 +455,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   }
 
   if (!.bartisan_family_takes_weights(family) && !all_the_same(s.weights)) {
-    arg::err(c("{.fn bartisan::dpm}, the default {.arg family} for continuous treatments, does not accept sampling weights.",
+    arg::err(c("The {.arg family} {.val {(.bartisan_family_name(family))}} does not accept sampling weights.",
                i = "Supply a {.arg family} that does, such as {.code family = gaussian()} or {.code family = bartisan::gaussian_ls()}."))
   }
 
@@ -475,7 +480,12 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     offset <- fit$linear.predictors
   }
   else {
-    offset <- ...get("offset", rep.int(0, length(treat)))
+    offset <- ...get("offset")
+
+    offset <- {
+      if (is_null(offset)) rep.int(0, length(treat))
+      else offset[subset]
+    }
   }
 
   df <- .make_bartisan_data(X, as.numeric(treat), s.weights, offset,

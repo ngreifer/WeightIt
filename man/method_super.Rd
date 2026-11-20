@@ -42,7 +42,7 @@ stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_
 
 For continuous treatments, weights are estimated as
 \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -147,7 +147,7 @@ details and references.}
 
 For continuous treatments, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
 
 Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
 \item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
@@ -163,7 +163,7 @@ prediction method) so that the weights generated from the weighted
 combination of the predictions optimize a balance criterion, which must be
 set with the \code{criterion} argument, described below.
 \describe{
-\item{\code{criterion}}{a string describing the balance criterion used to select the best weights. See \code{\link[cobalt:bal.compute]{cobalt::bal.compute()}} for allowable options for each treatment type. For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+\item{\code{criterion}}{a string describing the balance criterion used to select the best weights. See \code{\link[cobalt:bal.compute]{cobalt::bal.compute()}} for allowable options for each treatment type. For binary treatments and censoring weights, the default is \code{"smd.mean"}, which minimizes the average absolute standardized mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 }
 Note that this implementation differs from that of Pirracchio and Carone
@@ -172,7 +172,8 @@ model formula (i.e., not their interactions unless specifically
 included), and balance results from a sample weighted using the estimated
 predicted values as propensity scores, not a sample matched using
 propensity score matching on the predicted values. Binary and continuous
-treatments are supported, but currently multi-category treatments are not.
+treatments and censoring weights are supported, but currently multi-category
+treatments are not.
 }
 }
 

@@ -103,7 +103,8 @@ standard errors will not be computed using \code{glm_weightit()}.}
 \item{is.MSM.method}{\code{logical}; whether the method estimates weights for multiple time
 points all at once (\code{TRUE}) or by estimating weights at each time point and
 then multiplying them together (\code{FALSE}). This is only relevant for
-user-specified functions.}
+methods that can estimate the weights for all time points at once, currently
+\code{method = "cbps"}; user-defined functions must use \code{FALSE}.}
 
 \item{weightit.force}{\code{logical}; several methods are not valid for estimating weights
 with longitudinal treatments, and will produce an error message if
@@ -120,7 +121,12 @@ A \code{weightitMSM} object with the following elements:
 \item{method}{The weight estimation method specified.}
 \item{s.weights}{The provided sampling weights.}
 \item{by}{A data frame containing the \code{by} variable when specified.}
+\item{call}{The function call.}
+\item{formula.list}{The list of formulas supplied to \code{formula.list}.}
 \item{stabilization}{The stabilization factors, if any.}
+\item{missing}{The method used to handle missing covariate values, when any are present.}
+\item{env}{The environment from which \code{weightitMSM()} was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in \code{\link[=glm_weightit]{glm_weightit()}}).}
+\item{obj}{When \code{include.obj = TRUE}, a list of the fit objects, one for each time point (or a single fit object when the weights for all time points are estimated at once).}
 
 When censoring is modeled (i.e., when any entry of \code{formula.list} has its left
 side wrapped in \code{\link[=.cens]{.cens()}}), \code{formula.list} is kept exactly as supplied, markers

@@ -38,7 +38,7 @@
 
 \method{hatvalues}{ordinal_weightit}(model, ...)
 
-\method{estfun}{glm_weightit}(x, asympt = TRUE, ...)
+\method{estfun}{glm_weightit}(x, asympt = NULL, ...)
 
 \method{update}{glm_weightit}(object, formula. = NULL, ..., evaluate = TRUE)
 }
@@ -58,12 +58,15 @@ is also applied to the confidence interval bounds. If specified, the
 standard error will be omitted from the output. Default is no
 transformation.}
 
-\item{vcov}{either a string indicating the method used to compute the
-variance of the estimated parameters for \code{object}, a function used to
-extract the variance, or the variance matrix itself. Default is to use the
-variance matrix already present in \code{object}. If a string or function,
-arguments passed to \code{...} are supplied to the method or function. (Note:
-for \code{vcov()}, can also be supplied as \code{type}.)}
+\item{vcov}{a string indicating the method used to compute the variance of
+the estimated parameters for \code{object}; see the \code{vcov} argument of
+\code{\link[=glm_weightit]{glm_weightit()}} for the allowable options. Default is to use the variance
+matrix already present in \code{object}, unless \code{cluster}, \code{R}, or \code{fwb.args}
+is supplied through \code{...}, in which case the variance matrix is recomputed
+using the method used to fit \code{object} with the new arguments. A variance
+matrix computed another way can be supplied to functions in other packages
+that accept one (e.g., through the \code{vcov} argument of \CRANpkg{marginaleffects}
+functions). (Note: for \code{vcov()}, can also be supplied as \code{type}.)}
 
 \item{\dots}{for \code{vcov()} or \code{summary()} or \code{confint()} with \code{vcov} supplied,
 other arguments used to compute the variance matrix depending on the method
@@ -89,9 +92,12 @@ singular case.}
 
 \item{asympt}{\code{logical}; for \code{estfun()}, whether to use the asymptotic
 empirical estimating functions that account for estimation of the weights
-(when \code{Mparts} is available). Default is \code{TRUE}. Set to \code{FALSE} to ignore
-estimation of the weights. Ignored when \code{Mparts} is not available or no
-argument was supplied to \code{weightit} in the fitting function.}
+(when \code{Mparts} is available). Set to \code{FALSE} to ignore estimation of the
+weights. The default follows the variance the model was fit with: \code{FALSE}
+when \code{vcov} was \code{"HC0"} or \code{"const"} and \code{TRUE} otherwise, so that
+\code{sandwich::sandwich()} and \code{sandwich::vcovCL()} agree with \code{vcov()}. Ignored
+when \code{Mparts} is not available or no argument was supplied to \code{weightit} in
+the fitting function.}
 
 \item{formula.}{changes to the model formula, passed to the \code{new} argument of
 \code{\link[=update.formula]{update.formula()}}.}
@@ -100,7 +106,7 @@ argument was supplied to \code{weightit} in the fitting function.}
 return it.}
 }
 \value{
-\code{summary()} returns a \code{summary.glm_weightit()} object, which has its
+\code{summary()} returns a \code{summary.glm_weightit} object, which has its
 own \code{print()} method. For \code{coxph_weightit()} objects, the \code{print()} and
 \code{summary()} methods are more like those for \code{glm} objects than for \code{coxph}
 objects.
@@ -116,16 +122,16 @@ described at \code{\link[=predict.glm_weightit]{predict.glm_weightit()}} and \co
 }
 \details{
 \code{vcov()} by default extracts the parameter covariance matrix already
-computed by the fitting function, and \code{summary()} and \code{confint()} uses this
+computed by the fitting function, and \code{summary()} and \code{confint()} use this
 covariance matrix to compute standard errors and Wald confidence intervals
-(internally calling \code{\link[=confint.lm]{confint.lm()}}), respectively. Supplying arguments to
-\code{vcov} or \code{...} will compute a new covariance matrix. If \code{cluster} was
-supplied to the original fitting function, it will be incorporated into any
-newly computed covariance matrix unless \code{cluster = NULL} is specified in
-\code{vcov()}, \code{summary()}, or \code{confint()}. For other arguments (e.g., \code{R} and
-\code{fwb.args}), the defaults are those used by \code{\link[=glm_weightit]{glm_weightit()}}. Note that for
-\code{vcov = "BS"} and \code{vcov = "FWB"} (and \code{vcov = "const"} for
-\code{multinom_weightit} or \code{ordinal_weightit} objects), the environment for the
+(internally calling \code{\link[=confint.lm]{confint.lm()}}), respectively. Supplying \code{vcov}, or
+\code{cluster}, \code{R}, or \code{fwb.args} through \code{...}, will compute a new covariance
+matrix; when \code{vcov} is not supplied, the method used to fit \code{object} is used.
+If \code{cluster} was supplied to the original fitting function, it will be
+incorporated into any newly computed covariance matrix unless \code{cluster = NULL} is specified in \code{vcov()}, \code{summary()}, or \code{confint()}. \code{R} and
+\code{fwb.args} likewise default to the values used to fit \code{object}, or to the
+defaults of \code{\link[=glm_weightit]{glm_weightit()}} when the original fit was not bootstrapped. Note that for
+\code{vcov = "BS"} and \code{vcov = "FWB"}, the environment for the
 fitting function is used, so any changes to that environment may affect
 calculation. It is always safer to simply recompute the fitted object with a
 new covariance matrix than to modify it with the \code{vcov} argument, but it can

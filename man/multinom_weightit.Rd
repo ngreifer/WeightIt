@@ -43,8 +43,8 @@ supplied, an unweighted model will be fit.}
 parameters. Allowable options include \code{"asympt"}, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; \code{"const"}, which uses the usual
-maximum likelihood estimates (only available when \code{weightit} is not
-supplied); \code{"HC0"}, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when \code{weightit} is
+supplied, in which case a warning is issued); \code{"HC0"}, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; \code{"BS"}, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); \code{"FWB"},
 which uses the fractional weighted bootstrap as implemented in
@@ -65,8 +65,9 @@ default. Cluster-robust variance calculations are available only when
 \item{R}{the number of bootstrap replications when \code{vcov} is \code{"BS"} or
 \code{"FWB"}. Default is 500. Ignored otherwise.}
 
-\item{offset}{optional; a numeric vector containing the model offset. See
-\code{\link[=offset]{offset()}}. An offset can also be present in the model formula.}
+\item{offset}{not used. An offset is not supported for multinomial logistic
+regression models, so supplying one, or including an \code{\link[=offset]{offset()}} term in the
+model formula, is an error.}
 
 \item{start}{optional starting values for the coefficients.}
 
@@ -98,7 +99,11 @@ supplied to \code{weights} is treated as though it had been supplied to
 bootstrapping holds the weights fixed rather than re-estimating them.}
 
 \item{...}{arguments to be used to form the default control argument if it
-is not supplied directly.}
+is not supplied directly. A \code{subset} argument, as in \code{\link[=glm]{glm()}}, can also be
+supplied, but not when \code{weightit} or \code{weights} is supplied, since the
+weights and their estimation involve the full sample; to estimate an
+effect within a subgroup, fit the model in the full sample and use
+\CRANpkg{marginaleffects} to compute the effect in the subgroup.}
 }
 \value{
 A \code{multinom_weightit} object.

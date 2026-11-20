@@ -24,7 +24,7 @@
 #' ## Multi-Category Treatments
 #'
 #' For multi-category treatments, this method estimates the weights using
-#' `optim()`. The following estimands are allowed: ATE and ATT. When the ATE is
+#' `optim()`. The following estimands are allowed: ATE, ATT, and ATC. When the ATE is
 #' requested, the optimization is run once for each treatment group. When the ATT is
 #' requested, the optimization is run once for each non-focal (i.e., control) group.
 #'
@@ -70,7 +70,7 @@
 #'   \item{`base.weights`}{a vector of base weights, one for each unit. These correspond to the base weights \eqn{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to `base.weights` but can be included in a `weightit()` call that includes `s.weights`. Can also be supplied as `b.weights` or `base.weight`.}
 #'   \item{`reltol`}{the relative tolerance for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is `1e-10`.}
 #'   \item{`maxit`}{the maximum number of iterations for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is 10000.}
-#'   \item{`solver`}{the solver to use to estimate the parameters. Allowable options include `"multiroot"` to use \pkgfun{rootSolve}{multiroot} and `"optim"` to use [stats::optim()]. `"multiroot"` is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, `"optim"` is the default and requires no dependencies. The output of whichever solver was used is returned when `include.obj = TRUE` (see below).}
+#'   \item{`solver`}{the solver to use to estimate the parameters. Allowable options include `"multiroot"` to use \pkgfun{rootSolve}{multiroot} and `"optim"` to use [stats::optim()]. `"multiroot"` is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, `"optim"` is the default and requires no dependencies. When `tols` is greater than 0, the default is `"FISTA"`, and `"multiroot"` is not available. The output of whichever solver was used is returned when `include.obj = TRUE` (see below).}
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
 #'     }
 #'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.
@@ -191,7 +191,7 @@
 NULL
 
 weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
-                          stabilize, missing, verbose, ...) {
+                          missing, verbose, ...) {
 
   bw <- .process_b.weights(..., treat = treat)
 
@@ -277,13 +277,13 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   if (estimand == "ATE") {
     groups_to_weight <- levels(treat)
     N <- sum(!sw0)
-    s.weights <- s.weights / mean(s.weights)
+    s.weights <- s.weights / mean(s.weights[!sw0])
     targets <- cobalt::col_w_mean(covs, s.weights = s.weights)
   }
   else {
     groups_to_weight <- setdiff(levels(treat), focal)
     N <- sum(!sw0[treat == focal])
-    s.weights <-  s.weights / mean(s.weights[treat == focal])
+    s.weights <- s.weights / mean(s.weights[treat == focal & !sw0])
     targets <- cobalt::col_w_mean(covs, s.weights = s.weights, subset = treat == focal)
   }
 
@@ -440,7 +440,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 weightit2ebal.multi <- weightit2ebal
 
 weightit2ebal.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                               estimand = NULL, focal = NULL, ...) {
 
   bw <- .process_b.weights(..., treat = treat)
 
@@ -758,7 +758,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
   N <- sum(!sw0)
 
-  s.weights <- s.weights / mean(s.weights)
+  s.weights <- s.weights / mean(s.weights[!sw0])
 
   C <- cbind(`(Intercept)` = 1, C)
   dist_vars <- c(colnames(C)[1L], dist_vars)

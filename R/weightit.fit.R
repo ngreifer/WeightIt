@@ -15,11 +15,14 @@
 #'   converted to a matrix as [weightit()] converts the covariates named in its
 #'   `formula`, with each factor or character variable split into dummy
 #'   variables for its levels; methods that can use the covariates as they are,
-#'   such as `"bart"`, receive the data frame itself. May have zero columns, in which case
+#'   such as `"gbm"` and `"bart"`, receive the data frame itself. May have zero columns, in which case
 #'   the weights are computed with an intercept-only generalized linear model
 #'   whatever `method` is supplied and any method-specific arguments are ignored; see
 #'   *Empty model formulas* in Details at [weightit()].
-#' @param treat a vector of treatment statuses. To request inverse probability
+#' @param treat a vector of treatment statuses. A factor or character vector
+#'   is treated as binary or multi-category, depending on its number of unique
+#'   values, and a numeric vector with more than two unique values as
+#'   continuous, as in [weightit()]. To request inverse probability
 #'   of censoring weights, supply a 0/1 censoring indicator (1 = censored)
 #'   tagged with [.cens()], as in `treat = .cens(C)`; `NA` values are
 #'   then allowed outside `subset`, since a unit censored at an earlier time
@@ -33,18 +36,20 @@
 #'   supplied.
 #' @param by.factor a factor variable for which weighting is to be done within
 #'   levels. Corresponds to the `by` argument in [weightit()].
-#' @param stabilize `logical`; whether or not to stabilize the weights. For the
-#'   methods that involve estimating propensity scores, this involves
-#'   multiplying each unit's weight by the proportion of units in their
-#'   treatment group. Default is `FALSE`. Note this differs from its use with
-#'   [weightit()].
+#' @param stabilize `logical`; whether or not to stabilize the weights. For
+#'   binary and multi-category treatments with methods that estimate propensity
+#'   scores (or when `ps` is supplied), this involves multiplying each unit's
+#'   weight by the proportion of units in their treatment group (within each
+#'   level of `by.factor`); it is ignored otherwise. Stabilized weights do not
+#'   support M-estimation. Default is `FALSE`. Note this differs from its use
+#'   with [weightit()], which estimates a model for the numerator.
 #' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to
 #'   consider the "treated" or "control" group. This group will not be weighted,
 #'   and the other groups will be weighted to resemble the focal group. If
 #'   specified, `estimand` will automatically be set to `"ATT"` (with a warning
 #'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details at [weightit()].
 #' @param ps a vector of propensity scores. If specified, `method` will be
-#'   ignored and set to `"glm"`.
+#'   ignored.
 #' @param missing `character`; how missing data should be handled. The options
 #'   depend on the `method` used. If `NULL`, `covs` will be checked for `NA`
 #'   values, and if present, `missing` will be set to the default for `method`,
@@ -160,7 +165,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     arg::arg_supplied(treat)
     arg::arg_vector(treat)
-    arg::arg_numeric(treat)
 
     #Censoring is requested by tagging `treat` with `.cens()`
     censoring <- identical(get_treat_type(treat), "censoring")
@@ -183,6 +187,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     treat.type <- get_treat_type(treat)
 
     .check_acceptable_method(method, msm = FALSE, force = FALSE)
+
+    method <- .method_to_proper_method(method)
 
     .check_method_treat.type(method, treat.type)
 
@@ -316,10 +322,12 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   A["s.weights"] <- list(s.weights)
   A["estimand"] <- list(estimand)
   A["focal"] <- list(focal)
-  A["stabilize"] <- list(stabilize)
   A["ps"] <- list(ps)
   A["missing"] <- list(missing)
   A["verbose"] <- list(verbose)
+
+  uses_ps <- is_not_null(ps) ||
+    (is.character(fit.method) && isTRUE(.weightit_methods[[fit.method]]$ps))
 
   for (i in levels(by.factor)) {
     #`subset` (e.g., the units still under observation when a censoring model is
@@ -342,11 +350,11 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     #Extract weights
     if (is_null(obj)) {
-      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url())}}")
     }
 
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url())}}")
     }
 
     if (!all(is.finite(obj$w))) {
@@ -354,6 +362,17 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       obj$w[!is.finite(obj$w)] <- 0
     }
     # else if (any(!is.finite(obj$w))) probably_a_bug()
+
+    #Stabilization multiplies each unit's weight by the proportion of units in its
+    #treatment group (within the `by` level). It is applied here, after any method,
+    #rather than inside the methods, and only for methods that estimate propensity
+    #scores (or when they are supplied). The M-estimation parts describe the
+    #unstabilized weights, so they are dropped.
+    if (stabilize && uses_ps &&
+        treat.type %in% c("binary", "multinomial", "multi-category")) {
+      obj$w <- stabilize_w(obj$w, treat[sub])
+      obj$Mparts <- NULL
+    }
 
     out$weights[sub] <- obj$w
     if (is_not_null(obj$ps)) {
@@ -474,12 +493,6 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
         arg::err("treatment and covariates must have the same number of units")
       }
 
-      if (is_null(atrisk.list) &&
-          !identical(get_treat_type(treat.list[[i]]), "censoring") &&
-          anyNA(treat.list[[i]])) {
-        arg::err("no missing values are allowed in the treatment variable. Missing values found in treat.list[[{i}]]")
-      }
-
       treat.list[[i]] <- assign_treat_type(treat.list[[i]])
     }
 
@@ -548,7 +561,6 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   A["s.weights"] <- list(s.weights)
   A["estimand"] <- list(estimand)
   A["focal"] <- list(focal)
-  A["stabilize"] <- list(stabilize)
   A["missing"] <- list(missing)
   A["verbose"] <- list(verbose)
 
@@ -564,11 +576,11 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
     #Extract weights
     if (is_null(obj)) {
-      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url())}}")
     }
 
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url())}}")
     }
 
     if (!all(is.finite(obj$w))) {

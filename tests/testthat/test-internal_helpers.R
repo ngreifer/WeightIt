@@ -89,3 +89,59 @@ test_that(".block_diag() stacks matrices block-diagonally", {
   expect_equal(out0[1:2, 1:2], matrix(1, 2L, 2L))
   expect_equal(out0[5L, 3L], 3)
 })
+
+# ---- w.quantile() ----------------------------------------------------------
+
+test_that("w.quantile() is the weighted version of quantile(type = 2)", {
+  set.seed(123)
+  x <- rnorm(101)
+  p <- seq(0, 1, by = .05)
+
+  #Unweighted, it agrees with `quantile(type = 2)`, including at ties and at
+  #probabilities that fall in a flat region of the empirical CDF
+  expect_equal(w.quantile(x, p), unname(quantile(x, p, type = 2)))
+  expect_equal(w.quantile(1:4, .5), 2.5)
+  expect_equal(w.quantile(c(3, 1, 2, 2, 4), c(.2, .5, .6, .9)),
+               unname(quantile(c(3, 1, 2, 2, 4), c(.2, .5, .6, .9), type = 2)))
+
+  #Integer weights are the same as replicating units. The probabilities compared
+  #with `quantile()` are exact in binary: `quantile()` compares `n * p` with its
+  #floor with almost no tolerance, so, e.g., `.15 * 180` misses the tie that
+  #`w.quantile()` correctly finds
+  w <- sample(1:3, length(x), replace = TRUE)
+  expect_equal(w.quantile(x, p, w), w.quantile(rep(x, w), p))
+
+  p2 <- c(0, .125, .25, .5, .75, 1)
+  expect_equal(w.quantile(x, p2, w), unname(quantile(rep(x, w), p2, type = 2)))
+
+  #A flat region from a zero weight spans to the next value with weight
+  expect_equal(w.quantile(1:4, .5, w = c(1, 1, 0, 2)), 3)
+
+  #Missing values are removed before the empirical CDF is computed
+  expect_equal(w.quantile(c(1, 2, NA), c(0, .5, 1), na.rm = TRUE), c(1, 1.5, 2))
+  expect_equal(w.quantile(c(1, 2, NA), .5), NA_real_)
+})
+
+# ---- .isoregw() ------------------------------------------------------------
+
+test_that(".isoregw() is weighted isotonic regression", {
+  set.seed(123)
+  x <- runif(500)
+  y <- rbinom(500, 1, x)
+
+  #Unweighted, it agrees with `stats::isoreg()`
+  expect_equal(.isoregw(x, y), isoreg(x, y)$yf[order(order(x))])
+
+  #Integer weights are the same as replicating units
+  w <- sample(1:3, length(x), replace = TRUE)
+  rep_fit <- isoreg(rep(x, w), rep(y, w))$yf[order(order(rep(x, w)))]
+  expect_equal(.isoregw(x, y, w), rep_fit[cumsum(w)])
+
+  #Zero weights, including runs of them, give finite, monotone fits
+  w0 <- runif(length(x))
+  w0[sample.int(length(x), 200)] <- 0
+  f <- .isoregw(x, y, w0)
+
+  expect_true(all(is.finite(f)))
+  expect_false(is.unsorted(f[order(x)]))
+})

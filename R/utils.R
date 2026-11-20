@@ -552,10 +552,16 @@ bw.nrd <- function(x) {
   #R's bw.nrd doesn't always work, but bw.nrd0 does
   bw.nrd0(x) * 1.06 / .9
 }
+#Weighted quantiles using the inverse of the weighted empirical CDF, averaging
+#over a flat region of the CDF (i.e., `quantile(type = 2)` with weights). The CDF
+#is computed over the distinct values of `x` so that ties are handled correctly.
+#When `p` falls in a flat region (e.g., the median of an even number of
+#equally weighted units), the quantile is the midpoint of the region, which
+#splits the units exactly at `p`; otherwise, it is the value at which the CDF
+#crosses `p`.
 w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...) {
 
-  n <- length(x)
-  if (n == 0L || (!isTRUE(na.rm) && anyNA(x))) {
+  if (length(x) == 0L || (!isTRUE(na.rm) && anyNA(x))) {
     return(rep.int(NA_real_, length(probs)))
   }
 
@@ -563,37 +569,42 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
     return(rep.int(0, length(probs)))
   }
 
+  if (is_null(w)) {
+    w <- rep.int(1, length(x))
+  }
+
   if (isTRUE(na.rm)) {
     indices <- !is.na(x)
     x <- x[indices]
-    if (is_not_null(w)) {
-      w <- w[indices]
-    }
+    w <- w[indices]
   }
 
-  ord <- order(x)
-  x <- x[ord]
-  w <- w[ord]
+  ux <- sort(unique(x))
+  w_by_value <- rowsum(w, match(x, ux), reorder = TRUE)[, 1L]
+  cdf <- cumsum(w_by_value) / sum(w)
 
-  rw <- {
-    if (is_null(w)) seq_len(n) / n
-    else cumsum(w) / sum(w)
-  }
+  tol <- sqrt(.Machine$double.eps)
+  m <- length(ux)
 
   unname(vapply(probs, function(p) {
-    if (p == 0) {
-      return(x[1L])
+    if (p <= 0) {
+      return(ux[1L])
     }
 
-    if (p == 1) {
-      return(x[n])
+    if (p >= 1) {
+      return(ux[m])
     }
 
-    select <- min(which(rw > p))
+    k <- which(cdf >= p - tol)[1L]
 
-    if (rw[select] == p) mean(x[c(select, select + 1L)])
-    else x[select]
-  }, x[1L]))
+    if (abs(cdf[k] - p) > tol || k == m) {
+      return(ux[k])
+    }
+
+    j <- which(cdf > p + tol)[1L]
+
+    (ux[k] + ux[j]) / 2
+  }, numeric(1L)))
 }
 
 #Formulas
@@ -765,8 +776,8 @@ get_varnames <- function(expr) {
   #A coercion that introduces new NAs (e.g. a "Yes"/"No" factor) is an error,
   #not a silently all-missing indicator.
   if (any(is.na(C) & !is.na(treat)) || !all(na.rem(C) %in% c(0, 1))) {
-    arg::err(c("a censoring indicator must contain only the values {.val {0}} (still at risk) and {.val {1}} (censored).",
-               "i" = "Logical values and factors with levels {.val {0}}/{.val {1}} or {.val {FALSE}}/{.val {TRUE}} are also allowed."))
+    arg::err(c("A censoring indicator must contain only the values {.val {0}} (still at risk) and {.val {1}} (censored).",
+               "i" = "Logical values and factors with levels {.val {0}}/{.val {1}} are also allowed."))
   }
 
   C
@@ -836,7 +847,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
         #An unevaluable call on the LHS is most often a mistyped `.cens()` marker
         if (is.call(rlang::f_lhs(tt)) && grepl("^[Cc]ould not find function", m)) {
           arg::err(c("{m}",
-                     "i" = "the left side of the formula must be a treatment variable; to model censoring, use {.code .cens(C) ~ x1 + x2}"))
+                     "i" = "The left side of the formula must be a treatment variable; to model censoring, use {.code .cens(C) ~ x1 + x2}."))
         }
 
         arg::err("{m}")
@@ -865,7 +876,12 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     else {
       resp <- utils::strcapture("object '(.*)' not found", m, character(1L))[[1L]]
 
-      arg::err('the given response variable, {.var {resp}}, is not a variable in {.or {c("data", "the global environment")[c(data.specified, TRUE)]}}')
+      if (data.specified) {
+        arg::err(c("The given response variable, {.var {resp}}, is not a variable in {.arg data} or an object in the environment in which the formula was created.",
+                   "i" = "Supplying all variables in {.arg data} is safest."))
+      }
+
+      arg::err("the given response variable, {.var {resp}}, is not an object in the environment in which the formula was created")
     }
   }
 
@@ -996,7 +1012,9 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   }
 
   if (any(rhs.vars.failed)) {
-    arg::err("all variables in {.arg formula} must be variables in {.arg data} or objects in the global environment.\nMissing variables: {rhs.vars.mentioned.char[rhs.vars.failed]}")
+    arg::err(c("All variables in {.arg formula} must be variables in {.arg data} or objects in the environment in which the formula was created.",
+               "i" = "Missing variables: {.var {rhs.vars.mentioned.char[rhs.vars.failed]}}.",
+               "i" = "Supplying all variables in {.arg data} is safest."))
   }
 
   rhs.term.labels.list <- setNames(as.list(rhs.term.labels), rhs.term.labels)
@@ -1020,7 +1038,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (x %in% rhs.vars.mentioned.char[rhs.df]) paste(add_quotes(rhs.term.labels.list[[x]], "`"), collapse = " + ")
     else rhs.term.labels.list[[x]]
   } , character(1L)), collapse = " + ")) |>
-    as.formula()
+    as.formula(env = env)
 
   tt.covs <- terms(update(new.form,  ~ . - 1))
 

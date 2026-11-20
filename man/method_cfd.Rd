@@ -23,7 +23,7 @@ allowed: ATE, ATT, and ATC.
 
 For multi-category treatments, this method estimates the weights using
 \code{osqp()} using formulas described by Santra, Chen, and Park (2026). The following
-estimands are allowed: ATE and ATT.
+estimands are allowed: ATE, ATT, and ATC.
 }
 
 \subsection{Continuous Treatments}{
@@ -100,12 +100,12 @@ the update schedule at a set number of iterations. See
 }
 \note{
 Sometimes the optimization can fail to converge because the problem is
-not convex. A warning will be displayed if so. In these cases, try simply
-re-fitting the weights without changing anything (but see the
-\emph{Reproducibility} section above). If the method repeatedly fails, you should
-try another method or change the supplied parameters (though this is
-uncommon). Increasing \code{max_iter} or changing \code{adaptive_rho_interval} might
-help.
+not convex. A warning will be displayed if so. Because the optimization is
+deterministic (see the \emph{Reproducibility} section above), re-fitting without
+changing anything will reproduce the failure; increasing \code{max_iter} or changing
+\code{adaptive_rho_interval} may help instead. If the method repeatedly fails, you
+should try another method or change the supplied parameters (though this is
+uncommon).
 
 If it seems like the weights are balancing the covariates but you still get a
 failure to converge, this usually indicates that more iterations are needed to
@@ -127,7 +127,7 @@ The following additional arguments can be specified:
 \item{\code{kernel}}{the name of the kernel used to characterize the CFD. Allowable options include \code{"gaussian"} for the multivariate Gaussian kernel (the default), \code{"matern"} for the multivariate Matern kernel, \code{"energy"} for the energy distance kernel, \code{"laplace"} for the univariate Laplacian kernel, and \code{"t"} for the univariate t-distribution kernel.}
 \item{\code{nu}}{for \code{kernel = "matern"}, the \eqn{\nu} parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the \pkg{GPBayes} package is required to compute the Matern kernel. For \code{kernel = "t"}, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.}
 \item{\code{nsim}}{for \code{kernel = "t"}, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.}
-\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.}
+\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. The penalty added to the loss function is \code{lambda} times half the sum of the squared normalized weights, \eqn{(s_i w_i / n_g)^2}, where \eqn{s_i} is the sampling weight of unit \eqn{i} and \eqn{n_g} is the size of its treatment group (or of the sample, for continuous treatments). Higher values favor weights with less variability. A negative value adds the smallest penalty that makes the problem convex. Default is .0001, which is essentially 0.}
 \item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 \item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.}
 \item{\code{tols}}{when \code{moments} is positive, a number corresponding to the maximum allowed standardized mean difference allowed. Default is 0. Ignored when \code{moments = 0}.}

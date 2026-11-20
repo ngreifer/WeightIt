@@ -10,8 +10,7 @@
 #' @param formula a formula with a treatment variable on the left hand side and
 #'   the covariates to be balanced on the right hand side. See [glm()] for more
 #'   details. Interactions and functions of covariates are allowed. A formula may have an empty
-#'   right hand side (e.g., `A ~ 1`), which requests a marginal model at that
-#'   time point; see *Empty model formulas* in Details. The
+#'   right hand side (e.g., `A ~ 1`), which requests a marginal model; see *Empty model formulas* in Details. The
 #'   formulas may also contain \CRANpkg{lme4}-style random effects terms (e.g.,
 #'   `A ~ X1 + (1 | school)`) for methods that accept them, in which case a
 #'   multilevel model is fit. To estimate censoring weights, use [.cens()] on the left hand side variable.
@@ -95,10 +94,15 @@
 #' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models and only when `method` is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
 #' \item{s.weights}{The provided sampling weights, or a vector of 1s if none are provided.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{by}{A data frame containing the `by` variable when specified.}
+#' \item{call}{The function call.}
+#' \item{formula}{The formula supplied to `formula`.}
+#' \item{stabilization}{When the weights are stabilized, the right hand side of the formula of the model for the numerator of the weights.}
+#' \item{missing}{The method used to handle missing covariate values, when any are present.}
+#' \item{env}{The environment from which `weightit()` was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in [glm_weightit()]).}
 #' \item{obj}{When `include.obj = TRUE`, the fit object.}
 #' \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 #'
@@ -364,7 +368,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   estimand <- .process_estimand(estimand, method, treat.type)
   f.e.r <- .process_focal_and_estimand(focal, estimand, treat)
   focal <- f.e.r[["focal"]]
-  estimand <- f.e.r[["reported.estimand"]]
+  estimand <- f.e.r[["estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   if (treat.type == "binary") {
@@ -420,7 +424,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
       if (is_not_null(num.formula)) {
         #Censoring time points are stabilized like any other, so a list of numerator
         #formulas has one entry per entry of `formula.list`, censoring included.
-        .check_num.formula(num.formula, data, env = parent.frame(),
+        .check_num.formula(num.formula, data,
                            formula.list = list(formula),
                            stab_arg = "stabilize")
       }
@@ -477,11 +481,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     #censoring-tagged indicator, so the numerator is fit by the same `.cens`
     #method as the denominator.
 
-    if (is_null(num.formula)) {
-      num.formula <- as.formula("~ 1")
-    }
-
-    stab.f <- update(formula, num.formula)
+    stab.f <- update(formula, num.formula %or% ~ 1)
+    environment(stab.f) <- .stab_formula_env(formula, num.formula)
 
     stab.re.bars <- .find_re_bars(stab.f)
 

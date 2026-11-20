@@ -26,7 +26,7 @@ run twice, once for each treatment group.
 
 For multi-category treatments, this method estimates the weights using
 modifications of the formulas described by Graham, Pinto, and Egel (2012).
-The following estimands are allowed: ATE and ATT. When the ATE is requested,
+The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested,
 estimation is performed once for each treatment group. When the ATT is
 requested, estimation is performed once for each non-focal (i.e., control)
 group.
@@ -99,7 +99,7 @@ potentially with some cost in precision.
 }
 \item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \code{quantile = list(x1 = c(.25, .5, .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or a vector (e.g., \code{c(.25, .5, .75)}) to request the same quantile(s) for all continuous covariates.
 }
-\item{\code{link}}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, \code{"cloglog"}, \code{"loglog"}, \code{"log"}, \code{"clog"}, and \code{"softplus"} are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class \code{"link-glm"} can also be supplied. The argument is passed to \code{\link[=quasibinomial]{quasibinomial()}}.
+\item{\code{link}}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, \code{"cloglog"}, \code{"loglog"}, \code{"log"}, \code{"clog"}, and \code{"softplus"} are also allowed. Note that negative weights are possible with these last three and they should be used with caution. An object of class \code{"link-glm"} can also be supplied. The argument is passed to \code{\link[=quasibinomial]{quasibinomial()}}.
 }
 }
 

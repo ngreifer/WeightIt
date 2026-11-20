@@ -253,8 +253,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
       }
       else if (treat.type %in% c("multinomial", "multi-category")) {
         if (is_not_null(focal)) {
+          #The focal group is coded 1 (cobalt's "treated" group) whether the
+          #estimand is the ATT or the ATC, which are the same for a multi-category
+          #treatment, so its standard deviation is the denominator either way
           bin.treat <- as.numeric(treat == focal)
-          s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
+          s.d.denom <- "treated"
           F0_o <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
             cobalt::col_w_smd(covs, bin.treat, w_, std = TRUE, s.d.denom = s.d.denom,
                               abs = TRUE, s.weights = s.weights, bin.vars = bin.vars,
@@ -358,8 +361,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
       }
       else if (treat.type %in% c("multinomial", "multi-category")) {
         if (is_not_null(focal)) {
+          #The focal group is coded 1 (cobalt's "treated" group) whether the
+          #estimand is the ATT or the ATC, which are the same for a multi-category
+          #treatment, so its standard deviation is the denominator either way
           bin.treat <- as.numeric(treat == focal)
-          s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
+          s.d.denom <- "treated"
           F0_o <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
             cobalt::col_w_smd(covs, bin.treat, w_, std = TRUE, s.d.denom = s.d.denom,
                               abs = TRUE, s.weights = s.weights, bin.vars = bin.vars,

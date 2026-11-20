@@ -109,8 +109,8 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
     arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
-  Z1 <- .lm.fit(x = model.matrix(object2)[, names(b2), drop = FALSE],
-                y = model.matrix(object)[, names(b1), drop = FALSE])[["residuals"]]
+  Z1 <- .lm.fit(x = model.matrix(.fill_nzw_model(object2))[, names(b2), drop = FALSE],
+                y = model.matrix(.fill_nzw_model(object))[, names(b1), drop = FALSE])[["residuals"]]
 
   Z1_svd <- svd(Z1)
   keep <- Z1_svd[["d"]] > tolerance
@@ -200,11 +200,11 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   b1 <- b1[seq_len(length(b1) - nthreshold)]
   b2 <- b2[seq_len(length(b2) - nthreshold)]
 
-  X1 <- model.matrix(object)
-  X2 <- model.matrix(object2)
+  X1 <- model.matrix(.fill_nzw_model(object))
+  X2 <- model.matrix(.fill_nzw_model(object2))
 
-  nm <- names(na.rem(b1))[names(na.rem(b1)) %in% colnames(X1)[-1L]]
-  nm2 <- names(na.rem(b2))[names(na.rem(b2)) %in% colnames(X2)[-1L]]
+  nm <- names(na.rem(b1))[names(na.rem(b1)) %in% colnames(X1)]
+  nm2 <- names(na.rem(b2))[names(na.rem(b2)) %in% colnames(X2)]
 
   #Drop intercept column
   Z1 <- .lm.fit(x = cbind(1, X2[, nm2, drop = FALSE]),
@@ -285,11 +285,6 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   method <- arg::match_arg(method, "Wald")
 
-  if (!identical(.attr(object, "vcov_type"), .attr(object2, "vcov_type")) &&
-      !identical(.attr(object2, "vcov_type"), "none")) {
-    arg::wrn("different {.arg vcov} types detected for each model; using the {.arg vcov} from the larger model")
-  }
-
   b1 <- coef(object)
   b2 <- coef(object2)
 
@@ -300,8 +295,8 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
     arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
-  X1 <- model.matrix(object)
-  X2 <- model.matrix(object2)
+  X1 <- model.matrix(.fill_nzw_model(object))
+  X2 <- model.matrix(.fill_nzw_model(object2))
 
   k <- nlevels(object[["y"]]) - 1L
 

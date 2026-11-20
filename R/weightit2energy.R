@@ -29,7 +29,7 @@
 #'
 #' For multi-category treatments, this method estimates the weights using
 #' `osqp()` using formulas described by Huling and Mak (2024). The following
-#' estimands are allowed: ATE and ATT.
+#' estimands are allowed: ATE, ATT, and ATC.
 #'
 #' ## Continuous Treatments
 #'
@@ -73,7 +73,7 @@
 #'
 #' \describe{
 #'   \item{`dist.mat`}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include `"scaled_euclidean"` for the Euclidean (L2) distance on the scaled covariates (the default), `"mahalanobis"` for the Mahalanobis distance, and `"euclidean"` for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to [dist()].}
-#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2024). Default is .0001, which is essentially 0.}
+#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. The penalty added to the loss function is `lambda` times half the sum of the squared normalized weights, \eqn{(s_i w_i / n_g)^2}, where \eqn{s_i} is the sampling weight of unit \eqn{i} and \eqn{n_g} is the size of its treatment group (or of the sample, for continuous treatments). Higher values favor weights with less variability. A negative value adds the smallest penalty that makes the problem convex. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2024). Default is .0001, which is essentially 0.}
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 #'   \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
 #'   \item{`tols`}{when `moments` is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when `moments = 0`.}
@@ -499,7 +499,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2energy.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                                 estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                                 estimand = NULL, focal = NULL, ...) {
 
   missing <- .process_missing2(missing, covs)
 
@@ -1047,7 +1047,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     }
   }
   else if (lambda != 0) {
-    diag(P) <- diag(P) + lambda * s.weights^2 / 2
+    diag(P) <- diag(P) + lambda * (s.weights / n)^2 / 2
   }
 
   unbounded <- lvec == -Inf & uvec == Inf

@@ -26,7 +26,7 @@
 \item{object}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
 \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}.}
 
-\item{top}{how many of the largest and smallest weights to display. Default
+\item{top}{how many of the largest weights to display in each group. Default
 is 5. Ignored when \code{weight.range = FALSE}.}
 
 \item{ignore.s.weights}{\code{logical}; whether or not to ignore sampling weights when

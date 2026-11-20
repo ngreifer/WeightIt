@@ -24,12 +24,15 @@
 #'   transformation.
 #' @param thresholds `logical`; whether to include thresholds in the `summary()`
 #'   output for `ordinal_weightit` objects. Default is `TRUE`.
-#' @param vcov either a string indicating the method used to compute the
-#'   variance of the estimated parameters for `object`, a function used to
-#'   extract the variance, or the variance matrix itself. Default is to use the
-#'   variance matrix already present in `object`. If a string or function,
-#'   arguments passed to `...` are supplied to the method or function. (Note:
-#'   for `vcov()`, can also be supplied as `type`.)
+#' @param vcov a string indicating the method used to compute the variance of
+#'   the estimated parameters for `object`; see the `vcov` argument of
+#'   [glm_weightit()] for the allowable options. Default is to use the variance
+#'   matrix already present in `object`, unless `cluster`, `R`, or `fwb.args`
+#'   is supplied through `...`, in which case the variance matrix is recomputed
+#'   using the method used to fit `object` with the new arguments. A variance
+#'   matrix computed another way can be supplied to functions in other packages
+#'   that accept one (e.g., through the `vcov` argument of \CRANpkg{marginaleffects}
+#'   functions). (Note: for `vcov()`, can also be supplied as `type`.)
 #' @param complete `logical`; whether the full variance-covariance matrix should
 #'   be returned also in case of an over-determined system where some
 #'   coefficients are undefined and `coef(.)` contains `NA`s correspondingly.
@@ -39,9 +42,12 @@
 #'   [update.formula()].
 #' @param asympt `logical`; for `estfun()`, whether to use the asymptotic
 #'   empirical estimating functions that account for estimation of the weights
-#'   (when `Mparts` is available). Default is `TRUE`. Set to `FALSE` to ignore
-#'   estimation of the weights. Ignored when `Mparts` is not available or no
-#'   argument was supplied to `weightit` in the fitting function.
+#'   (when `Mparts` is available). Set to `FALSE` to ignore estimation of the
+#'   weights. The default follows the variance the model was fit with: `FALSE`
+#'   when `vcov` was `"HC0"` or `"const"` and `TRUE` otherwise, so that
+#'   `sandwich::sandwich()` and `sandwich::vcovCL()` agree with `vcov()`. Ignored
+#'   when `Mparts` is not available or no argument was supplied to `weightit` in
+#'   the fitting function.
 #' @param \dots for `vcov()` or `summary()` or `confint()` with `vcov` supplied,
 #'   other arguments used to compute the variance matrix depending on the method
 #'   supplied to `vcov`, e.g., `cluster`, `R`, or `fwb.args`. For `update()`,
@@ -53,7 +59,7 @@
 #'   `multinom_weightit()`.
 #'
 #' @returns
-#' `summary()` returns a `summary.glm_weightit()` object, which has its
+#' `summary()` returns a `summary.glm_weightit` object, which has its
 #' own `print()` method. For `coxph_weightit()` objects, the `print()` and
 #' `summary()` methods are more like those for `glm` objects than for `coxph`
 #' objects.
@@ -62,16 +68,17 @@
 #'
 #' @details
 #' `vcov()` by default extracts the parameter covariance matrix already
-#' computed by the fitting function, and `summary()` and `confint()` uses this
+#' computed by the fitting function, and `summary()` and `confint()` use this
 #' covariance matrix to compute standard errors and Wald confidence intervals
-#' (internally calling [confint.lm()]), respectively. Supplying arguments to
-#' `vcov` or `...` will compute a new covariance matrix. If `cluster` was
-#' supplied to the original fitting function, it will be incorporated into any
-#' newly computed covariance matrix unless `cluster = NULL` is specified in
-#' `vcov()`, `summary()`, or `confint()`. For other arguments (e.g., `R` and
-#' `fwb.args`), the defaults are those used by [glm_weightit()]. Note that for
-#' `vcov = "BS"` and `vcov = "FWB"` (and `vcov = "const"` for
-#' `multinom_weightit` or `ordinal_weightit` objects), the environment for the
+#' (internally calling [confint.lm()]), respectively. Supplying `vcov`, or
+#' `cluster`, `R`, or `fwb.args` through `...`, will compute a new covariance
+#' matrix; when `vcov` is not supplied, the method used to fit `object` is used.
+#' If `cluster` was supplied to the original fitting function, it will be
+#' incorporated into any newly computed covariance matrix unless `cluster =
+#' NULL` is specified in `vcov()`, `summary()`, or `confint()`. `R` and
+#' `fwb.args` likewise default to the values used to fit `object`, or to the
+#' defaults of [glm_weightit()] when the original fit was not bootstrapped. Note that for
+#' `vcov = "BS"` and `vcov = "FWB"`, the environment for the
 #' fitting function is used, so any changes to that environment may affect
 #' calculation. It is always safer to simply recompute the fitted object with a
 #' new covariance matrix than to modify it with the `vcov` argument, but it can
@@ -366,6 +373,9 @@ summary.ordinal_weightit <- function(object,
     attr(out, "thresholds") <- rownames(out$coefficients)[thresholds_ind]
   }
   else {
+    #Thresholds are never aliased, so they can be dropped from `aliased` by name
+    out$aliased <- out$aliased[setdiff(names(out$aliased),
+                                       rownames(out$coefficients)[thresholds_ind])]
     out$coefficients <- out$coefficients[-thresholds_ind, , drop = FALSE]
   }
 
@@ -494,10 +504,11 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
       aliased <- aliased[-match(.attr(x, "thresholds"), names(aliased))]
     }
 
+    est <- coefs
     cn <- names(aliased)
-    coefs <- matrix(NA_real_, nrow = length(aliased), ncol = ncol(coefs),
-                    dimnames = list(cn, colnames(coefs)))
-    coefs[!aliased, ] <- x$coefficients
+    coefs <- matrix(NA_real_, nrow = length(aliased), ncol = ncol(est),
+                    dimnames = list(cn, colnames(est)))
+    coefs[!aliased, ] <- est
   }
 
   .printCoefmat_glm_weightit(coefs, digits = digits,
@@ -596,6 +607,28 @@ confint.glm_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
 
   covmat <- .vcov_glm_weightit.internal(object, vcov. = vcov, ...)
 
+  #With no variance matrix (e.g., `vcov = "none"`), there are no confidence
+  #intervals; the bounds are `NA`, as are the standard errors in `summary()`. The
+  #warning has already been given.
+  if (is_null(covmat)) {
+    cf <- coef(object)
+    pnames <- names(cf)
+
+    parm <- {
+      if (missing(parm)) pnames
+      else if (is.numeric(parm)) pnames[parm]
+      else parm
+    }
+
+    a <- (1 - level) / 2
+    a <- c(a, 1 - a)
+
+    return(matrix(NA_real_, nrow = length(parm), ncol = 2L,
+                  dimnames = list(parm, paste(format(100 * a, trim = TRUE,
+                                                     scientific = FALSE,
+                                                     digits = 3L), "%"))))
+  }
+
   object |>
     .set_vcov(covmat) |>
     confint.lm(parm = parm, level = level, ...)
@@ -650,7 +683,7 @@ nobs.coxph_weightit <- nobs.multinom_weightit
 #' @exportS3Method stats::hatvalues multinom_weightit
 #' @rdname glm_weightit-methods
 hatvalues.multinom_weightit <- function(model, ...) {
-  X <- model[["x"]] %or% model.matrix(model)
+  X <- model[["x"]] %or% model.matrix(.fill_nzw_model(model))
   P <- model[["fitted.values"]]
   w <- model[["weights"]] %or% rep.int(1, nrow(X))
 
@@ -687,7 +720,7 @@ hatvalues.multinom_weightit <- function(model, ...) {
 #' @exportS3Method stats::hatvalues ordinal_weightit
 #' @rdname glm_weightit-methods
 hatvalues.ordinal_weightit <- function(model, ...) {
-  X <- model.matrix(model)
+  X <- model.matrix(.fill_nzw_model(model))
   P <- model[["fitted.values"]]
   w <- model[["weights"]] %or% rep.int(1, nrow(X))
   offset <- model[["offset"]] %or% rep.int(0, nrow(X))
@@ -738,7 +771,7 @@ hatvalues.ordinal_weightit <- function(model, ...) {
 #' @importFrom sandwich estfun
 #' @exportS3Method sandwich::estfun glm_weightit
 #' @rdname glm_weightit-methods
-estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
+estfun.glm_weightit <- function(x, asympt = NULL, ...) {
 
   # Check missing
   if (is_not_null(x[["na.action"]])) {
@@ -748,8 +781,8 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   bout <- x[["coefficients"]]
   aliased <- is.na(bout)
 
-  Xout <- x[["x"]] %or% model.matrix(x)
-  Y <- x[["y"]] %or% model.response(model.frame(x))
+  Xout <- x[["x"]] %or% model.matrix(.fill_nzw_model(x))
+  Y <- x[["y"]] %or% model.response(model.frame(.fill_nzw_model(x)))
 
   if (is_not_null(x[["weightit"]])) {
     W <- x[["weightit"]][["weights"]]
@@ -778,11 +811,14 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   Mparts <- .attr(x[["weightit"]], "Mparts")
   Mparts.list <- .attr(x[["weightit"]], "Mparts.list")
 
-  if (is_not_null(Mparts) || is_not_null(Mparts.list)) {
-    arg::arg_flag(asympt)
+  if (is_null(Mparts) && is_null(Mparts.list)) {
+    asympt <- FALSE
+  }
+  else if (is_null(asympt)) {
+    asympt <- .estfun_asympt_default(x)
   }
   else {
-    asympt <- FALSE
+    arg::arg_flag(asympt)
   }
 
   if (!asympt) {
@@ -906,6 +942,15 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   psi_b
 }
 
+#Whether `estfun()` accounts for estimation of the weights when `asympt` is not
+#supplied. It follows the variance the model was fit with, so that
+#`sandwich::sandwich()` and `sandwich::vcovCL()` agree with `vcov()`: `"HC0"` and
+#`"const"` treat the weights as fixed, and the others (`"asympt"`, `"BS"`,
+#`"FWB"`, and `"none"`) account for their estimation.
+.estfun_asympt_default <- function(x) {
+  !isTRUE(as.vector(x[["vcov_type"]]) %in% c("HC0", "const"))
+}
+
 #' @exportS3Method sandwich::estfun multinom_weightit
 estfun.multinom_weightit <- estfun.glm_weightit
 
@@ -922,7 +967,7 @@ bread.glm_weightit <- function(x, ...) {
   bout <- x[["coefficients"]]
   aliased <- is.na(bout)
 
-  Y <- x[["y"]] %or% model.response(model.frame(x))
+  Y <- x[["y"]] %or% model.response(model.frame(.fill_nzw_model(x)))
 
   H <- NULL
 
@@ -943,7 +988,7 @@ bread.glm_weightit <- function(x, ...) {
   }
 
   if (is_null(H)) {
-    Xout <- x[["x"]] %or% model.matrix(x)
+    Xout <- x[["x"]] %or% model.matrix(.fill_nzw_model(x))
 
     if (is_not_null(x[["weightit"]])) {
       W <- x[["weightit"]][["weights"]]
@@ -997,6 +1042,60 @@ bread.ordinal_weightit <- bread.glm_weightit
 
 #' @exportS3Method sandwich::bread coxph_weightit
 bread.coxph_weightit <- bread.glm_weightit
+
+#`sandwich::vcovHC()` recovers the working residuals from `estfun()` by dividing
+#each row by the model matrix, which only works when each row is a residual times
+#that row of X. Rows adjusted for estimation of the weights are not, so the
+#default method returns NaN. With the adjustment, HC0 and HC1 are computed from
+#the adjusted estimating functions directly; the other types correct each unit by
+#its leverage in the outcome model alone, which has no counterpart once the
+#weights are estimated, so they give an error. Without it (e.g., for a fit with
+#`vcov = "HC0"`, or with `asympt = FALSE`), all types are computed as for `glm()`.
+#' @exportS3Method sandwich::vcovHC glm_weightit
+vcovHC.glm_weightit <- function(x, type = c("HC3", "const", "HC", "HC0", "HC1", "HC2",
+                                            "HC4", "HC4m", "HC5"),
+                                omega = NULL, sandwich = TRUE, ...) {
+  type <- match.arg(type)
+
+  asympt <- ...get("asympt")
+
+  if (is_null(asympt)) {
+    asympt <- .estfun_asympt_default(x)
+  }
+  else {
+    arg::arg_flag(asympt)
+  }
+
+  adjusted <- asympt && (is_not_null(.attr(x[["weightit"]], "Mparts")) ||
+                           is_not_null(.attr(x[["weightit"]], "Mparts.list")))
+
+  if (adjusted) {
+    if (is_not_null(omega)) {
+      arg::err(c("{.arg omega} cannot be supplied when accounting for estimation of the weights.",
+                 "i" = 'Set {.code asympt = FALSE} to treat the weights as fixed, or fit the model with {.code vcov = "HC0"}.'))
+    }
+
+    if (!type %in% c("HC0", "HC", "HC1")) {
+      arg::err(c("{.code type = {.val {type}}} cannot account for estimation of the weights.",
+                 "i" = 'Use {.code type = "HC0"} or {.code type = "HC1"}, set {.code asympt = FALSE} to treat the weights as fixed, or fit the model with {.code vcov = "HC0"}.'))
+    }
+
+    rval <- sandwich::meat(x, adjust = type == "HC1", asympt = TRUE)
+  }
+  else {
+    #`sandwich::meatHC()` calls `estfun()` without `asympt`, so its default is set
+    #to leave out the adjustment
+    x[["vcov_type"]] <- "HC0"
+
+    rval <- sandwich::meatHC(x, type = type, omega = omega)
+  }
+
+  if (sandwich) {
+    rval <- sandwich::sandwich(x, meat. = rval)
+  }
+
+  rval
+}
 
 #' @importFrom generics tidy
 #' @exportS3Method generics::tidy glm_weightit

@@ -8,7 +8,7 @@
 #'
 #' @param object a `weightit` or `weightitMSM` object; the output of a call to
 #'   [weightit()] or [weightitMSM()].
-#' @param top how many of the largest and smallest weights to display. Default
+#' @param top how many of the largest weights to display in each group. Default
 #'   is 5. Ignored when `weight.range = FALSE`.
 #' @param ignore.s.weights `logical`; whether or not to ignore sampling weights when
 #'   computing the weight summary. If `FALSE`, the default, the estimated
@@ -134,7 +134,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
     out$weight.range <- lapply(tx, function(ti) c(min(ww[ti]), max(ww[ti]))) |>
       setNames(names(tx))
 
-    out$weight.top <- lapply(tx, function(ti) rev(sort(ww[ti], decreasing = TRUE)[seq_len(top)])) |>
+    out$weight.top <- lapply(tx, function(ti) rev(utils::head(sort(ww[ti], decreasing = TRUE), top))) |>
       setNames(names(tx))
   }
 
@@ -228,7 +228,7 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
         x$num.zeros) |>
     as.data.frame() |>
     setNames(c("Coef of Var", "MAD", "Entropy", "# Zeros")) |>
-    round_df_char(digits = 3L, pad = " ") |>
+    round_df_char(digits = digits, pad = " ") |>
     print.data.frame()
   cat("\n")
 
@@ -419,8 +419,8 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, weig
     out <- seq_along(nm)[nm %in% which.time]
 
     if (is_null(out)) {
-      arg::err(c("no names in {.arg which.time} correspond to a model.",
-                 "i" = "Available: {.or {.val {nm}}}"))
+      arg::err(c("No names in {.arg which.time} correspond to a model.",
+                 "i" = "Available: {.or {.val {nm}}}."))
     }
 
     return(out)
@@ -570,8 +570,7 @@ nobs.weightit <- function(object, ...) {
   for (i in seq_row(d)) {
     spaces1 <- rescaled.range.list[[i]][1L] - rescaled.full.range[1L]
     if (diff(rescaled.range.list[[i]]) == 0) {
-      dashes <- max(c(0L, diff(rescaled.range.list[[i]]) - 2L))
-      spaces2 <- max(c(0L, diff(rescaled.full.range) - (spaces1 + 3L)))
+      spaces2 <- max(c(0L, diff(rescaled.full.range) - (spaces1 + 1L)))
 
       d[i, 2L] <- sprintf("%s%s%s",
                           space(spaces1),

@@ -191,6 +191,18 @@ test_that("Binary treatment", {
   expect_equal(coef(fit), .coef(fit_g),
                tolerance = eps)
 
+  #Offset supplied as an argument is the same as in the formula, and is used in
+  #predictions for new data
+  fit_o <- expect_no_condition({
+    ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), offset = off,
+                     data = test_data, weightit = W)
+  })
+
+  expect_equal(coef(fit_o), coef(fit), tolerance = eps)
+
+  expect_equal(predict(fit_o, newdata = test_data, type = "response"),
+               fitted(fit_o), tolerance = eps)
+
   #Probit
   fit <- expect_no_condition({
     ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
@@ -699,4 +711,41 @@ test_that("br = TRUE gives finite estimates when the ML estimates are infinite",
   expect_false(anyNA(vcov(fit_br_d)))
   expect_equal(unname(colSums(fit_br_d$gradient)),
                rep.int(0, length(coef(fit_br_d))), tolerance = 1e-6)
+})
+
+test_that("Control arguments, aliased coefficients, and offsets", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$X1b <- 2 * test_data$X1
+
+  W <- weightit(A ~ X1 + X2 + X3, data = test_data)
+
+  #Arguments to `optim()`'s `control` can be supplied through `...`
+  suppressWarnings({
+    f1 <- ordinal_weightit(Y_O ~ A + X1, data = test_data, weightit = W, maxit = 2)
+    f2 <- ordinal_weightit(Y_O ~ A + X1, data = test_data, weightit = W,
+                           control = list(maxit = 2))
+  })
+
+  expect_equal(coef(f1), coef(f2), tolerance = eps)
+
+  #Aliased coefficients are printed as missing and don't break predictions
+  fa <- ordinal_weightit(Y_O ~ A + X1 + X1b, data = test_data, weightit = W)
+
+  expect_no_condition(capture.output(print(summary(fa))))
+
+  out <- capture.output(print(summary(fa, thresholds = FALSE)))
+  expect_true(any(grepl("^X1b\\s+\\.", out)))
+  thr <- grep("|", names(coef(fa)), fixed = TRUE, value = TRUE)
+  expect_false(any(vapply(thr, function(t) any(startsWith(out, t)), logical(1L))))
+
+  expect_equal(predict(fa, newdata = test_data, type = "response"),
+               fitted(fa), tolerance = eps, ignore_attr = TRUE)
+
+  #An intercept-only model can recompute its variance
+  f0 <- ordinal_weightit(Y_O ~ 1, data = test_data, weightit = W, vcov = "none")
+  expect_no_condition(summary(f0, vcov = "HC0"))
 })

@@ -46,7 +46,7 @@ generalized propensity score (e.g., ordinal logistic regression).
 
 For continuous treatments, weights are estimated as
 \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-stabilization factor) is the unconditional density of treatment evaluated the
+stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 propensity score) is the conditional density of treatment given the
 covariates evaluated at the observed treatment value. The shape of
@@ -93,8 +93,8 @@ estimated at each time point.
 \subsection{Sampling Weights}{
 
 Sampling weights are supported through \code{s.weights} in all scenarios except
-for multi-category treatments with \code{multi.method = "mnp"} and for binary and
-continuous treatments with \code{missing = "saem"} (see below). Warning messages
+for multi-category treatments with \code{multi.method = "mnp"} and with
+\code{missing = "saem"} (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 }
 
@@ -130,7 +130,7 @@ methods are.
 \section{Additional Arguments}{
 
 
-The following additional argument can be specified for all treatment types:
+The following additional argument can be specified for binary and continuous treatments:
 \describe{
 \item{\code{quick}}{\code{logical}; whether to fit the model with \code{\link[=glm.fit]{glm.fit()}} rather than \code{\link[=glm]{glm()}}. This skips construction of the model frame and returns a smaller fit object, which can be worthwhile when fitting many models (e.g., in a simulation) but means the object returned by \code{include.obj = TRUE} lacks the components that require it. Default is \code{FALSE}. Ignored when a fitting function other than \code{glm()} is used (e.g., with random effects terms or \code{missing = "saem"}).}
 }
@@ -155,7 +155,7 @@ For unordered treatments with \code{multi.method = "weightit"} and for ordered t
 For continuous treatments, the following additional arguments may be
 supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
 
 Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
 \item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
@@ -168,7 +168,8 @@ For binary treatments, the \code{method} argument in \code{glm()} is renamed to
 as those implemented in the \CRANpkg{glm2} package; it is ignored for
 multi-category and continuous treatments. Arguments matching those of
 \code{\link[=glm.control]{glm.control()}} are collected and passed to \code{glm()} as its \code{control}
-argument; a \code{control} list can also be supplied directly. Other arguments
+argument; a \code{control} list can also be supplied directly. For continuous
+treatments, only a \code{control} list is used. Other arguments
 are not forwarded to \code{glm()}.
 
 In the presence of missing data with \code{link = "logit"} and
@@ -182,8 +183,9 @@ When the model \code{formula} includes random effects terms (see \emph{Multileve
 Treatment Models} above), the fit is handled by \pkgfun{lme4}{glmer} for
 binary treatments, \pkgfun{mclogit}{mblogit} for multi-category treatments,
 and \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer} for continuous treatments.
-For multi-category treatments, \code{random}, \code{estimator}, \code{dispersion}, and
-\code{groups} are passed on to \code{mblogit()}; for continuous treatments, a
+For multi-category treatments, \code{estimator}, \code{dispersion}, and \code{groups} are
+passed on to \code{mblogit()} (the random effects structure comes from
+\code{formula}); for continuous treatments, a
 \code{control} argument is passed on. Binary treatments accept no additional
 arguments on this path.
 }

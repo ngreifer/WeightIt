@@ -2,6 +2,8 @@
 
 ## In Progress
 
+- [ ] Submit *WeightIt* 2.2.0 to CRAN. Prepared 2026-11-20: version set to 2.2.0 in `DESCRIPTION` and NEWS; `R CMD check --as-cran` on the built tarball gives 0 errors, 0 warnings, and 0 notes; the full suite with `NOT_CRAN=true` passes (39 files, 8894 expectations, no skips); `revdepcheck` on all 24 reverse dependencies found no new problems (run on 2.1.0.9003, before the version bump and the bib fixes below, which change no code); `cran-comments.md` is written. Four redirecting publisher URLs and an unregistered Statistica Sinica DOI (Hazlett 2020, which Crossref does not know and `doi.org` returns 404 for) were removed from `vignettes/references.bib`. After the checks, a sentence citing Peyrot, Porcher, and Petit (2026) on energy balancing was added to `vignette("weighting-methods")` (the vignette renders, and the DOI was verified against Crossref). Everything is committed but not pushed. What remains is the user's: push and submit (`devtools::submit_cran()`). The pre-submission review behind this release is in `_dev/pre-cran-review-notes.md` (2026-11-19), with all 36 items resolved.
+
 ## To Do
 
 - [ ] On hold (2026-11-18): support for shift interventions and other modified treatment policies. `_dev/plan-modified-treatment-policies.md` has the design (a `.shift()` marker, balance against the shifted sample in *cobalt*, single-shift contrasts in *WeightIt*, curves and the ADE left to *adrftools*, and a worked example of ADE weights, including energy-kernel ones), and `_dev/mtp-checks.R` holds the numerical checks it cites. No package code has been changed.

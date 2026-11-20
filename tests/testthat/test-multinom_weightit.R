@@ -50,13 +50,16 @@ test_that("No weights", {
                unname(sandwich::vcovCL(fit_g, cluster = test_data$clus)[ind, ind]),
                tolerance = eps)
 
-  #Offset
-  fit <- expect_no_condition({
+  #Offsets are not supported
+  expect_error({
     multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
                       data = test_data)
-  })
+  }, "offset")
 
-  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_error({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, offset = test_data$off)
+  }, "offset")
 
   #Test using sandwich functions
   fit0 <- expect_no_condition({
@@ -134,13 +137,16 @@ test_that("Binary treatment", {
   #              unname(sandwich::vcovCL(fit_g, cluster = test_data$clus, cadjust = T)[ind, ind]),
   #              tolerance = eps)
 
-  #Offset
-  fit <- expect_no_condition({
+  #Offsets are not supported
+  expect_error({
     multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
                       data = test_data)
-  })
+  }, "offset")
 
-  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_error({
+    multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
+                      data = test_data, offset = test_data$off)
+  }, "offset")
 
   #Test using sandwich functions
   fit0 <- expect_no_condition({
@@ -537,4 +543,34 @@ test_that("br = TRUE works with M-estimation and bootstrapping", {
                                 br = TRUE, vcov = "none")
 
   expect_equal(vcov(fit_none, vcov = "asympt"), vcov(fit), tolerance = eps)
+})
+
+test_that("Control arguments, aliased coefficients, and link", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+  test_data$X1b <- 2 * test_data$X1
+
+  W <- weightit(A ~ X1 + X2 + X3, data = test_data)
+
+  #Arguments to `optim()`'s `control` can be supplied through `...`
+  suppressWarnings({
+    f1 <- multinom_weightit(Y_M ~ A + X1, data = test_data, weightit = W, maxit = 2)
+    f2 <- multinom_weightit(Y_M ~ A + X1, data = test_data, weightit = W,
+                            control = list(maxit = 2))
+  })
+
+  expect_equal(coef(f1), coef(f2), tolerance = eps)
+
+  #Aliased coefficients don't break predictions
+  fa <- multinom_weightit(Y_M ~ A + X1 + X1b, data = test_data, weightit = W)
+
+  expect_equal(predict(fa, newdata = test_data, type = "response"),
+               fitted(fa), tolerance = eps, ignore_attr = TRUE)
+
+  #Only the logit link is allowed
+  expect_error(multinom_weightit(Y_M ~ A, data = test_data, link = "probit"))
 })

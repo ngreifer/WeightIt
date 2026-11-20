@@ -6,6 +6,9 @@
 #' @inheritParams glm_weightit
 #' @param link a string corresponding to the desired link function. Currently, only
 #'   `"logit"` is allowed.
+#' @param offset not used. An offset is not supported for multinomial logistic
+#'   regression models, so supplying one, or including an [offset()] term in the
+#'   model formula, is an error.
 #' @param br `logical`; whether to use mean bias reduction, i.e., to solve the
 #'   bias-reducing adjusted score equations of Firth (1993) rather than the score
 #'   equations. This yields estimates with smaller asymptotic bias that are always
@@ -168,6 +171,12 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   }
 
   arg::arg_flag(br)
+
+  link <- arg::match_arg(link, "logit")
+
+  if (!missing(offset)) {
+    arg::err("an offset cannot be used with {.fun multinom_weightit}")
+  }
 
   internal_model_call <- .build_internal_model_call(model = "multinom",
                                                     model_call = model_call,
@@ -502,13 +511,11 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
     arg::arg_gte(weights, 0)
   }
 
+  #An offset would shift the linear predictor of every category relative to the
+  #reference category by the same amount, which has no sensible interpretation
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset)) {
-    arg::arg_numeric(offset)
-
-    if (length(offset) != NROW(Y)) {
-      arg::err("number of offsets is {length(offset)}; should equal {NROW(Y)} (number of observations)")
-    }
+    arg::err("an offset cannot be used with {.fun multinom_weightit}, including an {.fun offset} term in the model formula")
   }
 
   fit <- eval(call(".multinom_weightit.fit",
@@ -529,8 +536,8 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 }
 
 .get_hess_multinom <- function(fit) {
-  x <- fit[["x"]] %or% model.matrix(fit)
-  y <- fit[["y"]] %or% model.response(model.frame(fit))
+  x <- fit[["x"]] %or% model.matrix(.fill_nzw_model(fit))
+  y <- fit[["y"]] %or% model.response(model.frame(.fill_nzw_model(fit)))
   weights <- weights(fit)
   coefs <- coef(fit)
 

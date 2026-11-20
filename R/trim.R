@@ -6,7 +6,7 @@
 #' This can be useful in controlling extreme weights, which can reduce effective
 #' sample size by enlarging the variability of the weights. Note that by
 #' default, no observations are fully discarded when using `trim()`, which may
-#' differ from the some uses of the word "trim" (see the `drop` argument below).
+#' differ from some uses of the word "trim" (see the `drop` argument below).
 #'
 #' @param x a `weightit` object or a vector of weights.
 #' @param at `numeric`; either the quantile of the weights above which weights
@@ -29,10 +29,13 @@
 #' @returns
 #' If the input is a `weightit` object, the output will be a `weightit`
 #' object with the weights replaced by the trimmed weights (or 0) and will have
-#' an additional attribute, `"trim"`, equal to the quantile of trimming.
+#' an additional attribute, `"trim"`, a list containing the values of `at`,
+#' `lower`, and `drop` used.
 #'
 #' If the input is a numeric vector of weights, the output will be a numeric
-#' vector of the trimmed weights, again with the aforementioned attribute.
+#' vector of the trimmed weights with an attribute `"trim"` equal to `at` (the
+#' quantile or the number of weights trimmed) and an attribute `"trim.lower"`
+#' equal to `lower`.
 #'
 #' @details
 #' `trim()` takes in a `weightit` object (the output of a call to

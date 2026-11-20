@@ -66,9 +66,7 @@
 #'     }
 #' }
 #'
-#' All arguments to `npCBPS()` can be passed through `weightit()` or `weightitMSM()`.
-#'
-#' All arguments take on the defaults of those in `npCBPS()`.
+#' `corprior` can be passed through `weightit()` or `weightitMSM()`; its default is that of `npCBPS()` (.01).
 #'
 #' @section Additional Outputs:
 #' \describe{

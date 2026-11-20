@@ -53,7 +53,8 @@
 #' @param is.MSM.method `logical`; whether the method estimates weights for multiple time
 #'   points all at once (`TRUE`) or by estimating weights at each time point and
 #'   then multiplying them together (`FALSE`). This is only relevant for
-#'   user-specified functions.
+#'   methods that can estimate the weights for all time points at once, currently
+#'   `method = "cbps"`; user-defined functions must use `FALSE`.
 #' @param weightit.force `logical`; several methods are not valid for estimating weights
 #'   with longitudinal treatments, and will produce an error message if
 #'   attempted. Set to `TRUE` to bypass this error message.
@@ -68,7 +69,12 @@
 #' \item{method}{The weight estimation method specified.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{by}{A data frame containing the `by` variable when specified.}
+#' \item{call}{The function call.}
+#' \item{formula.list}{The list of formulas supplied to `formula.list`.}
 #' \item{stabilization}{The stabilization factors, if any.}
+#' \item{missing}{The method used to handle missing covariate values, when any are present.}
+#' \item{env}{The environment from which `weightitMSM()` was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in [glm_weightit()]).}
+#' \item{obj}{When `include.obj = TRUE`, a list of the fit objects, one for each time point (or a single fit object when the weights for all time points are estimated at once).}
 #'
 #' When censoring is modeled (i.e., when any entry of `formula.list` has its left
 #' side wrapped in [.cens()]), `formula.list` is kept exactly as supplied, markers
@@ -236,7 +242,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     is.MSM.method <- .process_MSM_method(is.MSM.method, method)
   }
   else { #function
-    method.name <- paste(deparse(substitute(method)))
+    method.name <- deparse1(substitute(method))
     .check_user_method(method)
     if (missing(is.MSM.method)) is.MSM.method <- NULL
     is.MSM.method <- .process_MSM_method(is.MSM.method, method)
@@ -245,7 +251,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   ##Process by
   if (is_not_null(...get("exact"))) {
-    arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
+    arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightitMSM} syntax, but {.arg exact} will always work")
     by <- ...get("exact")
     by.arg <- "exact"
   }
@@ -308,7 +314,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
     if (!all(is.finite(treat.list[[i]][!na.list[[i]]]))) {
       arg::err(c("No non-finite values are allowed in the treatment variable.",
-                 "i" = "Non-finite values found in {.var treat.name}"))
+                 "i" = "Non-finite values found in {.var {treat.name}}."))
     }
 
     names(treat.list)[i] <- treat.name
@@ -340,7 +346,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     #has no way to receive the risk sets.
     #`==` rather than `identical()`: `method` carries a `"name"` attribute
     if (is.MSM.method && !(is.character(method) && isTRUE(method == "cbps"))) {
-      arg::err(c("censoring models (specified with {.fun .cens} in {.arg formula.list}) cannot be used with this method when it estimates the weights for all time points simultaneously.",
+      arg::err(c("Censoring models (specified with {.fun .cens} in {.arg formula.list}) cannot be used with this method when it estimates the weights for all time points simultaneously.",
                  "i" = "Set {.code is.MSM.method = FALSE} to estimate the weights separately at each time point."))
     }
 
@@ -370,7 +376,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     for (i in seq_along(formula.list)) {
       if (any(na.list[[i]] & atrisk.list[[i]])) {
         arg::err(c("No missing values are allowed among the units still under observation.",
-                   "i" = "Missing values found in {.var {names(treat.list)[i]}} among units not yet censored"))
+                   "i" = "Missing values found in {.var {names(treat.list)[i]}} among units not yet censored."))
       }
     }
 
@@ -390,7 +396,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     bad <- names(treat.list)[vapply(na.list, any, logical(1L))]
 
     arg::err(c("No missing values are allowed in the treatment variable.",
-               "i" = "Missing values found in {.var {bad}}"))
+               "i" = "Missing values found in {.var {bad}}."))
   }
 
   #Process missing
@@ -446,7 +452,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     else if (is_not_null(num.formula)) {
       #Censoring time points are stabilized like any other, so a list of numerator
       #formulas has one entry per entry of `formula.list`, censoring included.
-      .check_num.formula(num.formula, data, env = parent.frame(),
+      .check_num.formula(num.formula, data,
                          formula.list = formula.list,
                          stab_arg = stab_arg)
     }
@@ -586,6 +592,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
                                                    collapse = " * ")))
         }
 
+        environment(stab.f) <- .stab_formula_env(f_i, {
+          if (is.list(num.formula)) num.formula[[i]]
+          else num.formula
+        })
+
         stab.re.bars <- .find_re_bars(stab.f)
 
         stab.t.c_i <- get_covs_and_treat_from_formula2(
@@ -658,7 +669,12 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     }
   }
 
-  if (is_not_null(method) && all_the_same(w)) {
+  #Constant weights from models that are all covariate-free are correct by
+  #construction; see `.check_estimated_weights()`
+  all.covs.empty <- all(vapply(covs.list, function(x) NCOL(x) == 0L, logical(1L))) &&
+    all(vapply(re.bars.list, is_null, logical(1L)))
+
+  if (is_not_null(method) && !all.covs.empty && all_the_same(w)) {
     arg::wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
   }
 

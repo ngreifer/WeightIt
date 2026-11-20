@@ -26,12 +26,15 @@ weightit.fit(
 converted to a matrix as \code{\link[=weightit]{weightit()}} converts the covariates named in its
 \code{formula}, with each factor or character variable split into dummy
 variables for its levels; methods that can use the covariates as they are,
-such as \code{"bart"}, receive the data frame itself. May have zero columns, in which case
+such as \code{"gbm"} and \code{"bart"}, receive the data frame itself. May have zero columns, in which case
 the weights are computed with an intercept-only generalized linear model
 whatever \code{method} is supplied and any method-specific arguments are ignored; see
 \emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}.}
 
-\item{treat}{a vector of treatment statuses. To request inverse probability
+\item{treat}{a vector of treatment statuses. A factor or character vector
+is treated as binary or multi-category, depending on its number of unique
+values, and a numeric vector with more than two unique values as
+continuous, as in \code{\link[=weightit]{weightit()}}. To request inverse probability
 of censoring weights, supply a 0/1 censoring indicator (1 = censored)
 tagged with \code{\link[=.cens]{.cens()}}, as in \code{treat = .cens(C)}; \code{NA} values are
 then allowed outside \code{subset}, since a unit censored at an earlier time
@@ -62,14 +65,16 @@ and the other groups will be weighted to resemble the focal group. If
 specified, \code{estimand} will automatically be set to \code{"ATT"} (with a warning
 if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}}.}
 
-\item{stabilize}{\code{logical}; whether or not to stabilize the weights. For the
-methods that involve estimating propensity scores, this involves
-multiplying each unit's weight by the proportion of units in their
-treatment group. Default is \code{FALSE}. Note this differs from its use with
-\code{\link[=weightit]{weightit()}}.}
+\item{stabilize}{\code{logical}; whether or not to stabilize the weights. For
+binary and multi-category treatments with methods that estimate propensity
+scores (or when \code{ps} is supplied), this involves multiplying each unit's
+weight by the proportion of units in their treatment group (within each
+level of \code{by.factor}); it is ignored otherwise. Stabilized weights do not
+support M-estimation. Default is \code{FALSE}. Note this differs from its use
+with \code{\link[=weightit]{weightit()}}, which estimates a model for the numerator.}
 
 \item{ps}{a vector of propensity scores. If specified, \code{method} will be
-ignored and set to \code{"glm"}.}
+ignored.}
 
 \item{missing}{\code{character}; how missing data should be handled. The options
 depend on the \code{method} used. If \code{NULL}, \code{covs} will be checked for \code{NA}

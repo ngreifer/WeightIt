@@ -253,3 +253,64 @@ test_that("vcov arg works in vcov(), summary(), and anova() for each model class
     )
   )
 })
+
+test_that("summary(), confint(), and vcov() keep the fit's vcov type and accept only strings", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  set.seed(123)
+  test_data$clus <- sample(1:50, nrow(test_data), replace = TRUE)
+
+  W <- weightit(A ~ X1 + X2 + X3, data = test_data)
+  fit <- glm_weightit(Y_C ~ A + X1, data = test_data, weightit = W, vcov = "HC0")
+
+  #Arguments in `...` that don't concern the variance don't change it
+  expect_equal(summary(fit, conf.int = TRUE)$coefficients[, "Std. Error"],
+               sqrt(diag(vcov(fit))), tolerance = eps)
+
+  #Supplying `cluster` alone recomputes the variance of the type used in the fit
+  expect_equal(vcov(fit, cluster = ~clus),
+               vcov(fit, vcov = "HC0", cluster = ~clus), tolerance = eps)
+  expect_not_equal(vcov(fit, cluster = ~clus),
+                   vcov(fit, vcov = "asympt", cluster = ~clus), tolerance = eps)
+
+  #Only strings are allowed
+  expect_error(summary(fit, vcov = sandwich::vcovHC), "string")
+  expect_error(confint(fit, vcov = vcov(fit)), "string")
+  expect_error(vcov(fit, vcov = function(x) vcov(x)), "string")
+
+  fit0 <- glm_weightit(Y_C ~ A, data = test_data, weightit = W, vcov = "HC0")
+  expect_error(anova(fit, fit0, vcov = vcov(fit)), "string")
+
+  #`subset` is not allowed with weights
+  expect_error(glm_weightit(Y_C ~ A + X1, data = test_data, weightit = W,
+                            subset = X1 > 0),
+               "subset")
+  expect_error(glm_weightit(Y_C ~ A + X1, data = test_data, weights = W$weights,
+                            subset = X1 > 0),
+               "subset")
+  expect_no_condition(glm_weightit(Y_C ~ A + X1, data = test_data, subset = X1 > 0))
+})
+
+test_that("variances can be recomputed when zero-weight units have missing covariates", {
+  skip_on_cran()
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  w <- rep(1, nrow(test_data))
+  w[1:5] <- 0
+  test_data$X1_na <- test_data$X1
+  test_data$X1_na[1:5] <- NA
+
+  fit <- glm_weightit(Y_C ~ A + X1_na, data = test_data, weights = w)
+
+  #The missing values are reported in the model frame as supplied
+  expect_true(anyNA(model.frame(fit)$X1_na))
+
+  expect_true(all(is.finite(vcov(fit))))
+  expect_true(all(is.finite(vcov(fit, vcov = "HC0"))))
+  expect_true(all(is.finite(sandwich::estfun(fit))))
+  expect_true(all(is.finite(sandwich::bread(fit))))
+})

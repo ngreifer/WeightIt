@@ -462,7 +462,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
     start <- start[!aliased_B]
 
-    if (any(diff(start[-seq_col(x)]) <= 0)) {
+    if (any(diff(utils::tail(start, m - 1L)) <= 0)) {
       arg::err("starting values for the thresholds must be in ascending order")
     }
   }
@@ -797,7 +797,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
        varx = cov(x))
 }
 
-.ordinal_weightit <- function(formula, data, link = "logit", weights, subset, start = NULL, na.action,
+.ordinal_weightit <- function(formula, data, link = "logit", weights, subset, offset, start = NULL, na.action,
                               hess = TRUE, control = list(), model = TRUE,
                               x = FALSE, y = TRUE, contrasts = NULL, br = FALSE, ...) {
   cal <- match.call()
@@ -876,8 +876,8 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 }
 
 .get_hess_ordinal <- function(fit) {
-  x <- fit[["x"]] %or% model.matrix(fit)
-  y <- fit[["y"]] %or% model.response(model.frame(fit))
+  x <- fit[["x"]] %or% model.matrix(.fill_nzw_model(fit))
+  y <- fit[["y"]] %or% model.response(model.frame(.fill_nzw_model(fit)))
   fam <- fit[["family"]]
   weights <- weights(fit)
   offset <- fit$offset
@@ -940,7 +940,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     sum(weights * log(p))
   }
 
-  theta0 <- na.rem(coefs) * c(sds, rep.int(1, m - 1L))
+  theta0 <- na.rem(coefs) * (if (no_x) 1 else c(sds, rep.int(1, m - 1L)))
 
   # Psi function and gradient using natural parameterization
   psi <- function(B, X, y, weights, offset = NULL) {

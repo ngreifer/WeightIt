@@ -336,3 +336,24 @@ test_that("simultaneous CBPS handles a time point with no covariates", {
   expect_no_error(weightitMSM(list(A_1 ~ 1, A_2 ~ X1_1 + A_1), data = msmdata,
                               method = "cbps", is.MSM.method = TRUE))
 })
+
+test_that("constant weights from covariate-free models raise no warning", {
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$A2 <- test_data$A[sample.int(nrow(test_data))]
+  test_data$Ac2 <- test_data$Ac + rnorm(nrow(test_data))
+
+  #Stabilizing a covariate-free binary model by the same marginal model
+  expect_no_warning({
+    W <- weightit(A ~ 1, data = test_data, stabilize = TRUE)
+  })
+  expect_equal(unname(W$weights), rep(1, nrow(test_data)))
+
+  #Covariate-free continuous models at every time point
+  expect_no_warning({
+    W <- weightitMSM(list(Ac ~ 1, Ac2 ~ 1), data = test_data)
+  })
+  expect_equal(unname(W$weights), rep(1, nrow(test_data)))
+
+  expect_no_warning(weightitMSM(list(A ~ 1, A2 ~ 1), data = test_data,
+                                stabilize = TRUE))
+})

@@ -42,8 +42,8 @@ supplied, an unweighted model will be fit.}
 parameters. Allowable options include \code{"asympt"}, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; \code{"const"}, which uses the usual
-maximum likelihood estimates (only available when \code{weightit} is not
-supplied); \code{"HC0"}, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when \code{weightit} is
+supplied, in which case a warning is issued); \code{"HC0"}, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; \code{"BS"}, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); \code{"FWB"},
 which uses the fractional weighted bootstrap as implemented in
@@ -97,7 +97,11 @@ supplied to \code{weights} is treated as though it had been supplied to
 bootstrapping holds the weights fixed rather than re-estimating them.}
 
 \item{...}{arguments to be used to form the default control argument if it
-is not supplied directly.}
+is not supplied directly. A \code{subset} argument, as in \code{\link[=glm]{glm()}}, can also be
+supplied, but not when \code{weightit} or \code{weights} is supplied, since the
+weights and their estimation involve the full sample; to estimate an
+effect within a subgroup, fit the model in the full sample and use
+\CRANpkg{marginaleffects} to compute the effect in the subgroup.}
 }
 \value{
 An \code{ordinal_weightit} object.

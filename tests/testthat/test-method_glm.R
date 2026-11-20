@@ -696,3 +696,31 @@ test_that("Continuous treatment: stabilize composes with M-estimation", {
   # A numerator with terms in it is a real one and is reported
   expect_identical(deparse1(W$stabilization), "~X5")
 })
+
+test_that("weightit.fit() accepts factor and character treatments and method aliases", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Am <- factor(cut(test_data$X1, 3, labels = c("a", "b", "c")))
+
+  X <- as.matrix(test_data[c("X2", "X3", "X5")])
+
+  W <- weightit(Am ~ X2 + X3 + X5, data = test_data)
+
+  Wf <- weightit.fit(X, test_data$Am)
+  expect_identical(get_treat_type(Wf$treat), "multinomial")
+  expect_equal(unname(Wf$weights), unname(W$weights), tolerance = eps)
+
+  Wc <- weightit.fit(X, as.character(test_data$Am))
+  expect_equal(unname(Wc$weights), unname(W$weights), tolerance = eps)
+
+  #Aliases and capitalization are resolved as in `weightit()`
+  expect_equal(weightit.fit(X, test_data$A, method = "ps")$weights,
+               weightit.fit(X, test_data$A, method = "glm")$weights,
+               tolerance = eps)
+  expect_equal(weightit.fit(X, test_data$A, method = "GLM")$weights,
+               weightit.fit(X, test_data$A, method = "glm")$weights,
+               tolerance = eps)
+})

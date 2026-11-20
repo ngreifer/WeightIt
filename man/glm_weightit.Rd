@@ -64,8 +64,8 @@ supplied, an unweighted model will be fit.}
 parameters. Allowable options include \code{"asympt"}, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; \code{"const"}, which uses the usual
-maximum likelihood estimates (only available when \code{weightit} is not
-supplied); \code{"HC0"}, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when \code{weightit} is
+supplied, in which case a warning is issued); \code{"HC0"}, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; \code{"BS"}, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); \code{"FWB"},
 which uses the fractional weighted bootstrap as implemented in
@@ -122,7 +122,11 @@ supplied to \code{weights} is treated as though it had been supplied to
 bootstrapping holds the weights fixed rather than re-estimating them.}
 
 \item{\dots}{arguments to be used to form the default control argument if it
-is not supplied directly.}
+is not supplied directly. A \code{subset} argument, as in \code{\link[=glm]{glm()}}, can also be
+supplied, but not when \code{weightit} or \code{weights} is supplied, since the
+weights and their estimation involve the full sample; to estimate an
+effect within a subgroup, fit the model in the full sample and use
+\CRANpkg{marginaleffects} to compute the effect in the subgroup.}
 }
 \value{
 A \code{glm_weightit} object, which inherits from \code{glm}.
@@ -183,15 +187,20 @@ also performs the resampling-based bootstrap but
 with the additional features \pkg{fwb} provides (e.g., a progress bar and
 parallelization).
 
-Functions in the \pkg{sandwich} package can be used to compute standard errors
-after fitting, regardless of how \code{vcov} was specified, though these will
-ignore estimation of the weights, if any. When no adjustment is done for
-estimation of the weights (i.e., because no \code{weightit} argument was supplied
-or there was no \code{"Mparts"} component in the supplied object), the default
-variance matrix produced by \code{glm_weightit()} should align with that from
-\verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)}
-when \code{cluster} is supplied. Not all types are available
-for all models.
+Functions in the \pkg{sandwich} package can also be used to compute standard
+errors after fitting. Whether they account for estimation of the weights
+follows the \code{vcov} the model was fit with: they do when \code{vcov} is \code{"asympt"}
+(or \code{"BS"} or \code{"FWB"}, for which the analytic adjustment is used) and do not
+when \code{vcov} is \code{"HC0"} or \code{"const"}. For a model fit with \code{vcov = "asympt"}
+or \code{"HC0"}, \code{sandwich::sandwich()} therefore agrees with \code{vcov()}, and
+\code{sandwich::vcovCL(., cluster = cluster, type = "HC0")} agrees with
+\code{vcov(., cluster = cluster)}. Supplying \code{asympt} to these functions
+overrides this (see \link[=glm_weightit-methods]{sandwich::estfun()}). When they
+account for estimation of the weights, \code{sandwich::vcovHC()} is available only
+with \code{type = "HC0"} or \code{"HC1"}, because the other types adjust each unit's
+contribution by its leverage in the outcome model alone; for those, fit the
+model with \code{vcov = "HC0"} or supply \code{asympt = FALSE}, which treats the
+weights as fixed. Not all types are available for all models.
 }
 \examples{
 data("lalonde", package = "cobalt")

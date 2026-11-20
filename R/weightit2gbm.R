@@ -45,7 +45,7 @@
 #'
 #' For continuous treatments, weights are estimated as
 #' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-#' stabilization factor) is the unconditional density of treatment evaluated the
+#' stabilization factor) is the unconditional density of treatment evaluated at the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
 #' covariates evaluated at the observed treatment value. The shape of
@@ -76,7 +76,7 @@
 #'
 #' In the presence of missing data, the following value(s) for `missing` are allowed:
 #'     \describe{
-#'       \item{`"ind"` (default)}{Missing variables are automatically handled by the boosting model. When using a `criterion` targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
+#'       \item{`"ind"` (default)}{Missing variables are automatically handled by the boosting model. When using a `criterion` targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are included as covariates to balance. The missing values in the covariates are then replaced with the covariate medians; for a factor, the missing values instead become a category of their own, `"<NA>"`. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
 #'     }
 #'
 #' ## M-estimation
@@ -91,7 +91,7 @@
 #'
 #' The following additional arguments can be specified:
 #'   \describe{
-#'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See [cobalt::bal.compute()] for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, `criterion` can be set as `"cv{#}"`, where `{#}` is replaced by a number representing the number of cross-validation folds used (e.g., `"cv5"` for 5-fold cross-validation). For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+#'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See [cobalt::bal.compute()] for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, `criterion` can be set as `"cv{#}"`, where `{#}` is replaced by a number representing the number of cross-validation folds used (e.g., `"cv5"` for 5-fold cross-validation). For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standardized mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
 #'     \item{`trim.at`}{A number supplied to `at` in [trim()] which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 #'     }
@@ -117,8 +117,8 @@
 #'     }
 #' }
 #'
-#'   All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit},
-#'   and some are not used at all. For binary and multi-category treatments with
+#'   All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}
+#'   (except `keep.data`, which is `FALSE` by default), and some are not used at all. For binary and multi-category treatments with
 #'   cross-validation used as the criterion, `class.stratify.cv` is set
 #'   to `TRUE` by default.
 #'
@@ -127,7 +127,7 @@
 #'
 #' For continuous treatments only, the following arguments may be supplied:
 #' \describe{
-#'       \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'       \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
 #'
 #' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the numerator and denominator densities for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)
 #'
@@ -241,6 +241,8 @@
 #'
 #' ## Continuous treatments
 #'
+#' Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. *Epidemiology*, 25(2), 292–299. \doi{10.1097/EDE.0000000000000053}
+#'
 #' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf rlang::is_installed("gbm")
@@ -326,7 +328,7 @@
 NULL
 
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
-                         stabilize, missing, verbose, ...) {
+                         missing, verbose, ...) {
 
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
   t.lev <- .recorded_treated_level(treat)
@@ -465,7 +467,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
           .add_missing_indicators_df(X),
           treat = treat, stat = criterion,
           estimand = estimand, s.weights = s.weights,
-          focal = focal, ...)
+          focal = if (treat.type != "binary") focal, ...)
       }
     }
   }
@@ -585,8 +587,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         }
         else {
           .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                        focal = focal, stabilize = stabilize,
-                                        subclass = ...get("subclass"))
+                                        focal = focal, subclass = ...get("subclass"))
         }
       }
       if (trim.at != 0) {
@@ -633,8 +634,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
           }
           else {
             .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                          focal = focal, stabilize = stabilize,
-                                          subclass = ...get("subclass"))
+                                          focal = focal, subclass = ...get("subclass"))
           }
         }
         if (trim.at != 0) {
@@ -722,21 +722,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
           }
           else {
             drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
-                                               focal = focal, stabilize = stabilize,
-                                               subclass = ...get("subclass")))
+                                               focal = focal, subclass = ...get("subclass")))
           }
         }
 
         current.best.loss <- best.loss
         best.tune.index <- i
 
-        tree.val <- data.frame(tree = seq_along(cv.results$error),
-                               error = cv.results$error)
-
         if (treat.type %in% c("multinomial", "multi-category")) {
           best.ps <- NULL
         }
       }
+
+      tree.val <- data.frame(tree = seq_along(cv.results$error),
+                             error = cv.results$error)
     }
 
     info$best.tree <- c(info$best.tree, setNames(best.tree, i))
@@ -756,7 +755,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 }
 
 weightit2gbm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                              estimand = NULL, focal = NULL, ...) {
 
   C <- .make_cens_treat(treat)
 
@@ -776,14 +775,14 @@ weightit2gbm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
   #the weights actually target.
   weightit2gbm(covs = covs, treat = as.treat(C, censoring = TRUE),
                s.weights = s.weights, subset = subset,
-               estimand = "ATE", focal = NULL, stabilize = FALSE,
+               estimand = "ATE", focal = NULL,
                missing = missing, verbose = verbose, ...)
 }
 
 weightit2gbm.multi <- weightit2gbm
 
 weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
-                              stabilize, missing, verbose, ...) {
+                              missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]

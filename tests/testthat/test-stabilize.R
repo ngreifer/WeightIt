@@ -439,3 +439,70 @@ test_that("weightitMSM(): stabilization formulas are printed", {
     expect_identical(out_i[length(out_i)], " - weights trimmed at 90%")
   }
 })
+
+test_that("numerator variables are found where the numerator formula was created", {
+  #A variable that exists only in a calling function, not in `data` or the global
+  #environment. The numerator model must find it, not just the check before it.
+  #weightitMSM() builds the numerator formula for later time points itself, so
+  #those are covered separately from the first.
+  ref_data <- msmdata
+  ref_data$Z <- ref_data$X1_0
+
+  W_ref <- weightit(A_1 ~ X1_0 + X2_0, data = ref_data, method = "glm",
+                    stabilize = ~Z)
+  WM_ref <- weightitMSM(msm_formulas, data = ref_data, method = "glm",
+                        stabilize = ~Z)
+  WMl_ref <- weightitMSM(msm_formulas, data = ref_data, method = "glm",
+                         stabilize = list(~Z, ~1, ~Z))
+
+  f <- function() {
+    Z <- msmdata$X1_0
+
+    list(weightit(A_1 ~ X1_0 + X2_0, data = msmdata, method = "glm",
+                  stabilize = ~Z),
+         weightitMSM(msm_formulas, data = msmdata, method = "glm",
+                     stabilize = ~Z),
+         weightitMSM(msm_formulas, data = msmdata, method = "glm",
+                     stabilize = list(~Z, ~1, ~Z)))
+  }
+
+  W_f <- f()
+
+  expect_equal(W_f[[1L]]$weights, W_ref$weights, tolerance = eps)
+  expect_equal(W_f[[2L]]$weights, WM_ref$weights, tolerance = eps)
+  expect_equal(W_f[[3L]]$weights, WMl_ref$weights, tolerance = eps)
+
+  #A numerator formula created in one function and used in another
+  make_num <- function() {
+    Z <- msmdata$X1_0
+    ~Z
+  }
+
+  fit_msm <- function(nf) {
+    weightitMSM(msm_formulas, data = msmdata, method = "glm", stabilize = nf)
+  }
+
+  expect_equal(fit_msm(make_num())$weights, WM_ref$weights, tolerance = eps)
+
+  #Variables found nowhere name the preferred input
+  expect_error(weightitMSM(msm_formulas, data = msmdata, method = "glm",
+                           stabilize = list(~nonexistent, ~1, ~nonexistent2)),
+               "Supplying all variables in `data` is safest")
+})
+
+test_that("covariates are found where the treatment formula was created", {
+  ref_data <- msmdata
+  ref_data$Z <- ref_data$X1_0
+
+  W_ref <- weightit(A_1 ~ Z + X2_0, data = ref_data, method = "glm")
+
+  f <- function() {
+    Z <- msmdata$X1_0
+    weightit(A_1 ~ Z + X2_0, data = msmdata, method = "glm")
+  }
+
+  expect_equal(f()$weights, W_ref$weights, tolerance = eps)
+
+  expect_error(weightit(A_1 ~ nonexistent + X2_0, data = msmdata, method = "glm"),
+               "Supplying all variables in `data` is safest")
+})

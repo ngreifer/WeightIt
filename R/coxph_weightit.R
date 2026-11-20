@@ -697,7 +697,7 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     })
   }
 
-  .y <- fit[["y"]] %or% model.response(model.frame(fit))
+  .y <- fit[["y"]] %or% model.response(model.frame(.fill_nzw_model(fit)))
 
   ranks <- rank(.y[, "time"]) |>
     factor() |>

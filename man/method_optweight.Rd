@@ -26,8 +26,8 @@ and ATC. The weights are taken from the output of the \code{optweight.fit} fit o
 \subsection{Multi-Category Treatments}{
 
 For multi-category treatments, this method estimates the weights using
-\pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE and
-ATT. The weights are taken from the output of the \code{optweight.fit} fit object.
+\pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE, ATT,
+and ATC. The weights are taken from the output of the \code{optweight.fit} fit object.
 }
 
 \subsection{Continuous Treatments}{
@@ -137,7 +137,7 @@ A list with one entry:
 }
 
 \examples{
-\dontshow{if (rlang::is_installed("optweight (>= 1.0.0)")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("optweight (>= 2.0.1)")) withAutoprint(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)

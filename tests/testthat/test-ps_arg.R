@@ -116,3 +116,30 @@ test_that("ps and method are not both used", {
                unname(weightit(A ~ X1, data = d, ps = ps)$weights),
                tolerance = eps)
 })
+
+test_that("ps can be a matrix or data frame with one column per treatment level", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Am <- factor(cut(test_data$X1, 3, labels = c("a", "b", "c")))
+
+  P <- fitted(multinom_weightit(Am ~ X2 + X3, data = test_data))
+
+  W0 <- weightit(Am ~ X2 + X3, data = test_data)
+  W1 <- weightit(Am ~ X2 + X3, data = test_data, ps = P)
+
+  expect_equal(W1$weights, W0$weights, tolerance = eps)
+
+  #Columns named for the treatment levels are matched by name
+  W2 <- weightit(Am ~ X2 + X3, data = test_data, ps = as.data.frame(P[, c(3, 1, 2)]))
+  expect_equal(W2$weights, W1$weights, tolerance = eps)
+
+  #Unnamed columns are taken in the order of the levels
+  W3 <- weightit(Am ~ X2 + X3, data = test_data, ps = unname(P))
+  expect_equal(W3$weights, W1$weights, tolerance = eps)
+
+  expect_error(weightit(Am ~ X2 + X3, data = test_data, ps = P[-1, ]),
+               "same number of units")
+})

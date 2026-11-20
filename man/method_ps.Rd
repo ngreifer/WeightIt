@@ -32,8 +32,10 @@ levels. All estimands allowed by \code{\link[=get_w_from_ps]{get_w_from_ps()}} a
 
 \subsection{Multi-Category Treatments}{
 
-\code{ps} may be a matrix or data frame with one column per treatment level, or a
-numeric vector (or one-column matrix) giving each unit's probability of being
+\code{ps} may be a matrix or data frame with one column per treatment level (when
+the column names match the treatment levels, those names determine which
+column is which; otherwise the columns are assumed to be in the order of the
+treatment levels), or a numeric vector (or one-column matrix) giving each unit's probability of being
 in the treatment group it is actually in. The estimands \code{"ATE"}, \code{"ATT"},
 \code{"ATC"}, \code{"ATO"}, and \code{"ATM"} are available.
 }
@@ -63,7 +65,9 @@ weights are \code{1/P(C = 0 | X)} for the units still under observation and exac
 \subsection{Sampling Weights}{
 
 Sampling weights are supported and are applied to the resulting weights, but
-they play no part in computing them, since no model is fit.
+they play no part in computing them, since no model is fit, except for
+continuous treatments, where they are used to estimate the residual standard
+deviation and the marginal density of the treatment.
 }
 }
 \section{Additional Arguments}{

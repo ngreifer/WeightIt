@@ -239,9 +239,10 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
                    cloglog = -digamma(1),
                    loglog = digamma(1))
 
-      varY <- drop(object$coefficients[seq_col(object$varx)] %*%
-                     object$varx %*%
-                     object$coefficients[seq_col(object$varx)]) + sigma2
+      b <- object$coefficients[seq_col(object$varx)]
+      b[is.na(b)] <- 0
+
+      varY <- drop(b %*% object$varx %*% b) + sigma2
 
       out <- (mu + object$linear.predictors) / sqrt(varY)
     }
@@ -284,11 +285,16 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
     offset <- offset + addO
   }
 
+  #Aliased coefficients are NA; their columns are linear combinations of the
+  #others, so setting them to 0 gives the same predictions as the fitted model
+  coefs <- object$coefficients
+  coefs[is.na(coefs)] <- 0
+
   if (ord) {
     x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
 
     if (type == "link") {
-      return(offset + drop(x %*% object$coefficients[seq_col(x)]))
+      return(offset + drop(x %*% coefs[seq_col(x)]))
     }
 
     if (type == "stdlv") {
@@ -304,15 +310,15 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
                    cloglog = -digamma(1),
                    loglog = digamma(1))
 
-      varY <- drop(object$coefficients[seq_col(object$varx)] %*%
+      varY <- drop(coefs[seq_col(object$varx)] %*%
                      object$varx %*%
-                     object$coefficients[seq_col(object$varx)]) + sigma2
+                     coefs[seq_col(object$varx)]) + sigma2
 
-      return((mu + offset + drop(x %*% object$coefficients[seq_col(x)])) / sqrt(varY))
+      return((mu + offset + drop(x %*% coefs[seq_col(x)])) / sqrt(varY))
     }
   }
 
-  p <- object$get_p(object$coefficients, x, offset)
+  p <- object$get_p(coefs, x, offset)
 
   if (type == "response") {
     if (is_not_null(level)) {

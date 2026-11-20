@@ -8,7 +8,15 @@
 \usage{
 calibrate(x, ...)
 
-\method{calibrate}{default}(x, treat, s.weights = NULL, data = NULL, method = "platt", ...)
+\method{calibrate}{default}(
+  x,
+  treat,
+  s.weights = NULL,
+  data = NULL,
+  method = "platt",
+  treated = NULL,
+  ...
+)
 
 \method{calibrate}{weightit}(x, method = "platt", ...)
 }
@@ -31,6 +39,13 @@ treatments are supported.}
 include \code{"platt"} (default) for Platt scaling as described by Gutman et al.
 (2024) and \code{"isoreg"} for isotonic regression as described by van der Laan
 et al. (2024).}
+
+\item{treated}{when \code{x} is a vector of propensity scores, the value of
+\code{treat} that is considered the "treated" group (i.e., the group for which
+the propensity scores are the probability of being in). If \code{NULL},
+\code{calibrate()} will attempt to figure it out on its own using the same
+heuristics as \code{\link[=get_w_from_ps]{get_w_from_ps()}}. This only matters when \code{treat} has values
+other than 0 and 1.}
 }
 \value{
 If the input is a \code{weightit} object, the output will be a \code{weightit}

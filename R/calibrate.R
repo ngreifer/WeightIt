@@ -19,6 +19,12 @@
 #'   include `"platt"` (default) for Platt scaling as described by Gutman et al.
 #'   (2024) and `"isoreg"` for isotonic regression as described by van der Laan
 #'   et al. (2024).
+#' @param treated when `x` is a vector of propensity scores, the value of
+#'   `treat` that is considered the "treated" group (i.e., the group for which
+#'   the propensity scores are the probability of being in). If `NULL`,
+#'   `calibrate()` will attempt to figure it out on its own using the same
+#'   heuristics as [get_w_from_ps()]. This only matters when `treat` has values
+#'   other than 0 and 1.
 #' @param \dots not used.
 #'
 #' @returns
@@ -68,12 +74,18 @@ calibrate <- function(x, ...) {
 
 #' @exportS3Method calibrate default
 #' @rdname calibrate
-calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = "platt", ...) {
+calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = "platt",
+                              treated = NULL, ...) {
   arg::arg_supplied(treat)
 
   if (length(unique(treat)) != 2L) {
     arg::err("{.fun calibrate} can only be used with binary treatments")
   }
+
+  #The propensity scores are the probabilities of being in the treated group,
+  #which is determined as it is by `get_w_from_ps()`
+  treated <- .process_focal_and_estimand(NULL, "ATE", treat, treated)[["treated"]]
+  treat <- binarize(treat, one = treated)
 
   arg::arg_numeric(x)
 
@@ -112,13 +124,17 @@ calibrate.weightit <- function(x, method = "platt", ...) {
     arg::err("{.fun calibrate} can only be used with binary treatments")
   }
 
+  treated <- .recorded_treated_level(x[["treat"]]) %or%
+    .get_treated_level(x[["treat"]], x[["estimand"]], x[["focal"]])
+
   x$ps[] <- calibrate.default(x[["ps"]], treat = x[["treat"]],
                               s.weights = x[["s.weights"]],
-                              method = method, ...)
+                              method = method, treated = treated, ...)
 
   x$weights[] <- get_w_from_ps(x$ps, x[["treat"]],
                                estimand = x[["estimand"]],
-                               focal = x[["focal"]])
+                               focal = x[["focal"]],
+                               treated = treated)
 
   attr(x, "calibrate") <- list(method = method)
 
@@ -133,52 +149,45 @@ calibrate.weightit <- function(x, method = "platt", ...) {
   x
 }
 
-.isoregw <- function(x, y, w = rep(1, length(y))) {
-  stopifnot(length(x) == length(y), length(y) == length(w))
-
-  # Order by x
+#Weighted isotonic regression by the pool-adjacent-violators algorithm. The blocks
+#are kept on a stack of preallocated vectors (fitted value, total weight, number
+#of units), so each unit is pushed once and merged at most once, and the whole
+#fit takes linear time after sorting.
+.isoregw <- function(x, y, w = rep.int(1, length(y))) {
   ord <- order(x)
-  x <- x[ord]
   y <- y[ord]
   w <- w[ord]
 
-  # Start with each point as its own block
-  blocks <- lapply(seq_along(y), function(i) list(
-    idx = i,
-    value = y[i],
-    weight = w[i]
-  ))
+  n <- length(y)
 
-  i <- 1
-  while (i < length(blocks)) {
-    if (blocks[[i]]$value > blocks[[i + 1]]$value) {
-      # merge blocks i and i+1
-      new_weight <- blocks[[i]]$weight + blocks[[i + 1L]]$weight
-      new_value <- (blocks[[i]]$value * blocks[[i]]$weight +
-                      blocks[[i + 1L]]$value * blocks[[i + 1L]]$weight) / new_weight
-      new_idx <- c(blocks[[i]]$idx, blocks[[i + 1]]$idx)
+  val <- wt <- numeric(n)
+  cnt <- integer(n)
+  k <- 0L
 
-      blocks[[i]] <- list(idx = new_idx, value = new_value, weight = new_weight)
-      blocks[[i + 1L]] <- NULL
+  for (i in seq_len(n)) {
+    k <- k + 1L
+    val[k] <- y[i]
+    wt[k] <- w[i]
+    cnt[k] <- 1L
 
-      if (i > 1L) {
-        i <- i - 1L
+    #Pool the newest block with the one before it while they violate monotonicity
+    while (k > 1L && val[k - 1L] > val[k]) {
+      tw <- wt[k - 1L] + wt[k]
+
+      val[k - 1L] <- {
+        if (tw > 0) (val[k - 1L] * wt[k - 1L] + val[k] * wt[k]) / tw
+        else (val[k - 1L] * cnt[k - 1L] + val[k] * cnt[k]) / (cnt[k - 1L] + cnt[k])
       }
-    }
-    else {
-      i <- i + 1
+
+      wt[k - 1L] <- tw
+      cnt[k - 1L] <- cnt[k - 1L] + cnt[k]
+      k <- k - 1L
     }
   }
 
-  # Build fitted values
-  fit <- numeric(length(y))
-  for (b in blocks) {
-    fit[b$idx] <- b$value
-  }
-
-  # Return fitted values in original x order
-  yhat <- numeric(length(y))
-  yhat[ord] <- fit
+  #Fitted values in `x` order, returned in the original order
+  yhat <- numeric(n)
+  yhat[ord] <- rep.int(val[seq_len(k)], cnt[seq_len(k)])
 
   yhat
 }

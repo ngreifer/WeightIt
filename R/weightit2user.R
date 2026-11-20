@@ -12,18 +12,17 @@
 #' The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:
 #'   \itemize{
 #'     \item{`treat`: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to `weightit()` and so will have its type (e.g., numeric, factor, etc.), which may need to be converted.}
-#' \item{`covs`: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to `weightit()`. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use [make_full_rank()], which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
+#' \item{`covs`: a numeric matrix of covariate values for each unit. This comes directly from the right hand side of the formula passed to `weightit()`. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use [make_full_rank()], which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
 #' \item{`s.weights`: a numeric vector of sampling weights, one for each unit.}
 #' \item{`ps`: a numeric vector of propensity scores.}
 #' \item{`subset`: a logical vector the same length as `treat` that is `TRUE` for units to be included in the estimation and `FALSE` otherwise. This is used to subset the input objects when `by` is used. `treat`, `covs`, `s.weights`, and `ps`, if supplied, will already have been subsetted by `subset`.}
-#' \item{`estimand`: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, `weightit()` sets `focal` to the control level (usually 0 or the lowest level of `treat`) and sets `estimand` to "ATT".}
+#' \item{`estimand`: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to `estimand`, `weightit()` sets `focal` to the control level (usually 0 or the lowest level of `treat`); for binary treatments, `estimand` remains "ATC", and for multi-category treatments, it is set to "ATT".}
 #' \item{`focal`: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). `weightit()` ensures the value of focal is a level of `treat`.}
-#' \item{`stabilize`: a logical vector of length 1. It is not processed by `weightit()` before it reaches the fitting function.}
 #' \item{`missing`: a character vector of length 1 containing the missingness method in effect, or `""` when no missing data are present. See the `missing` argument of [weightit()].}
 #' \item{`verbose`: a logical vector of length 1 indicating whether the fitting function should print additional output.}
 #' }
 #'
-#' None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
+#' The fitting function must have parameters named `covs` and `treat`; the others are optional and are simply those that are automatically available.
 #'
 #' In addition, any additional arguments supplied to `weightit()` will be passed on to the fitting function. `weightit()` ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include `...` as a parameter.
 #'
@@ -130,7 +129,7 @@
 NULL
 
 weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
-                          stabilize, missing, ps, verbose, ...) {
+                          missing, ps, verbose, ...) {
   A <- list(...)
 
   if (is_not_null(covs)) {
@@ -156,10 +155,17 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     Fun_formal[["..."]] <- NULL
   }
 
+  #Only the documented arguments are supplied from this function's own values;
+  #matching any local object by name would hand the user's function internal
+  #objects whose names happen to match its parameters
+  available <- list(covs = covs, treat = treat, s.weights = s.weights,
+                    subset = subset, estimand = estimand, focal = focal,
+                    missing = missing, ps = ps, verbose = verbose)
+
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (exists(i, inherits = FALSE)) {
-      fun_args[i] <- list(get0(i, inherits = FALSE))
+    if (utils::hasName(available, i)) {
+      fun_args[i] <- available[i]
     }
     else if (utils::hasName(A, i)) {
       fun_args[i] <- A[i]
@@ -203,7 +209,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
   obj
 }
 
-weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize,
+weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset,
                              missing, verbose, ...) {
   A <- list(...)
 
@@ -234,10 +240,15 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     Fun_formal[["..."]] <- NULL
   }
 
+  #See `weightit2user()`
+  available <- list(covs.list = covs.list, treat.list = treat.list,
+                    s.weights = s.weights, subset = subset,
+                    missing = missing, verbose = verbose)
+
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (exists(i, inherits = FALSE)) {
-      fun_args[i] <- list(get0(i, inherits = FALSE))
+    if (utils::hasName(available, i)) {
+      fun_args[i] <- available[i]
     }
     else if (is_not_null(A[[i]])) {
       fun_args[[i]] <- A[[i]]
@@ -271,7 +282,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
   }
 
   if (all(is.na(obj[["w"]]))) {
-    arg::err("all weights were generated as {.val {NA}}")
+    arg::err("all weights were estimated as {.val {NA}}")
   }
 
   if (length(obj[["w"]]) != length(treat.list[[1L]])) {

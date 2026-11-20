@@ -31,8 +31,10 @@
 #'
 #' ## Multi-Category Treatments
 #'
-#' `ps` may be a matrix or data frame with one column per treatment level, or a
-#' numeric vector (or one-column matrix) giving each unit's probability of being
+#' `ps` may be a matrix or data frame with one column per treatment level (when
+#' the column names match the treatment levels, those names determine which
+#' column is which; otherwise the columns are assumed to be in the order of the
+#' treatment levels), or a numeric vector (or one-column matrix) giving each unit's probability of being
 #' in the treatment group it is actually in. The estimands `"ATE"`, `"ATT"`,
 #' `"ATC"`, `"ATO"`, and `"ATM"` are available.
 #'
@@ -58,7 +60,9 @@
 #' ## Sampling Weights
 #'
 #' Sampling weights are supported and are applied to the resulting weights, but
-#' they play no part in computing them, since no model is fit.
+#' they play no part in computing them, since no model is fit, except for
+#' continuous treatments, where they are used to estimate the residual standard
+#' deviation and the marginal density of the treatment.
 #'
 #' @section Additional Arguments:
 #' For binary and multi-category treatments, the following additional argument
@@ -124,7 +128,7 @@
 NULL
 
 weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
-                        stabilize, missing, ps, .data, verbose, ...) {
+                        missing, ps, .data, verbose, ...) {
 
   fit.obj <- NULL
 
@@ -175,14 +179,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
   #Computing weights
   w <- .get_w_from_ps_internal_bin(ps = p.score,
                                    treat = as.numeric(treat_sub == t.lev), estimand,
-                                   stabilize = stabilize,
                                    subclass = ...get("subclass"))
 
   list(w = w, ps = p.score, fit.obj = fit.obj)
 }
 
 weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                              stabilize, missing, ps, .data, verbose, ...) {
+                              missing, ps, .data, verbose, ...) {
 
   n <- length(treat)
   treat <- factor(treat)
@@ -191,7 +194,17 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   bad.ps <- FALSE
   if (is.matrix(ps) || is.data.frame(ps)) {
     if (all(dim(ps) == c(n, nunique(treat)))) {
-      ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
+      #Columns named for the treatment levels are matched by name, as for binary
+      #treatments; otherwise they are assumed to be in the order of the levels
+      cn <- colnames(ps)
+      ps <- as.data.frame(ps)
+
+      ps <- {
+        if (is_not_null(cn) && setequal(cn, levels(treat))) ps[levels(treat)]
+        else setNames(ps, levels(treat))
+      }
+
+      ps <- ps[subset, , drop = FALSE]
     }
     else if (nrow(ps) == n && ncol(ps) == 1L) {
       ps <- setNames(list2DF(lapply(levels(treat), function(x) {
@@ -227,14 +240,13 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat_sub, estimand, focal = focal,
-                                     stabilize = stabilize,
                                      subclass = ...get("subclass"))
 
   list(w = w)
 }
 
 weightit2ps.cens <- function(covs, treat, s.weights, subset, missing, ps, verbose,
-                             estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                             estimand = NULL, focal = NULL, ...) {
 
   C <- .make_cens_treat(treat)
 
@@ -249,13 +261,13 @@ weightit2ps.cens <- function(covs, treat, s.weights, subset, missing, ps, verbos
   #all of `weightit2ps()`'s input parsing.
   out <- weightit2ps(covs = covs, treat = C, s.weights = s.weights,
                      subset = subset, estimand = "ATT", focal = 1,
-                     stabilize = FALSE, missing = missing, ps = ps,
+                     missing = missing, ps = ps,
                      verbose = verbose, ...)
 
   .att_out_to_cens(out, C[subset])
 }
 
-weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
+weightit2ps.cont <- function(covs, treat, s.weights, subset, missing, ps, verbose, ...) {
 
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -269,7 +281,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
                                       use.kernel = ...get("use.kernel"))
 
   #Get weights
-  w <- .get_w_from_gps_internal_cont(mu = ps, treat = treat,
+  w <- .get_w_from_gps_internal_cont(mu = ps[subset], treat = treat,
                                      s.weights = s.weights,
                                      make_dens_fun = make_dens_fun)
 

@@ -80,8 +80,8 @@
     return(.modify_vcov_info(V, vcov_type = "const", cluster = cluster))
   }
 
-  Xout <- fit[["x"]] %or% model.matrix(fit)
-  Y <- fit[["y"]] %or% model.response(model.frame(fit))
+  Xout <- fit[["x"]] %or% model.matrix(.fill_nzw_model(fit))
+  Y <- fit[["y"]] %or% model.response(model.frame(.fill_nzw_model(fit)))
 
   if (is_not_null(weightit)) {
     W <- weightit[["weights"]]
@@ -107,6 +107,8 @@
     bout <- bout[!aliased]
   }
 
+  cluster_supplied <- cluster
+
   if (is_not_null(cluster) && vcov %in% c("asympt", "HC0", "BS", "FWB")) {
     if (inherits(cluster, "formula")) {
       cluster_tmp <- expand.model.frame(fit, cluster, na.expand = FALSE)
@@ -121,6 +123,11 @@
     }
 
     arg::arg_no_NA(cluster)
+
+    #Stored on the fit as supplied, before the intersections of the clustering
+    #variables are added below, so that recomputing the variance (e.g., with
+    #`summary(fit, vcov = "FWB")`) expands them only once
+    cluster_supplied <- cluster
 
     p <- ncol(cluster)
     if (p > 1L) {
@@ -506,7 +513,7 @@
 
   colnames(V) <- rownames(V) <- names(aliased)[!aliased]
 
-  .modify_vcov_info(V, vcov_type = vcov, cluster = cluster)
+  .modify_vcov_info(V, vcov_type = vcov, cluster = cluster_supplied)
 }
 
 # Derivative of the summed outcome estimating function with respect to each unit's
@@ -628,41 +635,6 @@
   vcov
 }
 
-# Process a user-supplied vcov for use in summary.glm_weightit()
-.process_vcov_summary <- function(object, vcov. = NULL, ...) {
-  if (is_null(vcov.)) {
-    V <- stats::vcov(object)
-    vcov_type <- object$vcov_type
-    cluster <- .attr(object, "cluster")
-  }
-  else if (is.function(vcov.)) {
-    V <- vcov.(object, ...)
-
-    arg::arg_cov(V,
-                 .msg = "the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (is.cov_like(vcov.)) {
-    V <- vcov.
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (rlang::is_string(vcov.)) {
-    V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
-
-    vcov_type <- .attr(V, "vcov_type")
-    cluster <- .attr(V, "cluster")
-  }
-  else {
-    arg::err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
-  }
-
-  .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
-}
-
 # Process a user-supplied vcov for use in anova.glm_weightit()
 .process_vcov_anova <- function(object, object2 = NULL, vcov. = NULL, b1 = NULL, ...) {
 
@@ -671,29 +643,14 @@
       arg::err("no variance matrix found in {.arg object}; please supply an argument to {.arg vcov}")
     }
 
-    if (!identical(object[["vcov_type"]], object2[["vcov_type"]]) &&
-        !identical(object2[["vcov_type"]], "none")) {
+    if (!identical(as.vector(object[["vcov_type"]]), as.vector(object2[["vcov_type"]])) &&
+        !identical(as.vector(object2[["vcov_type"]]), "none")) {
       arg::wrn("different {.arg vcov} types detected for each model; using the variance matrix from the larger model")
     }
 
     V <- stats::vcov(object)
     vcov_type <- object$vcov_type
     cluster <- .attr(object, "cluster")
-  }
-  else if (is.function(vcov.)) {
-    V <- vcov.(object, ...)
-
-    arg::arg_cov(V,
-                 .msg = "the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (is.cov_like(vcov.)) {
-    V <- vcov.
-
-    vcov_type <- "custom"
-    cluster <- NULL
   }
   else if (rlang::is_string(vcov.)) {
     V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
@@ -702,7 +659,7 @@
     cluster <- .attr(V, "cluster")
   }
   else {
-    arg::err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
+    arg::err("{.arg vcov} must be {.val {list(NULL)}} or a string corresponding to a method of computing the parameter variance matrix")
   }
 
   if (is_null(V)) {
@@ -748,7 +705,17 @@
     vcov. <- ...get("type")
   }
 
-  if (is_null(vcov.) && ...length() == 0L) {
+  #Only these arguments change how the variance is computed; others in `...`
+  #(e.g., `conf.int` from `summary()`) must not trigger a recomputation
+  recompute <- any(c("cluster", "R", "fwb.args") %in% ...names())
+
+  if (is_null(vcov.) && recompute &&
+      !identical(as.vector(object[["vcov_type"]]), "none")) {
+    #Recompute the variance of the type used in the original fit
+    vcov. <- as.vector(object[["vcov_type"]])
+  }
+
+  if (is_null(vcov.) && !recompute) {
     # An empty variance matrix is the correct answer for a model with no
     # coefficients (e.g., a null Cox model), so don't treat it as missing
     if (is_not_null(object[["vcov"]]) ||
@@ -767,8 +734,8 @@
     return(NULL)
   }
 
-  R <- ...get("R", 500L)
-  fwb.args <- ...get("fwb.args", list())
+  R <- ...get("R", .attr(object[["vcov_type"]], "R") %or% 500L)
+  fwb.args <- ...get("fwb.args", .attr(object[["vcov_type"]], "fwb.args") %or% list())
 
   vcov. <- .process_vcov(vcov., object[["weightit"]], R, fwb.args)
 
@@ -1050,6 +1017,30 @@
   object
 }
 
+# Re-applies the placeholder fill of `.na_zero_weight()` to the model frame stored
+# in a fitted model, whose filled rows `.process_fit()` restored to their original
+# (missing) values. Any recomputation from the model frame (the model matrix and
+# response used for a new variance matrix, `estfun()`, `bread()`, `hatvalues()`)
+# must see the same complete rows the model was fit with; those rows have a weight
+# of 0, so their values do not affect the results.
+.fill_nzw_model <- function(fit) {
+  mf <- fit[["model"]]
+  rows <- .attr(mf, "na.zero.weight")
+
+  if (is_null(rows)) {
+    return(fit)
+  }
+
+  keep <- !startsWith(names(mf), "(")
+  donor <- which(stats::complete.cases(mf[keep]))[1L]
+
+  mf[rows, keep] <- mf[rep(donor, length(rows)), keep]
+
+  fit[["model"]] <- mf
+
+  fit
+}
+
 # The environment in which variables not found in `data` are looked up, as in
 # `model.frame()`: that of the formula, or, when the formula has none (e.g., it was
 # supplied as a string), that of the caller of the model fitting function
@@ -1150,6 +1141,13 @@
   if (is_not_null(weightit)) {
     arg::arg_is(weightit, c("weightit", "weightitMSM"))
 
+    #The weights and the weighting model's estimating functions cover the full
+    #sample, so a model fit to a subset of it cannot be paired with them
+    if (is_null(object) && utils::hasName(as.list(model_call), "subset")) {
+      arg::err(c("{.arg subset} cannot be used when {.arg weightit} or {.arg weights} is supplied.",
+                 i = "To estimate an effect within a subgroup, fit the model in the full sample (e.g., with the treatment interacted with the subgroup variable) and use the {.arg by} or {.arg newdata} arguments of {.pkg marginaleffects} functions."))
+    }
+
     if (is_null(weightit[["s.weights"]])) {
       weightit[["s.weights"]] <- rep.int(1, nobs(weightit))
     }
@@ -1210,6 +1208,8 @@
     arg::arg_flag(br)
 
     model_call[[1L]] <- .ordinal_weightit
+    model_call <- .fold_control_args(model_call, .ordinal_weightit,
+                                     c(.optim_control_names(), "br.maxit", "br.tol"))
     model_call[setdiff(names(model_call), rlang::fn_fmls_names(.ordinal_weightit))] <- NULL
 
     if (is_not_null(weightit)) {
@@ -1226,6 +1226,8 @@
     arg::arg_flag(br)
 
     model_call[[1L]] <- .multinom_weightit
+    model_call <- .fold_control_args(model_call, .multinom_weightit,
+                                     .optim_control_names())
     model_call[setdiff(names(model_call), rlang::fn_fmls_names(.multinom_weightit))] <- NULL
 
     if (is_not_null(weightit)) {
@@ -1255,6 +1257,30 @@
     model_call$na.action <- .na_zero_weight
     model_call$br <- br
   }
+
+  model_call
+}
+
+#Arguments to `optim()`'s `control` supplied loose in `...` to
+#`ordinal_weightit()` or `multinom_weightit()` are collected into `control`, as
+#`glm()` does with the arguments of `glm.control()`. As with `glm()`, they are
+#ignored when `control` is supplied.
+.optim_control_names <- function() {
+  c("trace", "fnscale", "parscale", "ndeps", "maxit", "abstol", "reltol",
+    "alpha", "beta", "gamma", "REPORT", "warn.1d.NelderMead", "type", "lmm",
+    "factr", "pgtol", "temp", "tmax")
+}
+
+.fold_control_args <- function(model_call, fun, control_names) {
+  loose <- intersect(setdiff(names(model_call), rlang::fn_fmls_names(fun)),
+                     control_names)
+
+  if (is_null(loose) || is_not_null(model_call[["control"]])) {
+    return(model_call)
+  }
+
+  model_call[["control"]] <- as.call(c(list(quote(list)), as.list(model_call)[loose]))
+  model_call[loose] <- NULL
 
   model_call
 }

@@ -12,18 +12,17 @@ To supply a user-defined function, the function object should be entered directl
 The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:
 \itemize{
 \item{\code{treat}: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to \code{weightit()} and so will have its type (e.g., numeric, factor, etc.), which may need to be converted.}
-\item{\code{covs}: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit()}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{\link[=make_full_rank]{make_full_rank()}}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
+\item{\code{covs}: a numeric matrix of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit()}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{\link[=make_full_rank]{make_full_rank()}}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
 \item{\code{s.weights}: a numeric vector of sampling weights, one for each unit.}
 \item{\code{ps}: a numeric vector of propensity scores.}
 \item{\code{subset}: a logical vector the same length as \code{treat} that is \code{TRUE} for units to be included in the estimation and \code{FALSE} otherwise. This is used to subset the input objects when \code{by} is used. \code{treat}, \code{covs}, \code{s.weights}, and \code{ps}, if supplied, will already have been subsetted by \code{subset}.}
-\item{\code{estimand}: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, \code{weightit()} sets \code{focal} to the control level (usually 0 or the lowest level of \code{treat}) and sets \code{estimand} to "ATT".}
+\item{\code{estimand}: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to \code{estimand}, \code{weightit()} sets \code{focal} to the control level (usually 0 or the lowest level of \code{treat}); for binary treatments, \code{estimand} remains "ATC", and for multi-category treatments, it is set to "ATT".}
 \item{\code{focal}: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). \code{weightit()} ensures the value of focal is a level of \code{treat}.}
-\item{\code{stabilize}: a logical vector of length 1. It is not processed by \code{weightit()} before it reaches the fitting function.}
 \item{\code{missing}: a character vector of length 1 containing the missingness method in effect, or \code{""} when no missing data are present. See the \code{missing} argument of \code{\link[=weightit]{weightit()}}.}
 \item{\code{verbose}: a logical vector of length 1 indicating whether the fitting function should print additional output.}
 }
 
-None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
+The fitting function must have parameters named \code{covs} and \code{treat}; the others are optional and are simply those that are automatically available.
 
 In addition, any additional arguments supplied to \code{weightit()} will be passed on to the fitting function. \code{weightit()} ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \code{...} as a parameter.
 

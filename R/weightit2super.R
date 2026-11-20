@@ -40,7 +40,7 @@
 #'
 #' For continuous treatments, weights are estimated as
 #' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-#' stabilization factor) is the unconditional density of treatment evaluated the
+#' stabilization factor) is the unconditional density of treatment evaluated at the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
 #' covariates evaluated at the observed treatment value. The shape of
@@ -106,7 +106,7 @@
 #'
 #' For continuous treatments, the following arguments may be supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
 #'
 #' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
 #'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
@@ -123,7 +123,7 @@
 #'   combination of the predictions optimize a balance criterion, which must be
 #'   set with the `criterion` argument, described below.
 #'   \describe{
-#'     \item{`criterion`}{a string describing the balance criterion used to select the best weights. See [cobalt::bal.compute()] for allowable options for each treatment type. For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+#'     \item{`criterion`}{a string describing the balance criterion used to select the best weights. See [cobalt::bal.compute()] for allowable options for each treatment type. For binary treatments and censoring weights, the default is `"smd.mean"`, which minimizes the average absolute standardized mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
 #'   }
 #'   Note that this implementation differs from that of Pirracchio and Carone
@@ -132,7 +132,8 @@
 #'   included), and balance results from a sample weighted using the estimated
 #'   predicted values as propensity scores, not a sample matched using
 #'   propensity score matching on the predicted values. Binary and continuous
-#'   treatments are supported, but currently multi-category treatments are not.
+#'   treatments and censoring weights are supported, but currently multi-category
+#'   treatments are not.
 #'
 #' @section Additional Outputs:
 #' \describe{
@@ -272,7 +273,7 @@
 NULL
 
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
-                           stabilize, missing, verbose, ...) {
+                           missing, verbose, ...) {
 
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
   t.lev <- .recorded_treated_level(treat)
@@ -422,7 +423,6 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     }
     else {
       .get_w_from_ps_internal_bin(ps = ps, treat = treat, estimand,
-                                  stabilize = stabilize,
                                   subclass = ...get("subclass"))
     }
   }
@@ -431,7 +431,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2super.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                                estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                                estimand = NULL, focal = NULL, ...) {
 
   C <- .make_cens_treat(treat)
 
@@ -450,12 +450,12 @@ weightit2super.cens <- function(covs, treat, s.weights, subset, missing, verbose
   #sample, which is what the weights actually target.
   weightit2super(covs = covs, treat = as.treat(C, censoring = TRUE),
                  s.weights = s.weights, subset = subset,
-                 estimand = "ATE", focal = NULL, stabilize = FALSE,
+                 estimand = "ATE", focal = NULL,
                  missing = missing, verbose = verbose, ...)
 }
 
 weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                                 stabilize, missing, verbose, ...) {
+                                 missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -482,6 +482,10 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
     arg::err('{.arg SL.library} must be supplied with {.code method = "super"}')
   }
   arg::arg_character(SL.library)
+
+  if (is_null(cvControl[["stratifyCV"]])) {
+    cvControl[["stratifyCV"]] <- TRUE
+  }
 
   discrete <- ...get("discrete", FALSE)
   arg::arg_flag(discrete)
@@ -534,7 +538,6 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
-                     stabilize = stabilize,
                      subclass = ...get("subclass"))
 
   p.score <- NULL
@@ -542,7 +545,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   list(w = w, ps = p.score, info = info, fit.obj = fit.list)
 }
 
-weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
+weightit2super.cont <- function(covs, treat, s.weights, subset, missing, ps, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -697,21 +700,29 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
           w <- {
             if (censoring) .get_w_from_ps_internal_cens(drop(ps), Y)
-            else get_w_from_ps(ps, Y, estimand)
+            else .get_w_from_ps_internal_bin(drop(ps), Y, estimand)
           }
 
           cobalt::bal.compute(init, weights = w)
         }
 
-        #Constraints: all coefs greater than 0, sum to less than 1
-        ui <- rbind(diag(p - 1), -1)
-        ci <- c(rep.int(0, p - 1), -1)
+        if (p == 2L) {
+          #A single mixing proportion between 0 and 1, which `constrOptim()`
+          #would search with one-dimensional Nelder-Mead (unreliable, and it warns)
+          alpha <- optimize(loss, c(0, 1))$minimum
+          coefs <- c(alpha, 1 - alpha)
+        }
+        else {
+          #Constraints: all coefs greater than 0, sum to less than 1
+          ui <- rbind(diag(p - 1), -1)
+          ci <- c(rep.int(0, p - 1), -1)
 
-        fit <- constrOptim(rep.int(1 / p, p - 1),
-                           f = loss, grad = NULL,
-                           ui = ui, ci = ci)
+          fit <- constrOptim(rep.int(1 / p, p - 1),
+                             f = loss, grad = NULL,
+                             ui = ui, ci = ci)
 
-        coefs <- c(fit$par, 1 - sum(fit$par))
+          coefs <- c(fit$par, 1 - sum(fit$par))
+        }
       }
 
       list(cvRisk = cvRisk, coef = coefs)
@@ -764,15 +775,23 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
             cobalt::bal.compute(x = init)
         }
 
-        #Constraints: all coefs greater than 0, sum to less than 1
-        ui <- rbind(diag(p - 1), -1)
-        ci <- c(rep.int(0, p - 1), -1)
+        if (p == 2L) {
+          #A single mixing proportion between 0 and 1, which `constrOptim()`
+          #would search with one-dimensional Nelder-Mead (unreliable, and it warns)
+          alpha <- optimize(loss, c(0, 1))$minimum
+          coefs <- c(alpha, 1 - alpha)
+        }
+        else {
+          #Constraints: all coefs greater than 0, sum to less than 1
+          ui <- rbind(diag(p - 1), -1)
+          ci <- c(rep.int(0, p - 1), -1)
 
-        fit <- constrOptim(rep.int(1 / p, p - 1),
-                           f = loss, grad = NULL,
-                           ui = ui, ci = ci)
+          fit <- constrOptim(rep.int(1 / p, p - 1),
+                             f = loss, grad = NULL,
+                             ui = ui, ci = ci)
 
-        coefs <- c(fit$par, 1 - sum(fit$par))
+          coefs <- c(fit$par, 1 - sum(fit$par))
+        }
       }
 
       list(cvRisk = cvRisk, coef = coefs)

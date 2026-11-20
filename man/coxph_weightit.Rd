@@ -36,8 +36,8 @@ supplied, an unweighted model will be fit.}
 parameters. Allowable options include \code{"asympt"}, which uses the
 asymptotically correct M-estimation-based method that accounts for
 estimation of the weights when available; \code{"const"}, which uses the usual
-maximum likelihood estimates (only available when \code{weightit} is not
-supplied); \code{"HC0"}, which computes the robust sandwich variance treating
+maximum likelihood estimates (not recommended when \code{weightit} is
+supplied, in which case a warning is issued); \code{"HC0"}, which computes the robust sandwich variance treating
 weights (if supplied) as fixed; \code{"BS"}, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); \code{"FWB"},
 which uses the fractional weighted bootstrap as implemented in

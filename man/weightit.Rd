@@ -25,8 +25,7 @@ weightit(
 \item{formula}{a formula with a treatment variable on the left hand side and
 the covariates to be balanced on the right hand side. See \code{\link[=glm]{glm()}} for more
 details. Interactions and functions of covariates are allowed. A formula may have an empty
-right hand side (e.g., \code{A ~ 1}), which requests a marginal model at that
-time point; see \emph{Empty model formulas} in Details. The
+right hand side (e.g., \code{A ~ 1}), which requests a marginal model; see \emph{Empty model formulas} in Details. The
 formulas may also contain \CRANpkg{lme4}-style random effects terms (e.g.,
 \code{A ~ X1 + (1 | school)}) for methods that accept them, in which case a
 multilevel model is fit. To estimate censoring weights, use \code{\link[=.cens]{.cens()}} on the left hand side variable.}
@@ -123,10 +122,15 @@ A \code{weightit} object with the following elements:
 \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models and only when \code{method} is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
 \item{s.weights}{The provided sampling weights, or a vector of 1s if none are provided.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{by}{A data frame containing the \code{by} variable when specified.}
+\item{call}{The function call.}
+\item{formula}{The formula supplied to \code{formula}.}
+\item{stabilization}{When the weights are stabilized, the right hand side of the formula of the model for the numerator of the weights.}
+\item{missing}{The method used to handle missing covariate values, when any are present.}
+\item{env}{The environment from which \code{weightit()} was called, in which the call is evaluated again to re-estimate the weights (e.g., when bootstrapping in \code{\link[=glm_weightit]{glm_weightit()}}).}
 \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 

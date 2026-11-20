@@ -44,7 +44,7 @@
 #'
 #' For continuous treatments, weights are estimated as
 #' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-#' stabilization factor) is the unconditional density of treatment evaluated the
+#' stabilization factor) is the unconditional density of treatment evaluated at the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
 #' covariates evaluated at the observed treatment value. The shape of
@@ -87,8 +87,8 @@
 #' ## Sampling Weights
 #'
 #' Sampling weights are supported through `s.weights` in all scenarios except
-#' for multi-category treatments with `multi.method = "mnp"` and for binary and
-#' continuous treatments with `missing = "saem"` (see below). Warning messages
+#' for multi-category treatments with `multi.method = "mnp"` and with
+#' `missing = "saem"` (see below). Warning messages
 #' may appear otherwise about non-integer successes, and these can be ignored.
 #'
 #' ## Missing Data
@@ -120,7 +120,7 @@
 #'
 #' @section Additional Arguments:
 #'
-#' The following additional argument can be specified for all treatment types:
+#' The following additional argument can be specified for binary and continuous treatments:
 #' \describe{
 #'   \item{`quick`}{`logical`; whether to fit the model with [glm.fit()] rather than [glm()]. This skips construction of the model frame and returns a smaller fit object, which can be worthwhile when fitting many models (e.g., in a simulation) but means the object returned by `include.obj = TRUE` lacks the components that require it. Default is `FALSE`. Ignored when a fitting function other than `glm()` is used (e.g., with random effects terms or `missing = "saem"`).}
 #' }
@@ -145,7 +145,7 @@
 #'   For continuous treatments, the following additional arguments may be
 #'   supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
 #'
 #' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
 #'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
@@ -158,7 +158,8 @@
 #'   as those implemented in the \CRANpkg{glm2} package; it is ignored for
 #'   multi-category and continuous treatments. Arguments matching those of
 #'   [glm.control()] are collected and passed to `glm()` as its `control`
-#'   argument; a `control` list can also be supplied directly. Other arguments
+#'   argument; a `control` list can also be supplied directly. For continuous
+#'   treatments, only a `control` list is used. Other arguments
 #'   are not forwarded to `glm()`.
 #'
 #'   In the presence of missing data with `link = "logit"` and
@@ -172,8 +173,9 @@
 #'   Treatment Models* above), the fit is handled by \pkgfun{lme4}{glmer} for
 #'   binary treatments, \pkgfun{mclogit}{mblogit} for multi-category treatments,
 #'   and \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer} for continuous treatments.
-#'   For multi-category treatments, `random`, `estimator`, `dispersion`, and
-#'   `groups` are passed on to `mblogit()`; for continuous treatments, a
+#'   For multi-category treatments, `estimator`, `dispersion`, and `groups` are
+#'   passed on to `mblogit()` (the random effects structure comes from
+#'   `formula`); for continuous treatments, a
 #'   `control` argument is passed on. Binary treatments accept no additional
 #'   arguments on this path.
 #'
@@ -305,7 +307,7 @@
 NULL
 
 weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
-                         stabilize, missing, .data, verbose, ...) {
+                         missing, .data, verbose, ...) {
   fit.obj <- NULL
 
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
@@ -436,7 +438,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     modctrl_fun <- logistf::logistf.mod.control
     modcontrol <- do.call(modctrl_fun, c(as.list(...get("modcontrol")),
                                          ...mget(setdiff(names(formals(modctrl_fun))[pmatch(...names(), names(formals(modctrl_fun)), 0L)],
-                                                         names(...get("modctrl_fun"))))))
+                                                         names(...get("modcontrol"))))))
 
     rlang::try_fetch({verbosely({
       data <- data.frame(treat, covs)
@@ -569,7 +571,6 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #Computing weights
   w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
-                                   stabilize = stabilize,
                                    subclass = ...get("subclass"))
 
   Mparts <- NULL
@@ -582,8 +583,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
       wfun = function(Btreat, Xtreat, A) {
         XB <- drop(Xtreat %*% Btreat)
         p <- family$linkinv(XB)
-        .get_w_from_ps_internal_bin(ps = p, treat = A, estimand,
-                                    stabilize = stabilize)
+        .get_w_from_ps_internal_bin(ps = p, treat = A, estimand)
       },
       dw_dBtreat = switch(estimand,
                           ATOS = NULL,
@@ -613,7 +613,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2glm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                              estimand = NULL, focal = NULL, ...) {
 
   C <- .make_cens_treat(treat)
 
@@ -628,20 +628,16 @@ weightit2glm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
   #only the map from the propensity score to the weights differs, so the whole
   #binary machinery (links, `missing = "saem"`, random effects, bias reduction,
   #and the M-estimation parts) is inherited unchanged.
-  #
-  #`stabilize` must be FALSE: `stabilize_w()` would break the w_ATT + 1 identity
-  #that `.att_out_to_cens()` relies on. Stabilized censoring weights are instead
-  #formed in `weightit()` from a separate numerator model.
   out <- weightit2glm(covs = covs, treat = C, s.weights = s.weights,
                       subset = subset, estimand = "ATT", focal = 1,
-                      stabilize = FALSE, missing = missing,
+                      missing = missing,
                       verbose = verbose, ...)
 
   .att_out_to_cens(out, C[subset])
 }
 
 weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                               stabilize, missing, .data, verbose, ...) {
+                               missing, .data, verbose, ...) {
   fit.obj <- NULL
 
   covs <- covs[subset, , drop = FALSE]
@@ -890,7 +886,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
         invokeRestart("muffleWarning")
       },
-      error = function(w) {
+      error = function(e) {
         arg::err("(from {.fun glm}): {conditionMessage(e)}")
       })
 
@@ -967,6 +963,10 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
   else if (multi.method == "mnp") {
     rlang::check_installed("MNP")
+
+    if (!all_the_same(s.weights)) {
+      arg::err('sampling weights cannot be used with {.code multi.method = "mnp"}')
+    }
 
     data <- data.frame(treat, covs)
     formula <- formula(data)
@@ -1056,7 +1056,6 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat, estimand, focal = focal,
-                                     stabilize = stabilize,
                                      subclass = ...get("subclass"))
 
   #Get Mparts
@@ -1069,8 +1068,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         },
         wfun = function(Btreat, Xtreat, A) {
           ps <- fit.obj$get_p(Btreat, Xtreat)
-          .get_w_from_ps_internal_multi(ps = ps, treat = A, estimand, focal = focal,
-                                        stabilize = stabilize)
+          .get_w_from_ps_internal_multi(ps = ps, treat = A, estimand, focal = focal)
         },
         Xtreat = fit.obj$x,
         A = treat,
@@ -1095,8 +1093,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
           ps <- family$linkinv(Xtreat %*% matrix(Btreat, nrow = ncol(Xtreat)))
           colnames(ps) <- levels(A)
 
-          .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal,
-                                        stabilize = stabilize)
+          .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal)
         },
         Xtreat = cbind(`(Intercept)` = 1, covs),
         A = treat,
@@ -1109,7 +1106,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
        Mparts = Mparts)
 }
 
-weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, .data, verbose, ...) {
+weightit2glm.cont <- function(covs, treat, s.weights, subset, missing, .data, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]

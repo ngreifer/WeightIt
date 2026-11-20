@@ -198,3 +198,23 @@ test_that("calibrate() rejects what it cannot handle", {
     )
   )
 })
+
+test_that("calibrate() calibrates the probability of the treated group for any coding", {
+  d <- test_data
+  d$A_f <- factor(ifelse(d$A == 1, "T", "C"), levels = c("T", "C"))
+
+  W01 <- weightit(A ~ X1 + X2 + X3, data = d, estimand = "ATT")
+  Wf <- weightit(A_f ~ X1 + X2 + X3, data = d, estimand = "ATT", focal = "T")
+
+  for (m in c("platt", "isoreg")) {
+    c01 <- calibrate(W01, method = m)
+    cf <- calibrate(Wf, method = m)
+
+    expect_equal(unname(cf$ps), unname(c01$ps), tolerance = eps)
+    expect_equal(unname(cf$weights), unname(c01$weights), tolerance = eps)
+
+    expect_equal(unname(calibrate(Wf$ps, treat = d$A_f, treated = "T", method = m)),
+                 unname(calibrate(W01$ps, treat = d$A, method = m)),
+                 tolerance = eps)
+  }
+})

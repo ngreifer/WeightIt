@@ -48,7 +48,8 @@ test_that("hatvalues() gives the generalized leverage", {
     {
       fit <- {
         if (model == "multinom") {
-          multinom_weightit(Y_M ~ A + X1 + X5 + offset(off), data = test_data,
+          #Offsets are not allowed with multinomial models
+          multinom_weightit(Y_M ~ A + X1 + X5, data = test_data,
                             weights = w)
         }
         else {
@@ -68,7 +69,8 @@ test_that("hatvalues() gives the generalized leverage", {
       expect_equal(sum(h), length(coef(fit)), tolerance = 1e-10)
 
       expect_equal(unname(h),
-                   brute_hatvalues(fit, X = model.matrix(fit), offset = test_data$off),
+                   brute_hatvalues(fit, X = model.matrix(fit),
+                                   offset = if (model == "multinom") 0 else test_data$off),
                    tolerance = 1e-6)
     },
     .cases = data.frame(model = c("multinom", "ordinal", "ordinal", "ordinal"),

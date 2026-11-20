@@ -168,7 +168,7 @@ test_that("methods without censoring support error informatively", {
   d <- make_cens_data()
 
   expect_error(weightit(.cens(C) ~ X1, data = d, method = "npcbps"),
-               "cannot be used to estimate censoring weights")
+               "Censoring weights cannot be estimated with")
 })
 
 # ---- .cens() as a constructor, and the lower-level entry points -------------

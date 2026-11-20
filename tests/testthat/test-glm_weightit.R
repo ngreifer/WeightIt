@@ -435,3 +435,66 @@ test_that("dropping a collinear covariate doesn't change the estimable results",
                                stringsAsFactors = FALSE))
   )
 })
+
+# Whether `estfun()` accounts for estimation of the weights follows the variance the
+# model was fit with, so the sandwich functions agree with `vcov()` for both types.
+# `vcovHC()` cannot recover working residuals from adjusted estimating functions, so
+# it has a method of its own.
+test_that("sandwich functions follow the fit's vcov", {
+  skip_on_cran()
+  skip_if_not_installed("sandwich")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  W <- weightit(A ~ X1 + X2 + X3 + X5, data = test_data, method = "glm")
+
+  fit_a <- glm_weightit(Y_C ~ A * X5, data = test_data, weightit = W,
+                        vcov = "asympt")
+  fit_h <- glm_weightit(Y_C ~ A * X5, data = test_data, weightit = W,
+                        vcov = "HC0")
+  fit_g <- glm(Y_C ~ A * X5, data = test_data, weights = W$weights)
+
+  n <- nrow(test_data)
+  k <- length(coef(fit_a))
+
+  expect_equal(sandwich::sandwich(fit_a), vcov(fit_a), tolerance = eps)
+  expect_equal(sandwich::sandwich(fit_h), vcov(fit_h), tolerance = eps)
+  expect_equal(sandwich::sandwich(fit_h, asympt = TRUE), vcov(fit_a), tolerance = eps)
+  expect_equal(sandwich::sandwich(fit_a, asympt = FALSE), vcov(fit_h), tolerance = eps)
+
+  expect_equal(sandwich::vcovCL(fit_h, cluster = test_data$cluster, type = "HC0"),
+               vcov(fit_h, cluster = ~cluster), tolerance = eps)
+  expect_equal(sandwich::vcovCL(fit_a, cluster = test_data$cluster, type = "HC0"),
+               vcov(fit_a, cluster = ~cluster), tolerance = eps)
+
+  #With the adjustment, only HC0 and HC1
+  expect_equal(sandwich::vcovHC(fit_a, type = "HC0"), vcov(fit_a), tolerance = eps)
+  expect_equal(sandwich::vcovHC(fit_a, type = "HC1"), vcov(fit_a) * n / (n - k),
+               tolerance = eps)
+  expect_false(anyNA(sandwich::vcovHC(fit_a, type = "HC0")))
+
+  expect_error(sandwich::vcovHC(fit_a), "cannot account for estimation of the weights")
+  expect_error(sandwich::vcovHC(fit_a, type = "HC0", omega = function(...) 1),
+               "cannot be supplied")
+
+  #Without it, every type matches `glm()`
+  for (type in c("HC0", "HC1", "HC2", "HC3")) {
+    expect_equal(sandwich::vcovHC(fit_h, type = type),
+                 sandwich::vcovHC(fit_g, type = type),
+                 tolerance = eps, ignore_attr = TRUE)
+    expect_equal(sandwich::vcovHC(fit_a, type = type, asympt = FALSE),
+                 sandwich::vcovHC(fit_g, type = type),
+                 tolerance = eps, ignore_attr = TRUE)
+  }
+
+  #The ordinal and multinomial methods follow the fit too
+  fit_o <- ordinal_weightit(Y_O ~ A + X5, data = test_data, weightit = W,
+                            vcov = "HC0")
+  expect_equal(sandwich::sandwich(fit_o), vcov(fit_o), tolerance = eps)
+
+  fit_m <- multinom_weightit(Y_O ~ A + X5, data = test_data, weightit = W,
+                             vcov = "HC0")
+  expect_equal(sandwich::sandwich(fit_m), vcov(fit_m), tolerance = eps)
+})

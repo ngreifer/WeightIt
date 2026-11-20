@@ -38,7 +38,7 @@
   if (!is.function(method) &&
       (!rlang::is_string(method) || !utils::hasName(.weightit_methods, .method_to_proper_method(method)))) {
     arg::err(c("{.arg method} must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.",
-               "i" = "Allowable methods: {.val {names(.weightit_methods)}}"))
+               "i" = "Allowable methods: {.val {names(.weightit_methods)}}."))
   }
 
   if (msm && !isTRUE(force) && rlang::is_string(method)) {
@@ -54,7 +54,7 @@
       utils::hasName(.weightit_methods, method) &&
       (treat.type %nin% .weightit_methods[[method]]$treat_type)) {
     if (treat.type == "censoring") {
-      arg::err(c("{(.method_to_phrase(method))} cannot be used to estimate censoring weights.",
+      arg::err(c("Censoring weights cannot be estimated with {(.method_to_phrase(method))}.",
                  "i" = "See the {.field treat_type} component of {.code .weightit_methods} for the methods that can."))
     }
 
@@ -401,6 +401,10 @@
     return("")
   }
 
+  if (is.function(method)) {
+    return(missing %or% "ind")
+  }
+
   allowable.missings <- .weightit_methods[[method]]$missing
 
   if (is_null(missing)) {
@@ -533,11 +537,21 @@
     return(ps)
   }
 
+  #A matrix or data frame with one column per treatment level is allowed too; see
+  #`?method_ps`
+  if (is.data.frame(ps)) {
+    if (!all(vapply(ps, is.numeric, logical(1L)))) {
+      arg::err("when supplied as a data frame, all columns of {.arg ps} must be numeric")
+    }
+
+    ps <- as.matrix(ps)
+  }
+
   if (!is.numeric(ps)) {
     arg::err("the argument to {.arg ps} must be a vector of propensity scores or a string containing the name of a numeric variable in {.arg data} that contains propensity scores")
   }
 
-  if (length(ps) != length(treat)) {
+  if (NROW(ps) != length(treat)) {
     arg::err("{.arg ps} must have the same number of units as the treatment")
   }
 
@@ -810,12 +824,12 @@
     }
   }
   else if (treat.type != "continuous" &&
-           any_apply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]))) {
+           any_apply(levels(by.factor), function(x) length(unique(treat)) != length(unique(treat[by.factor == x])))) {
     if (is_null(treat.name)) {
       arg::err("not all the groups formed by {.arg {by.arg}} contain all treatment levels. Consider coarsening {.arg {by.arg}}")
     }
     else {
-      arg::err("not all the groups formed by {.arg {by.arg}} contain all treatment levels in {.var treat}. Consider coarsening {.arg {by.arg}}")
+      arg::err("not all the groups formed by {.arg {by.arg}} contain all treatment levels in {.var {treat.name}}. Consider coarsening {.arg {by.arg}}")
     }
   }
 
@@ -973,22 +987,16 @@
   c(fe.vars, lapply(re.vars, str2lang))
 }
 
-.check_num.formula <- function(num.formula, data, env, formula.list, stab_arg = "num.formula") {
+#Variables in a numerator formula are looked up in `data` and then in the
+#formula's own environment, which is where the numerator model finds them too
+#(see `.stab_formula_env()`).
+.check_num.formula <- function(num.formula, data, formula.list, stab_arg = "num.formula") {
   if (rlang::is_formula(num.formula)) {
     if (!rlang::is_formula(num.formula, lhs = FALSE)) {
       arg::err("the argument to {.arg {stab_arg}} must have right hand side variables but not a response variable (e.g., {.code ~ V1 + V2})")
     }
 
-    rhs.vars.mentioned.lang <- .num_formula_vars(num.formula)
-    rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
-    rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
-      null_or_error(try(eval(v, c(data, env)), silent = TRUE))
-    }, logical(1L))
-
-    if (any(rhs.vars.failed)) {
-      arg::err(c("All variables in {.arg {stab_arg}} must be variables in {.arg data} or objects in the global environment.",
-                 "i" = "Missing variables: {.var {rhs.vars.mentioned[rhs.vars.failed]}}"))
-    }
+    num.formula <- list(num.formula)
   }
   else if (is.list(num.formula)) {
     if (length(num.formula) != length(formula.list)) {
@@ -998,21 +1006,38 @@
     if (!all_apply(num.formula, rlang::is_formula, lhs = FALSE)) {
       arg::err("{.arg {stab_arg}} must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
     }
-
-    rhs.vars.mentioned.lang.list <- lapply(num.formula, .num_formula_vars)
-    rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list,
-                                               function(r) vapply(r, deparse1, character(1L)))))
-    rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
-      null_or_error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
-    }, logical(1L))
-
-    if (any(rhs.vars.failed)) {
-      arg::err("all variables in {.arg {stab_arg}} must be variables in {.arg data} or objects in the global environment. Missing variables: {.var {rhs.vars.mentioned[rhs.vars.failed]}}")
-    }
   }
   else {
     arg::err("{.arg {stab_arg}} must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
   }
+
+  rhs.vars.failed <- unlist(lapply(num.formula, function(f) {
+    vars <- .num_formula_vars(f)
+    env <- rlang::f_env(f)
+
+    failed <- vapply(vars, function(v) {
+      null_or_error(try(eval(v, data, env), silent = TRUE))
+    }, logical(1L))
+
+    vapply(vars[failed], deparse1, character(1L))
+  }))
+
+  if (is_not_null(rhs.vars.failed)) {
+    arg::err(c("All variables in {.arg {stab_arg}} must be variables in {.arg data} or objects in the environment in which {.arg {stab_arg}} was created.",
+               "i" = "Missing variables: {.var {unique(rhs.vars.failed)}}.",
+               "i" = "Supplying all variables in {.arg data} is safest."))
+  }
+}
+
+#The environment of a numerator model formula built from `f`, the treatment (or
+#censoring) formula, and `num.formula`, the user's numerator formula for this
+#time point, if any. `update()` and `as.formula()` would give the new formula the
+#environment of `f` or of the calling frame, so a variable found only where
+#`num.formula` was created would not be found by the model, though it passed
+#`.check_num.formula()`.
+.stab_formula_env <- function(f, num.formula = NULL) {
+  if (rlang::is_formula(num.formula)) rlang::f_env(num.formula)
+  else rlang::f_env(f)
 }
 
 #Build the data.frame and model formula for a random-effects (lme4-style) PS
@@ -1286,16 +1311,17 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
   extreme.warn <- FALSE
   if (all_the_same(w)) {
     #Some constant weights are correct by construction rather than a sign of
-    #failure. For censoring, 1 means no unit was censored and 0 means every unit
-    #was; the latter is already reported by the weighting function itself. For a
-    #covariate-free continuous model, the conditional density of the treatment is
-    #its marginal density, so every weight is exactly 1.
+    #failure. A covariate-free model cannot fail, and its weights are constant
+    #whenever they should be (e.g., for a continuous treatment, whose conditional
+    #density is then its marginal density, or when the weights are stabilized by
+    #the same marginal model). For censoring, 1 means no unit was censored and 0
+    #means every unit was; the latter is already reported by the weighting
+    #function itself.
     expected <- switch(treat.type,
                        censoring = c(0, 1),
-                       continuous = if (covs.empty) 1 else numeric(),
                        numeric())
 
-    if (!any(check_if_zero(w[1L] - expected))) {
+    if (!covs.empty && !any(check_if_zero(w[1L] - expected))) {
       arg::wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
     }
   }
@@ -1647,7 +1673,7 @@ stabilize_w <- function(weights, treat) {
         do.call(splitdens1, c(list(x), .args))
       },
       error = function(e) {
-        arg::err(c("Error in applying {.arg density}:",
+        arg::err(c("An error occurred when applying {.arg density}.",
                    "!" = "{conditionMessage(e)}"))
       })
     }
@@ -1702,7 +1728,7 @@ stabilize_w <- function(weights, treat) {
 }
 
 .get_w_from_ps_internal_bin <- function(ps, treat, estimand = "ATE",
-                                        subclass = NULL, stabilize = FALSE) {
+                                        subclass = NULL) {
 
   estimand <- toupper(estimand)
   w <- rep_with(1, treat)
@@ -1756,10 +1782,6 @@ stabilize_w <- function(weights, treat) {
 
   names(w) <- names(treat) %or% NULL
 
-  if (stabilize) {
-    w <- stabilize_w(w, treat)
-  }
-
   w
 }
 
@@ -1795,7 +1817,7 @@ stabilize_w <- function(weights, treat) {
 }
 
 .get_w_from_ps_internal_multi <- function(ps, treat, estimand = "ATE", focal = NULL,
-                                          subclass = NULL, stabilize = FALSE) {
+                                          subclass = NULL) {
 
   estimand <- toupper(estimand)
   w <- rep_with(0, treat)
@@ -1847,17 +1869,13 @@ stabilize_w <- function(weights, treat) {
     return(numeric(0L))
   }
 
-  if (stabilize) {
-    w <- stabilize_w(w, treat)
-  }
-
   names(w) <- rownames(ps_mat) %or% names(treat) %or% NULL
 
   w
 }
 
 .get_w_from_ps_internal_array <- function(ps, treat, estimand = "ATE", focal = NULL,
-                                          subclass = NULL, stabilize = FALSE) {
+                                          subclass = NULL) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary
   if (length(dim(ps)) <= 1L) {
@@ -1915,10 +1933,6 @@ stabilize_w <- function(weights, treat) {
       w[t0, ][!pslt.5[t0, ]] <- 1
     }
 
-    if (stabilize) {
-      w[t1] <- w[t1] * length(t1) / length(treat)
-      w[t0] <- w[t0] * length(t0) / length(treat)
-    }
   }
   else if (length(dim(ps)) == 3L) {
     #Multi-category treatment, matrix PS
@@ -1952,28 +1966,14 @@ stabilize_w <- function(weights, treat) {
       w <- w / colSums(aperm(1 / ps, c(2L, 1L, 3L)))
     }
     else if (estimand == "ATM") {
-      treat <- as.integer(treat)
-
+      #As in `.get_w_from_ps_internal_multi()`: the inverse probability weight times
+      #the smallest generalized propensity score, which is 1 for a unit whose
+      #observed level has the smallest one
       for (p in seq_len(dim(ps)[3L])) {
-        ps_p <- ps[, , p]
-        min_ind <- max.col(-ps_p, ties.method = "first")
-        no_match <- which(ps_p[cbind(seq_along(treat), treat)] != ps_p[cbind(seq_along(treat), min_ind)])
-
-        if (length(no_match) < length(treat)) {
-          w[-no_match, p] <- 1
-        }
-
-        if (is_not_null(no_match)) {
-          w[no_match, p] <- w[no_match, p] * ps_p[cbind(no_match, min_ind[no_match])]
-        }
+        w[, p] <- w[, p] * do.call("pmin", lapply(seq_len(dim(ps)[2L]), function(x) ps[, x, p]))
       }
     }
 
-    if (stabilize) {
-      for (i in t.levs) {
-        w[treat == i, ] <- mean_fast(treat == i) * w[treat == i, ]
-      }
-    }
   }
   else {
     arg::err("don't know how to process more than 3 dims (likely a bug)")
@@ -2271,20 +2271,16 @@ with_delayed_warnings <- function(expr) {
 }
 
 #Generalized matrix inverse (port of MASS::ginv)
-generalized_inverse <- function(sigma, .try = TRUE) {
+#Moore-Penrose pseudoinverse of a symmetric positive semidefinite matrix (every
+#caller supplies a covariance or `crossprod()` matrix), dropping directions whose
+#eigenvalues are negligible relative to the largest. The symmetric eigendecomposition
+#gives the same result as the SVD for such a matrix at a fraction of the cost.
+generalized_inverse <- function(sigma) {
+  e <- eigen(sigma, symmetric = TRUE)
 
-  if (.try) {
-    sigmasvd <- svd(sigma)
-    pos <- sigmasvd$d > max(1e-9 * sigmasvd$d[1L], 0)
-    sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^(-1) * t(sigmasvd$u[, pos, drop = FALSE]))
+  pos <- e$values > max(1e-9 * e$values[1L], 0)
 
-    return(sigma_inv)
-  }
-
-  rlang::try_fetch(solve(sigma),
-                   error = function(e) {
-                     generalized_inverse(sigma, .try = FALSE)
-                   })
+  e$vectors[, pos, drop = FALSE] %*% (e$values[pos]^(-1) * t(e$vectors[, pos, drop = FALSE]))
 }
 
 #Compute gradient numerically using centered difference

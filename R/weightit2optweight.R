@@ -25,8 +25,8 @@
 #' ## Multi-Category Treatments
 #'
 #' For multi-category treatments, this method estimates the weights using
-#' \pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE and
-#' ATT. The weights are taken from the output of the `optweight.fit` fit object.
+#' \pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE, ATT,
+#' and ATC. The weights are taken from the output of the `optweight.fit` fit object.
 #'
 #' ## Continuous Treatments
 #'
@@ -152,7 +152,7 @@
 #'
 #' Greifer, N. (2020). *Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization*. \doi{10.17615/DYSS-B342}
 #'
-#' @examplesIf rlang::is_installed("optweight (>= 1.0.0)")
+#' @examplesIf rlang::is_installed("optweight (>= 2.0.1)")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -241,7 +241,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 weightit2optweight.multi <- weightit2optweight
 
 weightit2optweight.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                                    estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                                    estimand = NULL, focal = NULL, ...) {
 
   bw <- .process_b.weights(..., treat = treat)
 

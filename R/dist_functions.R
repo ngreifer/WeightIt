@@ -173,8 +173,10 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
                     contrasts.arg = lapply(Filter(is.factor, mf),
                                            function(x) contrasts(x, contrasts = FALSE) / sqrt(2)))
 
+  .assign <- .attr(X, "assign")
+
   if (ncol(X) > 1L) {
-    .assign <- .attr(X, "assign")[-1L]
+    .assign <- .assign[-1L]
     X <- X[, -1L, drop = FALSE]
   }
   attr(X, "assign") <- .assign
@@ -215,14 +217,6 @@ check_X <- function(X) {
   attr(X, "treat") <- treat
 
   X
-}
-
-is.cov_like <- function(var, X) {
-  is.numeric(var) &&
-    length(dim(var)) == 2L &&
-    (missing(X) || all(dim(var) == ncol(X))) &&
-    isSymmetric(var) &&
-    all(diag(var) >= 0)
 }
 
 weightit_distances <- function() {

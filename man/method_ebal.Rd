@@ -25,7 +25,7 @@ run twice, once for each treatment group.
 \subsection{Multi-Category Treatments}{
 
 For multi-category treatments, this method estimates the weights using
-\code{optim()}. The following estimands are allowed: ATE and ATT. When the ATE is
+\code{optim()}. The following estimands are allowed: ATE, ATT, and ATC. When the ATE is
 requested, the optimization is run once for each treatment group. When the ATT is
 requested, the optimization is run once for each non-focal (i.e., control) group.
 }
@@ -104,7 +104,7 @@ When \code{tols} is greater than 0, inexact balance is allowed on the covariates
 \item{\code{base.weights}}{a vector of base weights, one for each unit. These correspond to the base weights \eqn{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}. Can also be supplied as \code{b.weights} or \code{base.weight}.}
 \item{\code{reltol}}{the relative tolerance for convergence of the optimization. Passed to the \code{control} argument of \code{optim()}. Default is \code{1e-10}.}
 \item{\code{maxit}}{the maximum number of iterations for convergence of the optimization. Passed to the \code{control} argument of \code{optim()}. Default is 10000.}
-\item{\code{solver}}{the solver to use to estimate the parameters. Allowable options include \code{"multiroot"} to use \pkgfun{rootSolve}{multiroot} and \code{"optim"} to use \code{\link[stats:optim]{stats::optim()}}. \code{"multiroot"} is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, \code{"optim"} is the default and requires no dependencies. The output of whichever solver was used is returned when \code{include.obj = TRUE} (see below).}
+\item{\code{solver}}{the solver to use to estimate the parameters. Allowable options include \code{"multiroot"} to use \pkgfun{rootSolve}{multiroot} and \code{"optim"} to use \code{\link[stats:optim]{stats::optim()}}. \code{"multiroot"} is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, \code{"optim"} is the default and requires no dependencies. When \code{tols} is greater than 0, the default is \code{"FISTA"}, and \code{"multiroot"} is not available. The output of whichever solver was used is returned when \code{include.obj = TRUE} (see below).}
 \item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
 }
 \item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.

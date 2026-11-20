@@ -27,12 +27,15 @@
 \item{tolerance}{for the Wald test, the tolerance used to determine if models
 are symbolically nested.}
 
-\item{vcov}{either a string indicating the method used to compute the
-variance of the estimated parameters for \code{object}, a function used to
-extract the variance, or the variance matrix itself. Default is to use the
-variance matrix already present in \code{object}. If a string or function,
-arguments passed to \code{...} are supplied to the method or function. (Note:
-for \code{vcov()}, can also be supplied as \code{type}.)}
+\item{vcov}{a string indicating the method used to compute the variance of
+the estimated parameters for \code{object}; see the \code{vcov} argument of
+\code{\link[=glm_weightit]{glm_weightit()}} for the allowable options. Default is to use the variance
+matrix already present in \code{object}, unless \code{cluster}, \code{R}, or \code{fwb.args}
+is supplied through \code{...}, in which case the variance matrix is recomputed
+using the method used to fit \code{object} with the new arguments. A variance
+matrix computed another way can be supplied to functions in other packages
+that accept one (e.g., through the \code{vcov} argument of \CRANpkg{marginaleffects}
+functions). (Note: for \code{vcov()}, can also be supplied as \code{type}.)}
 
 \item{\dots}{other arguments passed to the function used for computing the
 parameter variance matrix, if supplied as a string or function, e.g.,

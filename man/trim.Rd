@@ -39,10 +39,13 @@ multi-category treatments.}
 \value{
 If the input is a \code{weightit} object, the output will be a \code{weightit}
 object with the weights replaced by the trimmed weights (or 0) and will have
-an additional attribute, \code{"trim"}, equal to the quantile of trimming.
+an additional attribute, \code{"trim"}, a list containing the values of \code{at},
+\code{lower}, and \code{drop} used.
 
 If the input is a numeric vector of weights, the output will be a numeric
-vector of the trimmed weights, again with the aforementioned attribute.
+vector of the trimmed weights with an attribute \code{"trim"} equal to \code{at} (the
+quantile or the number of weights trimmed) and an attribute \code{"trim.lower"}
+equal to \code{lower}.
 }
 \description{
 Trims (i.e., winsorizes) large weights by setting all weights
@@ -50,7 +53,7 @@ higher than that at a given quantile to the weight at the quantile or to 0.
 This can be useful in controlling extreme weights, which can reduce effective
 sample size by enlarging the variability of the weights. Note that by
 default, no observations are fully discarded when using \code{trim()}, which may
-differ from the some uses of the word "trim" (see the \code{drop} argument below).
+differ from some uses of the word "trim" (see the \code{drop} argument below).
 }
 \details{
 \code{trim()} takes in a \code{weightit} object (the output of a call to

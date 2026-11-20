@@ -33,8 +33,8 @@
 #'   parameters. Allowable options include `"asympt"`, which uses the
 #'   asymptotically correct M-estimation-based method that accounts for
 #'   estimation of the weights when available; `"const"`, which uses the usual
-#'   maximum likelihood estimates (only available when `weightit` is not
-#'   supplied); `"HC0"`, which computes the robust sandwich variance treating
+#'   maximum likelihood estimates (not recommended when `weightit` is
+#'   supplied, in which case a warning is issued); `"HC0"`, which computes the robust sandwich variance treating
 #'   weights (if supplied) as fixed; `"BS"`, which uses the traditional
 #'   bootstrap (including re-estimation of the weights, if supplied); `"FWB"`,
 #'   which uses the fractional weighted bootstrap as implemented in
@@ -71,7 +71,11 @@
 #'   to have a mean of 1 among the units with a nonzero weight before fitting, so
 #'   that the estimates do not depend on the scale of the weights.
 #' @param \dots arguments to be used to form the default control argument if it
-#'   is not supplied directly.
+#'   is not supplied directly. A `subset` argument, as in [glm()], can also be
+#'   supplied, but not when `weightit` or `weights` is supplied, since the
+#'   weights and their estimation involve the full sample; to estimate an
+#'   effect within a subgroup, fit the model in the full sample and use
+#'   \CRANpkg{marginaleffects} to compute the effect in the subgroup.
 #'
 #' @returns
 #' A `glm_weightit` object, which inherits from `glm`.
@@ -123,15 +127,20 @@
 #' with the additional features \pkg{fwb} provides (e.g., a progress bar and
 #' parallelization).
 #'
-#' Functions in the \pkg{sandwich} package can be used to compute standard errors
-#' after fitting, regardless of how `vcov` was specified, though these will
-#' ignore estimation of the weights, if any. When no adjustment is done for
-#' estimation of the weights (i.e., because no `weightit` argument was supplied
-#' or there was no `"Mparts"` component in the supplied object), the default
-#' variance matrix produced by `glm_weightit()` should align with that from
-#' `sandwich::vcovHC(. type = "HC0")` or `sandwich::vcovCL(., type = "HC0", cluster = cluster)`
-#' when `cluster` is supplied. Not all types are available
-#' for all models.
+#' Functions in the \pkg{sandwich} package can also be used to compute standard
+#' errors after fitting. Whether they account for estimation of the weights
+#' follows the `vcov` the model was fit with: they do when `vcov` is `"asympt"`
+#' (or `"BS"` or `"FWB"`, for which the analytic adjustment is used) and do not
+#' when `vcov` is `"HC0"` or `"const"`. For a model fit with `vcov = "asympt"`
+#' or `"HC0"`, `sandwich::sandwich()` therefore agrees with `vcov()`, and
+#' `sandwich::vcovCL(., cluster = cluster, type = "HC0")` agrees with
+#' `vcov(., cluster = cluster)`. Supplying `asympt` to these functions
+#' overrides this (see [sandwich::estfun()][glm_weightit-methods]). When they
+#' account for estimation of the weights, `sandwich::vcovHC()` is available only
+#' with `type = "HC0"` or `"HC1"`, because the other types adjust each unit's
+#' contribution by its leverage in the outcome model alone; for those, fit the
+#' model with `vcov = "HC0"` or supply `asympt = FALSE`, which treats the
+#' weights as fixed. Not all types are available for all models.
 #'
 #' @seealso
 #' * [lm()] and [glm()] for fitting (generalized) linear models without
@@ -299,7 +308,7 @@ lm_weightit <- function(formula, data, weightit = NULL,
 }
 
 .get_hess_glm <- function(fit) {
-  X <- fit[["x"]] %or% model.matrix(fit)
+  X <- fit[["x"]] %or% model.matrix(.fill_nzw_model(fit))
 
   if (anyNA(fit[["coefficients"]])) {
     # Columns belonging to aliased (collinear) coefficients would make the

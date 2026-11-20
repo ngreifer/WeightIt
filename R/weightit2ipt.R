@@ -25,7 +25,7 @@
 #'
 #' For multi-category treatments, this method estimates the weights using
 #' modifications of the formulas described by Graham, Pinto, and Egel (2012).
-#' The following estimands are allowed: ATE and ATT. When the ATE is requested,
+#' The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested,
 #' estimation is performed once for each treatment group. When the ATT is
 #' requested, estimation is performed once for each non-focal (i.e., control)
 #' group.
@@ -71,7 +71,7 @@
 #'     }
 #'     \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5, .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same quantile(s) for all continuous covariates.
 #'     }
-#'   \item{`link`}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is `"logit"`, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, and `"softplus"` are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()].
+#'   \item{`link`}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is `"logit"`, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, and `"softplus"` are also allowed. Note that negative weights are possible with these last three and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()].
 #'   }
 #' }
 #'
@@ -141,7 +141,7 @@
 NULL
 
 weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
-                         stabilize, missing, verbose, ...) {
+                         missing, verbose, ...) {
 
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
   t.lev <- .recorded_treated_level(treat)
@@ -364,7 +364,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ipt.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                              estimand = NULL, focal = NULL, ...) {
 
   cens <- .make_cens_treat(treat)[subset]
   covs <- covs[subset, , drop = FALSE]
@@ -496,7 +496,7 @@ weightit2ipt.cens <- function(covs, treat, s.weights, subset, missing, verbose,
 }
 
 weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                               stabilize, missing, verbose, ...) {
+                               missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])

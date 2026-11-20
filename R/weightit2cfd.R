@@ -22,7 +22,7 @@
 #'
 #' For multi-category treatments, this method estimates the weights using
 #' `osqp()` using formulas described by Santra, Chen, and Park (2026). The following
-#' estimands are allowed: ATE and ATT.
+#' estimands are allowed: ATE, ATT, and ATC.
 #'
 #' ## Continuous Treatments
 #'
@@ -67,7 +67,7 @@
 #'   \item{`kernel`}{the name of the kernel used to characterize the CFD. Allowable options include `"gaussian"` for the multivariate Gaussian kernel (the default), `"matern"` for the multivariate Matern kernel, `"energy"` for the energy distance kernel, `"laplace"` for the univariate Laplacian kernel, and `"t"` for the univariate t-distribution kernel.}
 #'   \item{`nu`}{for `kernel = "matern"`, the \eqn{\nu} parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the \pkg{GPBayes} package is required to compute the Matern kernel. For `kernel = "t"`, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.}
 #'   \item{`nsim`}{for `kernel = "t"`, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.}
-#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.}
+#'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. The penalty added to the loss function is `lambda` times half the sum of the squared normalized weights, \eqn{(s_i w_i / n_g)^2}, where \eqn{s_i} is the sampling weight of unit \eqn{i} and \eqn{n_g} is the size of its treatment group (or of the sample, for continuous treatments). Higher values favor weights with less variability. A negative value adds the smallest penalty that makes the problem convex. Default is .0001, which is essentially 0.}
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 #'   \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
 #'   \item{`tols`}{when `moments` is positive, a number corresponding to the maximum allowed standardized mean difference allowed. Default is 0. Ignored when `moments = 0`.}
@@ -133,12 +133,12 @@
 #'
 #' @note
 #' Sometimes the optimization can fail to converge because the problem is
-#' not convex. A warning will be displayed if so. In these cases, try simply
-#' re-fitting the weights without changing anything (but see the
-#' *Reproducibility* section above). If the method repeatedly fails, you should
-#' try another method or change the supplied parameters (though this is
-#' uncommon). Increasing `max_iter` or changing `adaptive_rho_interval` might
-#' help.
+#' not convex. A warning will be displayed if so. Because the optimization is
+#' deterministic (see the *Reproducibility* section above), re-fitting without
+#' changing anything will reproduce the failure; increasing `max_iter` or changing
+#' `adaptive_rho_interval` may help instead. If the method repeatedly fails, you
+#' should try another method or change the supplied parameters (though this is
+#' uncommon).
 #'
 #' If it seems like the weights are balancing the covariates but you still get a
 #' failure to converge, this usually indicates that more iterations are needed to
@@ -450,7 +450,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2cfd.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                              estimand = NULL, focal = NULL, ...) {
 
   missing <- .process_missing2(missing, covs)
 
@@ -763,11 +763,14 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
-      lambda <- -e.min * n^2
+      diag(P) <- diag(P) - e.min + .Machine$double.eps
     }
   }
-
-  diag(P) <- diag(P) + lambda / n^2
+  else if (lambda != 0) {
+    diag(P) <- switch(estimand,
+                      ATE = diag(P) + lambda * rowSums(s.weights_n_t)^2 / 2,
+                      ATT = diag(P) + lambda * rowSums(s.weights_n_t[!in_focal, non_focal, drop = FALSE])^2 / 2)
+  }
 
   unbounded <- lvec == -Inf & uvec == Inf
 
@@ -884,9 +887,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   PX <- t(tcrossprod(X, V.random))
 
-  D <- do.call("rbind", apply(PX, 2L, function(Pxii) {
-    cos(PX - Pxii) |> colMeans()
-  }, simplify = FALSE))
-
-  D
+  #The kernel between units i and j is the mean over the simulated draws of
+  #cos(PX[, i] - PX[, j]) = cos(PX[, i]) cos(PX[, j]) + sin(PX[, i]) sin(PX[, j]),
+  #so it takes two matrix products rather than n^2 * nsim cosines
+  (crossprod(cos(PX)) + crossprod(sin(PX))) / nsim
 }

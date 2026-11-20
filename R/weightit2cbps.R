@@ -23,7 +23,7 @@
 #'
 #' For multi-category treatments, this method estimates the generalized
 #' propensity scores and weights using `optim()` using formulas described by
-#' Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, and ATO.
+#' Imai and Ratkovic (2014). The following estimands are allowed: ATE, ATT, ATC, and ATO.
 #'
 #' ## Continuous Treatments
 #'
@@ -84,7 +84,7 @@
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Setting to `FALSE` increases computation time but may improve estimation. Ignored with a warning when `over = FALSE`.
 #'     }
-#'     \item{`link`}{the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, `"softplus"`, and `"identity"`. Note that negative weights are possible with these last three and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()]. Ignored for multi-category, continuous, and longitudinal treatments.
+#'     \item{`link`}{the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, `"softplus"`, and `"identity"`. Note that negative weights are possible with these last four and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()]. Ignored for multi-category, continuous, and longitudinal treatments.
 #'     }
 #'     \item{`reltol`}{the relative tolerance for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is `1e-10`.
 #'     }
@@ -271,7 +271,7 @@
 NULL
 
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
-                          stabilize, missing, verbose, ...) {
+                          missing, verbose, ...) {
 
   #Read before `subset` narrows `treat`; see `.recorded_treated_level()`.
   t.lev <- .recorded_treated_level(treat)
@@ -514,8 +514,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   .check_cbps_converged(out, over)
 
-  w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand,
-                                   stabilize = stabilize)
+  w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand)
 
   Mparts <- if (!over) {list(
     psi_treat = function(Btreat, Xtreat, A, SW) {
@@ -523,8 +522,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     },
     wfun = function(Btreat, Xtreat, A) {
       ps <- .fam$linkinv(drop(Xtreat %*% Btreat))
-      .get_w_from_ps_internal_bin(ps, A, estimand = estimand,
-                                  stabilize = stabilize)
+      .get_w_from_ps_internal_bin(ps, A, estimand = estimand)
     },
     dw_dBtreat = function(Btreat, Xtreat, A, SW) {
       XB <- drop(Xtreat %*% Btreat)
@@ -548,7 +546,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 }
 
 weightit2cbps.cens <- function(covs, treat, s.weights, subset, missing, verbose,
-                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+                               estimand = NULL, focal = NULL, ...) {
 
   cens <- .make_cens_treat(treat)[subset]
   covs <- covs[subset, , drop = FALSE]
@@ -810,7 +808,7 @@ weightit2cbps.cens <- function(covs, treat, s.weights, subset, missing, verbose,
 }
 
 weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
-                                stabilize, missing, verbose, ...) {
+                                missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- droplevels(treat[subset])
@@ -1103,8 +1101,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
   w <- .get_w_from_ps_internal_multi(pp, treat,
                                      estimand = estimand,
-                                     focal = focal,
-                                     stabilize = stabilize)
+                                     focal = focal)
 
   out$pp <- pp
 
@@ -1114,8 +1111,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     },
     wfun = function(Btreat, Xtreat, A) {
       ps <- get_pp(Btreat, Xtreat)
-      .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal,
-                                    stabilize = stabilize)
+      .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal)
     },
     dw_dBtreat = function(Btreat, Xtreat, A, SW) {
       ps <- get_pp(Btreat, Xtreat)
@@ -1529,6 +1525,11 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
   squish_tol <- 50
 
+  #The root finder, which also supplies the starting values for the
+  #over-identified CBPS, balances each level of a multi-category treatment against
+  #the first; the optimizer, and so the over-identified CBPS, balances all pairs
+  all_pairs <- FALSE
+
   get_p <- get_w <- get_psi_bal <- get_par_glm <- make_list(length(treat.list))
 
   for (i in seq_along(treat.list)) {
@@ -1593,7 +1594,17 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       }
 
       get_psi_bal[[i]] <- function(w, B, X, A, SW) {
-        do.call("cbind", lapply(utils::combn(levels(A), 2L, simplify = FALSE), function(co) {
+        #Each level against the first gives a square system (one condition per
+        #parameter) that `multiroot()` can solve exactly; all pairs of levels give
+        #the same roots but an objective that is symmetric in the levels, so the
+        #optimizer's solution does not depend on the coding of the treatment when
+        #no exact root is found. See `all_pairs` below.
+        combs <- {
+          if (all_pairs) utils::combn(levels(A), 2L, simplify = FALSE)
+          else lapply(levels(A)[-1L], function(l) c(levels(A)[1L], l))
+        }
+
+        do.call("cbind", lapply(combs, function(co) {
           #Rows outside the risk set have `X == 0`; the indicators below are FALSE
           #rather than NA there, so their contribution is exactly 0
           SW * w * (!is.na(A) & A == co[1L]) * X -
@@ -1790,6 +1801,8 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       par_alpha <- out[["root"]]
     }
   }
+
+  all_pairs <- TRUE
 
   # Optimize balance objective
   out <- optim(par = par_alpha,

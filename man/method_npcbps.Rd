@@ -84,9 +84,7 @@ correlation between the treatment and covariates allowed.
 }
 }
 
-All arguments to \code{npCBPS()} can be passed through \code{weightit()} or \code{weightitMSM()}.
-
-All arguments take on the defaults of those in \code{npCBPS()}.
+\code{corprior} can be passed through \code{weightit()} or \code{weightitMSM()}; its default is that of \code{npCBPS()} (.01).
 }
 
 \section{Additional Outputs}{
