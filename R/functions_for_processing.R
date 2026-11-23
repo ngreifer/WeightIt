@@ -1587,6 +1587,10 @@ stabilize_w <- function(weights, treat) {
               arg::arg_string,
               arg::arg_function)
 
+  #Marks the standard normal density, whose derivative is known in closed form
+  #(see `.dw_dB_gaussian_ls()`)
+  is_dnorm <- identical(density, dnorm) || identical(density, "dnorm")
+
   .check_density <- function(p) {
     if (is_null(p) || !is.numeric(p) || anyNA(p)) {
       arg::err("there was a problem with the output of {.arg density}. Try another density function or leave it blank to use the Gaussian density")
@@ -1605,6 +1609,8 @@ stabilize_w <- function(weights, treat) {
         density(r) |> .check_density()
       }
     }
+
+    attr(make_dens_fun, "is_dnorm") <- is_dnorm
 
     return(make_dens_fun)
   }
@@ -1685,15 +1691,27 @@ stabilize_w <- function(weights, treat) {
     }
   }
 
+  attr(make_dens_fun, "is_dnorm") <- is_dnorm
+
   make_dens_fun
 }
 
+#`sd` is one residual SD for all units or, for a location-scale model, one per
+#unit; the latter is handled by `.get_w_from_gps_internal_cont_ls()`.
 .get_w_from_gps_internal_cont <- function(mu, treat, sd = NULL, s.weights, make_dens_fun, n = 50L) {
   #Get weights
   r <- treat - mu
 
   if (is_null(sd)) {
     sd <- sqrt(w.m((r - w.m(r, s.weights))^2, s.weights))
+  }
+
+  if (length(sd) > 1L) {
+    if (!all_the_same(sd)) {
+      return(.get_w_from_gps_internal_cont_ls(mu, treat, sd, s.weights, make_dens_fun))
+    }
+
+    sd <- sd[1L]
   }
 
   t_grid <- seq(min(treat), max(treat), length.out = n)
@@ -1723,6 +1741,59 @@ stabilize_w <- function(weights, treat) {
   # plot(x = treat[order(treat)],
   #      y = dens_num[order(treat)],
   #      type = "l")
+
+  dens_num / dens_denom
+}
+
+#Weights for a location-scale model, in which each unit has its own residual SD.
+#The conditional density of the treatment is the density of the standardized
+#residual divided by the SD, and the marginal density is its sampling-weighted
+#average over units. That average is the sum of one narrow peak per unit with a
+#small SD, which no interpolation through a grid captures (with 2000 units and
+#log SDs with an SD of 1, a spline through 1000 grid points was off by 13% for
+#some units), so it is computed exactly at each distinct treatment value, in
+#chunks to bound memory. That costs O(n^2), about 1.5 seconds with 10,000 units;
+#with more than 20,000 distinct values, it is computed exactly on a grid of 1000
+#points and interpolated on the log scale instead.
+.get_w_from_gps_internal_cont_ls <- function(mu, treat, sd, s.weights, make_dens_fun,
+                                             max_exact = 2e4, n_grid = 1000L,
+                                             chunk = 2e6) {
+  r <- treat - mu
+
+  dens_fun <- make_dens_fun(mu = r / sd,
+                            weights = s.weights,
+                            grid = c((min(treat) - mu) / sd, (max(treat) - mu) / sd))
+
+  ## Conditional density
+  dens_denom <- dens_fun(r / sd) / sd
+
+  ## Marginal density at the points `pts`
+  ut <- unique(treat)
+
+  pts <- {
+    if (length(ut) <= max_exact) ut
+    else seq(min(treat), max(treat), length.out = n_grid)
+  }
+
+  sw <- s.weights / sum(s.weights)
+  rows <- max(1L, floor(chunk / length(mu)))
+
+  dens_pts <- numeric(length(pts))
+
+  for (start in seq(1L, length(pts), by = rows)) {
+    i <- start:min(length(pts), start + rows - 1L)
+    sd_rep <- rep(sd, each = length(i))
+
+    dens_pts[i] <- (dens_fun((outer(pts[i], mu, "-") / sd_rep)) / sd_rep) |>
+      matrix(nrow = length(i)) |>
+      tcrossprod(t(sw)) |>
+      drop()
+  }
+
+  dens_num <- {
+    if (length(ut) <= max_exact) dens_pts[match(treat, ut)]
+    else exp(spline(x = pts, y = log(dens_pts), xout = treat)[["y"]])
+  }
 
   dens_num / dens_denom
 }

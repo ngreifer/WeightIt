@@ -49,15 +49,33 @@ For continuous treatments, weights are estimated as
 stabilization factor) is the unconditional density of treatment evaluated at the
 observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 propensity score) is the conditional density of treatment given the
-covariates evaluated at the observed treatment value. The shape of
-\eqn{f_{A|X}(.)} is controlled by the \code{density} argument
-described below (normal distribution by default), and the predicted values
-used for the mean of the conditional density are estimated using linear
-regression. \eqn{f_A(.)} is estimated by marginalizing
-over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
-instead of assuming a specific density for the denominator by
-setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
-to refine the density estimation parameters.
+covariates evaluated at the observed treatment value. The model for
+\eqn{f_{A|X}(.)} is set by the \code{family} argument described below. By
+default (\code{family = "gaussian"}), the conditional mean of the treatment is
+estimated using linear regression, the residuals are assumed to have a
+constant variance, and their distribution is controlled by the \code{density}
+argument (normal by default). With \code{family = "gaussian_ls"}, the log of the
+conditional variance is also modeled as linear in the covariates (i.e., a
+Gaussian location-scale model, also known as a double generalized linear
+model; Smyth, 1989), which can yield better weights when the variability of
+the treatment differs across levels of the covariates; \code{density} then
+controls the distribution of the residuals standardized by each unit's own
+standard deviation. Because its density is still symmetric, the location-scale
+model does not accommodate skewness, and with a right-skewed treatment it can
+produce more extreme weights than the default model; \code{family = "Gamma"} may be
+more appropriate then. Count treatments can be modeled with Poisson or negative
+binomial regression (\code{family = "poisson"} or \code{"negbin"}) and positive
+treatments with Gamma regression (\code{family = "Gamma"}), in which case
+\eqn{f_{A|X}(.)} is the density (or probability mass function) of that
+distribution. \eqn{f_A(.)} is estimated by marginalizing over
+\eqn{f_{A|X}(.)}, i.e., as the average over units of their conditional
+densities, weighted by the sampling weights. With \code{family = "gaussian_ls"},
+this average is computed exactly at each treatment value, which takes time
+proportional to the square of the sample size (about 1.5 seconds with 10,000
+units). For the Gaussian families, kernel density estimation can be used
+instead of assuming a specific density for the denominator by setting
+\code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to
+refine the density estimation parameters.
 }
 
 \subsection{Multilevel Treatment Models}{
@@ -69,7 +87,10 @@ when units are clustered (e.g., patients within hospitals or students within
 schools). The grouping (and any random-slope) variables are taken from \code{data}.
 For binary treatments, the model is fit using \pkgfun{lme4}{glmer} with the
 requested \code{link} (\code{"logit"}, \code{"probit"}, or \code{"cloglog"}); for continuous
-treatments, using \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer}; and
+treatments, using \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer} (with
+\code{family} \code{"gaussian"}, \code{"poisson"}, or \code{"Gamma"}) or \pkgfun{lme4}{glmer.nb}
+(with \code{family = "negbin"} and a log link), and multilevel models are not
+available with \code{family = "gaussian_ls"}; and
 for multi-category treatments, using \pkgfun{mclogit}{mblogit} with its
 \code{random} argument (i.e., \code{multi.method} is set to \code{"mclogit"}). The propensity
 scores are the predicted probabilities (or conditional densities) that include
@@ -105,7 +126,7 @@ allowed:
 \describe{
 \item{\code{"ind"} (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
-\item{\code{"saem"}}{For binary treatments with \code{link = "logit"}, multi-category treatments (where one such model is fit per treatment level), or continuous treatments, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation.
+\item{\code{"saem"}}{For binary treatments with \code{link = "logit"}, multi-category treatments (where one such model is fit per treatment level), or continuous treatments with \code{family = "gaussian"}, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation.
 }
 }
 }
@@ -115,10 +136,13 @@ allowed:
 For binary treatments, M-estimation is supported when \code{link} is neither
 \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments,
 M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default)
-or \code{"glm"}. M-estimation is not supported when \code{subclass} is specified. For continuous treatments, M-estimation is supported when
-\code{density} is not \code{"kernel"}. The conditional treatment variance and
-unconditional treatment mean and variance are included as parameters to
-estimate, as these all go into calculation of the weights. For all treatment
+or \code{"glm"}. M-estimation is not supported when \code{subclass} is specified. For continuous treatments, M-estimation is supported for all
+families when \code{density} is not \code{"kernel"}. The parameters of the conditional
+density other than the coefficients of the mean (the residual variance, the
+coefficients of the log variance with \code{family = "gaussian_ls"}, the shape of
+the Gamma distribution, or the dispersion parameter of the negative binomial
+distribution) are included as parameters to estimate, as they go into the
+calculation of the weights. For all treatment
 types, M-estimation is not supported when \code{missing = "saem"} or when the model
 \code{formula} includes random effects terms (i.e., a multilevel model is fit; see
 \emph{Multilevel Treatment Models} above). See
@@ -155,11 +179,12 @@ For unordered treatments with \code{multi.method = "weightit"} and for ordered t
 For continuous treatments, the following additional arguments may be
 supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014). With \code{family = "gaussian_ls"}, the residuals are standardized by each unit's own estimated standard deviation. Only used with \code{family = "gaussian"} or \code{"gaussian_ls"}.
 
 Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
 \item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
-\item{\code{link}}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
+\item{\code{family}}{the model for the conditional density of the treatment. Allowable options include \code{"gaussian"} (the default) for linear regression with a constant residual variance, \code{"gaussian_ls"} for a Gaussian location-scale model in which the log of the residual variance is also linear in the covariates, \code{"poisson"} for Poisson regression, \code{"negbin"} for negative binomial regression (which requires \CRANpkg{MASS}), and \code{"Gamma"} for Gamma regression; case is ignored. Can also be a \code{\link[=gaussian]{gaussian()}}, \code{\link[=poisson]{poisson()}}, or \code{\link[=Gamma]{Gamma()}} family object, in which case its link is used unless \code{link} is supplied. With \code{"poisson"} and \code{"negbin"}, the treatment must take only nonnegative integer values, and with \code{"Gamma"}, only positive values. The shape of the Gamma distribution and the dispersion parameter of the negative binomial distribution are estimated by maximum likelihood given the fitted means. \code{density}, \code{bw}, \code{adjust}, \code{kernel}, and \code{n} apply only to the Gaussian families and are ignored with a warning otherwise. \code{family} is ignored for binary and multi-category treatments.}
+\item{\code{link}}{the link used for the conditional mean of the treatment. With \code{family = "gaussian"} or \code{"gaussian_ls"}, allowable options include \code{"identity"} (the default), \code{"log"}, and \code{"inverse"}; the conditional variance of \code{"gaussian_ls"} always uses a log link. With \code{"poisson"} and \code{"negbin"}, allowable options include \code{"log"} (the default), \code{"identity"}, and \code{"sqrt"}, and with \code{"Gamma"}, \code{"log"} (the default), \code{"inverse"}, and \code{"identity"}. Bias-reduced models (a \code{br.} prefix) are not available for continuous treatments.
 }
 }
 
@@ -319,6 +344,13 @@ Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014).
 Constructing Inverse Probability Weights for Continuous Exposures: A
 Comparison of Methods. \emph{Epidemiology}, 25(2), 292–299.
 \doi{10.1097/EDE.0000000000000053}
+\itemize{
+\item Gaussian location-scale model
+}
+
+Smyth, G. K. (1989). Generalized Linear Models with Varying Dispersion.
+\emph{Journal of the Royal Statistical Society: Series B (Methodological)},
+51(1), 47–60. \doi{10.1111/j.2517-6161.1989.tb01747.x}
 \itemize{
 \item SAEM linear regression for missing data
 }

@@ -10,3 +10,4 @@ inst/doc
 CLAUDE.md
 Rplots.pdf
 .progress-runs
+_dev/*-sim-parts

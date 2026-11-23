@@ -605,6 +605,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
           data)
 
         A_i["covs"] <- stab.t.c_i["model.covs"]
+        #The numerator is always fit by `method = "glm"`. Another method's `family`
+        #(e.g., a *bartisan* family for `method = "bart"`) means something else, so the
+        #numerator uses the Gaussian family then.
+        if (!identical(method, "glm")) {
+          A_i[["family"]] <- NULL
+        }
+
         A_i["method"] <- list("glm")
         A_i["moments"] <- list(integer())
         A_i["int"] <- list(FALSE)

@@ -47,15 +47,33 @@
 #' stabilization factor) is the unconditional density of treatment evaluated at the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
-#' covariates evaluated at the observed treatment value. The shape of
-#' \eqn{f_{A|X}(.)} is controlled by the `density` argument
-#' described below (normal distribution by default), and the predicted values
-#' used for the mean of the conditional density are estimated using linear
-#' regression. \eqn{f_A(.)} is estimated by marginalizing
-#' over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
-#' instead of assuming a specific density for the denominator by
-#' setting `density = "kernel"`. Other arguments to [density()] can be specified
-#' to refine the density estimation parameters.
+#' covariates evaluated at the observed treatment value. The model for
+#' \eqn{f_{A|X}(.)} is set by the `family` argument described below. By
+#' default (`family = "gaussian"`), the conditional mean of the treatment is
+#' estimated using linear regression, the residuals are assumed to have a
+#' constant variance, and their distribution is controlled by the `density`
+#' argument (normal by default). With `family = "gaussian_ls"`, the log of the
+#' conditional variance is also modeled as linear in the covariates (i.e., a
+#' Gaussian location-scale model, also known as a double generalized linear
+#' model; Smyth, 1989), which can yield better weights when the variability of
+#' the treatment differs across levels of the covariates; `density` then
+#' controls the distribution of the residuals standardized by each unit's own
+#' standard deviation. Because its density is still symmetric, the location-scale
+#' model does not accommodate skewness, and with a right-skewed treatment it can
+#' produce more extreme weights than the default model; `family = "Gamma"` may be
+#' more appropriate then. Count treatments can be modeled with Poisson or negative
+#' binomial regression (`family = "poisson"` or `"negbin"`) and positive
+#' treatments with Gamma regression (`family = "Gamma"`), in which case
+#' \eqn{f_{A|X}(.)} is the density (or probability mass function) of that
+#' distribution. \eqn{f_A(.)} is estimated by marginalizing over
+#' \eqn{f_{A|X}(.)}, i.e., as the average over units of their conditional
+#' densities, weighted by the sampling weights. With `family = "gaussian_ls"`,
+#' this average is computed exactly at each treatment value, which takes time
+#' proportional to the square of the sample size (about 1.5 seconds with 10,000
+#' units). For the Gaussian families, kernel density estimation can be used
+#' instead of assuming a specific density for the denominator by setting
+#' `density = "kernel"`. Other arguments to [density()] can be specified to
+#' refine the density estimation parameters.
 #'
 #' ## Multilevel Treatment Models
 #'
@@ -66,7 +84,10 @@
 #' schools). The grouping (and any random-slope) variables are taken from `data`.
 #' For binary treatments, the model is fit using \pkgfun{lme4}{glmer} with the
 #' requested `link` (`"logit"`, `"probit"`, or `"cloglog"`); for continuous
-#' treatments, using \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer}; and
+#' treatments, using \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer} (with
+#' `family` `"gaussian"`, `"poisson"`, or `"Gamma"`) or \pkgfun{lme4}{glmer.nb}
+#' (with `family = "negbin"` and a log link), and multilevel models are not
+#' available with `family = "gaussian_ls"`; and
 #' for multi-category treatments, using \pkgfun{mclogit}{mblogit} with its
 #' `random` argument (i.e., `multi.method` is set to `"mclogit"`). The propensity
 #' scores are the predicted probabilities (or conditional densities) that include
@@ -98,7 +119,7 @@
 #'     \describe{
 #'       \item{`"ind"` (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
 #'       }
-#'       \item{`"saem"`}{For binary treatments with `link = "logit"`, multi-category treatments (where one such model is fit per treatment level), or continuous treatments, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation.
+#'       \item{`"saem"`}{For binary treatments with `link = "logit"`, multi-category treatments (where one such model is fit per treatment level), or continuous treatments with `family = "gaussian"`, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation.
 #'       }
 #'    }
 #'
@@ -107,10 +128,13 @@
 #' For binary treatments, M-estimation is supported when `link` is neither
 #' `"flic"` nor `"flac"` (see below). For multi-category treatments,
 #' M-estimation is supported when `multi.method` is `"weightit"` (the default)
-#' or `"glm"`. M-estimation is not supported when `subclass` is specified. For continuous treatments, M-estimation is supported when
-#' `density` is not `"kernel"`. The conditional treatment variance and
-#' unconditional treatment mean and variance are included as parameters to
-#' estimate, as these all go into calculation of the weights. For all treatment
+#' or `"glm"`. M-estimation is not supported when `subclass` is specified. For continuous treatments, M-estimation is supported for all
+#' families when `density` is not `"kernel"`. The parameters of the conditional
+#' density other than the coefficients of the mean (the residual variance, the
+#' coefficients of the log variance with `family = "gaussian_ls"`, the shape of
+#' the Gamma distribution, or the dispersion parameter of the negative binomial
+#' distribution) are included as parameters to estimate, as they go into the
+#' calculation of the weights. For all treatment
 #' types, M-estimation is not supported when `missing = "saem"` or when the model
 #' `formula` includes random effects terms (i.e., a multilevel model is fit; see
 #' *Multilevel Treatment Models* above). See
@@ -145,11 +169,12 @@
 #'   For continuous treatments, the following additional arguments may be
 #'   supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014).
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme treatment values are observed (Naimi et al., 2014). With `family = "gaussian_ls"`, the residuals are standardized by each unit's own estimated standard deviation. Only used with `family = "gaussian"` or `"gaussian_ls"`.
 #'
 #' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
 #'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
-#'     \item{`link`}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by [gaussian()].
+#'     \item{`family`}{the model for the conditional density of the treatment. Allowable options include `"gaussian"` (the default) for linear regression with a constant residual variance, `"gaussian_ls"` for a Gaussian location-scale model in which the log of the residual variance is also linear in the covariates, `"poisson"` for Poisson regression, `"negbin"` for negative binomial regression (which requires \CRANpkg{MASS}), and `"Gamma"` for Gamma regression; case is ignored. Can also be a [gaussian()], [poisson()], or [Gamma()] family object, in which case its link is used unless `link` is supplied. With `"poisson"` and `"negbin"`, the treatment must take only nonnegative integer values, and with `"Gamma"`, only positive values. The shape of the Gamma distribution and the dispersion parameter of the negative binomial distribution are estimated by maximum likelihood given the fitted means. `density`, `bw`, `adjust`, `kernel`, and `n` apply only to the Gaussian families and are ignored with a warning otherwise. `family` is ignored for binary and multi-category treatments.}
+#'     \item{`link`}{the link used for the conditional mean of the treatment. With `family = "gaussian"` or `"gaussian_ls"`, allowable options include `"identity"` (the default), `"log"`, and `"inverse"`; the conditional variance of `"gaussian_ls"` always uses a log link. With `"poisson"` and `"negbin"`, allowable options include `"log"` (the default), `"identity"`, and `"sqrt"`, and with `"Gamma"`, `"log"` (the default), `"inverse"`, and `"identity"`. Bias-reduced models (a `br.` prefix) are not available for continuous treatments.
 #'     }
 #'   }
 #'
@@ -264,6 +289,12 @@
 #' Constructing Inverse Probability Weights for Continuous Exposures: A
 #' Comparison of Methods. *Epidemiology*, 25(2), 292–299.
 #' \doi{10.1097/EDE.0000000000000053}
+#'
+#' - Gaussian location-scale model
+#'
+#' Smyth, G. K. (1989). Generalized Linear Models with Varying Dispersion.
+#' *Journal of the Royal Statistical Society: Series B (Methodological)*,
+#' 51(1), 47–60. \doi{10.1111/j.2517-6161.1989.tb01747.x}
 #'
 #' - SAEM linear regression for missing data
 #'
@@ -1116,6 +1147,18 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, missing, .data, ve
 
   re.bars <- ...get(".random")
 
+  fam <- .process_cont_family(...get("family"), ...get("link"))
+
+  #The density arguments describe the distribution of the standardized residuals,
+  #which only the Gaussian families have
+  if (!fam$name %in% c("gaussian", "gaussian_ls")) {
+    dens.args <- intersect(...names(), c("density", "bw", "adjust", "kernel", "n", "use.kernel"))
+
+    if (is_not_null(dens.args)) {
+      arg::wrn('{.arg {dens.args}} {?is/are} ignored with {.code family = "{fam$name}"}; the conditional density of the treatment is given by {.arg family}')
+    }
+  }
+
   #With nothing to condition on, the conditional density of the treatment is its
   #marginal density and the weights are exactly 1. Fitting the model would instead
   #send them through the numeric marginalization in
@@ -1129,6 +1172,10 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, missing, .data, ve
 
   if (missing == "saem" && is_not_null(re.bars)) {
     arg::err('random effects are not supported with {.code missing = "saem"}')
+  }
+
+  if (missing == "saem" && fam$name != "gaussian") {
+    arg::err('{.code missing = "saem"} is available for continuous treatments only with {.code family = "gaussian"}')
   }
 
   if (missing == "ind") {
@@ -1163,8 +1210,15 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, missing, .data, ve
 
   is_kernel <- isTRUE(attr(make_dens_fun, "is_kernel"))
 
+  if (fam$name != "gaussian") {
+    return(.weightit2glm.cont_family(covs, treat, s.weights, fam = fam,
+                                     make_dens_fun = make_dens_fun,
+                                     re.bars = re.bars, .data = .data,
+                                     subset = subset, verbose = verbose, ...))
+  }
+
   #Estimate GPS
-  link <- ...get("link", "identity")
+  link <- fam$link
 
   if (is_not_null(re.bars)) {
     if (missing == "saem") {
