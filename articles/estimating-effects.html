@@ -81,7 +81,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-11-20</h4>
+            <h4 data-toc-skip class="date">2026-11-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -696,10 +696,12 @@ Robust SEs for HRs were studied by <span class="citation">Austin (<a href="#ref-
 conservative. Other formulas have been developed for estimating standard
 errors more accurately <span class="citation">(<a href="#ref-mao2018">Mao et al. 2018</a>; <a href="#ref-hajage2018">Hajage et al. 2018</a>; <a href="#ref-shuVarianceEstimationInverse2021">Shu et al.
 2021</a>)</span>, though <span class="citation">Austin (<a href="#ref-austin2016">2016</a>)</span> also found the bootstrap to be
-adequate. The M-estimation-based standard error as described by <span class="citation">Shu et al. (<a href="#ref-shuVarianceEstimationInverse2021">2021</a>)</span> is
-requested by default, and bootstrap standard errors can be requested by
-setting <code>vcov</code> to <code>"BS"</code> or
-<code>"FWB"</code>.</p>
+adequate. <span class="citation">Zhang et al. (<a href="#ref-zhangBridgingBalancingWeights2026">n.d.</a>)</span> compared
+SEs estimated in small samples using M-estimation as described by <span class="citation">Shu et al. (<a href="#ref-shuVarianceEstimationInverse2021">2021</a>)</span> and
+bootstrapping and found bootstrapping to be more accurate. The
+M-estimation-based SE is requested by default, and bootstrap standard
+errors can be requested by setting <code>vcov</code> to
+<code>"BS"</code> or <code>"FWB"</code>.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Cox Regression for marginal HR</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_weightit.html">coxph_weightit</a></span><span class="op">(</span><span class="fu">survival</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">Y_S</span>, <span class="va">Y_death</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>,</span>
@@ -1364,6 +1366,11 @@ Coefficients.”</span> <em>American Journal of Epidemiology</em> 177 (4):
 Xu, Li, Chris Gotwalt, Yili Hong, Caleb B. King, and William Q. Meeker.
 2020. <span>“Applications of the Fractional-Random-Weight
 Bootstrap.”</span> <em>The American Statistician</em> 74 (4): 345–58. <a href="https://doi.org/10.1080/00031305.2020.1731599" class="external-link">https://doi.org/10.1080/00031305.2020.1731599</a>.
+</div>
+<div id="ref-zhangBridgingBalancingWeights2026" class="csl-entry">
+Zhang, Baoshan, Yi Chen, Yu Du, and Tuo Wang. n.d. <em>Bridging
+Balancing Weights and Augmentation in Covariate-Adjusted Analyses with
+Time-to-Event Endpoints: Theory and Practical Recommendations</em>. <a href="https://doi.org/10.48550/arXiv.2608.06774" class="external-link">https://doi.org/10.48550/arXiv.2608.06774</a>.
 </div>
 </div>
 </div>

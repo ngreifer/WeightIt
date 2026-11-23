@@ -53,9 +53,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.2.0" id="weightit-220">
-<code>WeightIt</code> 2.2.0<a class="anchor" aria-label="anchor" href="#weightit-220"></a></h2>
+<em>WeightIt</em> 2.2.0<a class="anchor" aria-label="anchor" href="#weightit-220"></a></h2>
 <ul><li><p>Added a new vignette, <code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>, which describes the weighting methods available in <em>WeightIt</em> and offers guidance on choosing among them.</p></li>
 <li><p>Added a new vignette, <code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code>, which explains the estimand and assumptions for longitudinal treatments and demonstrates estimating weights with <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>, assessing balance, estimating effects with a marginal structural model, and accounting for loss to follow-up with censoring weights.</p></li>
+<li><p>With <code>method = "glm"</code> and a continuous treatment, the new <code>family</code> argument sets the model for the conditional density of the treatment. In addition to linear regression (<code>family = "gaussian"</code>, the default), a Gaussian location-scale model in which the variance of the treatment depends on the covariates (<code>"gaussian_ls"</code>) and Poisson, negative binomial, and Gamma regression models (<code>"poisson"</code>, <code>"negbin"</code>, and <code>"Gamma"</code>) are available. M-estimation is supported for all of them. See <code><a href="../reference/method_glm.html">?method_glm</a></code> for details.</p></li>
 <li><p>Added <code><a href="https://rdrr.io/r/stats/influence.measures.html" class="external-link">hatvalues()</a></code> methods for <code>ordinal_weightit</code> and <code>multinom_weightit</code> objects, which compute the generalized leverage of each unit. These allow HC2 robust standard errors to be computed for these models, e.g., by <em>adrftools</em>. See <code>?glm_weightit-methods</code> for details.</p></li>
 <li><p><code>method = "bart"</code> now fits the BART model using <code><a href="https://ngreifer.github.io/bartisan/reference/bartisan.html" class="external-link">bartisan::bartisan()</a></code> from the <em>bartisan</em> package instead of using <em>dbarts</em> and <em>stan4bart</em>, which are no longer used. Binary treatments are modeled with a logit link by default (previously always a probit link), multi-category treatments with a single multinomial model whose probabilities sum to 1 (previously one model per category), and continuous treatments by default with a model for the conditional density whose error distribution is a Dirichlet process mixture of normals. The trees use soft decision rules by default. Results will differ from those of previous versions; see <code><a href="../reference/method_bart.html">?method_bart</a></code> for details.</p></li>
 <li><p>With <code>method = "bart"</code>, the new <code>link</code> argument sets the link function of the model for binary and multi-category treatments and censoring weights, as it does with <code>method = "glm"</code>.</p></li>
@@ -122,7 +123,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.1.0" id="weightit-210">
-<code>WeightIt</code> 2.1.0<a class="anchor" aria-label="anchor" href="#weightit-210"></a></h2><p class="text-muted">CRAN release: 2026-09-30</p>
+<em>WeightIt</em> 2.1.0<a class="anchor" aria-label="anchor" href="#weightit-210"></a></h2><p class="text-muted">CRAN release: 2026-09-30</p>
 <ul><li><p>With <code>method = "bart"</code>, <code>use.offset</code> can now be set to <code>TRUE</code> to use the linear predictor of a GLM as an offset in the BART model.</p></li>
 <li><p>With <code>method = "gbm"</code>, balance is now assessed on multiple trees in parallel when a <a href="https://CRAN.R-project.org/package=future" class="external-link"><em>future</em></a> plan with more than one worker is set. This requires <a href="https://CRAN.R-project.org/package=future.apply" class="external-link"><em>future.apply</em></a> to be installed.</p></li>
 <li><p>Model formulas supplied to <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> can now have random effects included. Note this is intended to be used in the case of clustering, not for modeling longitudinal treatments in a single model.</p></li>
@@ -154,7 +155,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.0.0" id="weightit-200">
-<code>WeightIt</code> 2.0.0<a class="anchor" aria-label="anchor" href="#weightit-200"></a></h2><p class="text-muted">CRAN release: 2026-08-03</p>
+<em>WeightIt</em> 2.0.0<a class="anchor" aria-label="anchor" href="#weightit-200"></a></h2><p class="text-muted">CRAN release: 2026-08-03</p>
 <p>Several new features have been added, described in more detail below. In particular, these are censoring weights estimation and random effects in propensity score models.</p>
 <div class="section level4">
 <h4 id="censoring-weights-ipcw-2-0-0">Censoring weights (IPCW)<a class="anchor" aria-label="anchor" href="#censoring-weights-ipcw-2-0-0"></a></h4>
@@ -235,7 +236,7 @@
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.7.0" id="weightit-170">
-<code>WeightIt</code> 1.7.0<a class="anchor" aria-label="anchor" href="#weightit-170"></a></h2><p class="text-muted">CRAN release: 2026-04-22</p>
+<em>WeightIt</em> 1.7.0<a class="anchor" aria-label="anchor" href="#weightit-170"></a></h2><p class="text-muted">CRAN release: 2026-04-22</p>
 <ul><li><p><code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> can now estimate standard errors that account for estimation of the weights using M-estimation as described by <a href="https://doi.org/10.1111/biom.13332" class="external-link">Shu et al. (2021)</a>.</p></li>
 <li><p><code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "ebal"</code> now accepts an optional <code>tols</code> argument, which can be used to set a balance threshold for inexact balance. This uses a new algorithm for optimizing with L1 regularization.</p></li>
 <li><p>Fixed bugs in entropy balancing that made the M-estimation covariance slightly too small. Thanks to Chad Hazlett for pointing them out.</p></li>
@@ -248,14 +249,14 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.6.0" id="weightit-160">
-<code>WeightIt</code> 1.6.0<a class="anchor" aria-label="anchor" href="#weightit-160"></a></h2><p class="text-muted">CRAN release: 2026-03-19</p>
+<em>WeightIt</em> 1.6.0<a class="anchor" aria-label="anchor" href="#weightit-160"></a></h2><p class="text-muted">CRAN release: 2026-03-19</p>
 <ul><li><p>Added <code>method = "cfd"</code> for characteristic function distance balancing as described by <a href="https://arxiv.org/abs/2601.15449" class="external-link">Santra, Chen, and Park (2026)</a>. Energy balancing is a special case of this method.</p></li>
 <li><p>Added support for the new version of <em>osqp</em>, which changes some optional argument names and defaults for <code>method = "energy"</code>. These should not impact results.</p></li>
 <li><p><em>chk</em> and <em>crayon</em> have been removed as dependencies in favor of <em>cli</em>.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.5.1" id="weightit-151">
-<code>WeightIt</code> 1.5.1<a class="anchor" aria-label="anchor" href="#weightit-151"></a></h2><p class="text-muted">CRAN release: 2025-11-15</p>
+<em>WeightIt</em> 1.5.1<a class="anchor" aria-label="anchor" href="#weightit-151"></a></h2><p class="text-muted">CRAN release: 2025-11-15</p>
 <ul><li><p><code><a href="../reference/calibrate.html">calibrate()</a></code> with <code>method = "isoreg"</code> can now be used with sampling weights.</p></li>
 <li><p>With <code><a href="../reference/predict.glm_weightit.html">predict.ordinal_weightit()</a></code> and <code><a href="../reference/predict.glm_weightit.html">predict.multinom_weightit()</a></code> with <code>type = "response"</code>, an optional <code>level</code> argument can be supplied to request predictions solely for the given outcome level.</p></li>
 <li><p>When <code>vcov</code> is <code>"BS"</code> or <code>"FWB"</code> in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, etc., any call to <code><a href="../reference/trim.html">trim()</a></code> or <code><a href="../reference/calibrate.html">calibrate()</a></code> will be applied within each bootstrap replication.</p></li>
@@ -265,7 +266,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.5.0" id="weightit-150">
-<code>WeightIt</code> 1.5.0<a class="anchor" aria-label="anchor" href="#weightit-150"></a></h2><p class="text-muted">CRAN release: 2025-09-18</p>
+<em>WeightIt</em> 1.5.0<a class="anchor" aria-label="anchor" href="#weightit-150"></a></h2><p class="text-muted">CRAN release: 2025-09-18</p>
 <ul><li><p>For <code><a href="../reference/predict.glm_weightit.html">predict.ordinal_weightit()</a></code>, <code>type</code> can now be <code>"stdlv"</code> to request predictions on the scale of the standardized latent variable underlying the ordinal responses.</p></li>
 <li><p><code>moments</code> can now be supplied as a named vector with a different integer value for each covariate, e.g., <code>moments = c(x1 = 2, x2 = 3)</code> to balance just the first two moments of <code>x1</code> and the first three of <code>x2</code>.</p></li>
 <li><p>With <code>method = "energy"</code>, a new <code>tols</code> argument can be set to request inexact balance on covariate moments.</p></li>
@@ -282,7 +283,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="weightit-140">
-<code>WeightIt</code> 1.4.0<a class="anchor" aria-label="anchor" href="#weightit-140"></a></h2><p class="text-muted">CRAN release: 2025-02-24</p>
+<em>WeightIt</em> 1.4.0<a class="anchor" aria-label="anchor" href="#weightit-140"></a></h2><p class="text-muted">CRAN release: 2025-02-24</p>
 <ul><li><p>Entropy balancing works slightly differently when sampling weights are supplied. The negative entropy between the estimated weights and the product of the sampling weights and base weights (if any) is now the quantity minimized in the optimization. Previously, the negative entropy between the product of the sampling weights and estimated weights and the base weights was minimized. The new behavior ensures entropy balancing is consistent with mathematically equivalent methods when it ought to be (i.e., CBPS and IPT for the ATT) and prevents counter-intuitive results, like that the ESS after weighting could be larger than that before weighting. Note this will cause results to differ between this and previous versions of <code>WeightIt</code>.</p></li>
 <li><p>With <code>method = "cbps"</code>, <code>estimand</code> can now be set to <code>"ATO"</code> for binary and multi-category treatments. For binary treatments with the default link, this will yield identical weights to using <code>method = "glm"</code> with <code>estimand = "ATO"</code>.</p></li>
 <li><p>Two new links can be supplied with <code>method = "glm"</code>, <code>"cbps"</code>, and <code>"ipt"</code>: <code>"loglog"</code> for the log-log link and <code>"clog"</code> for the complementary log link. The <code>link</code> argument can also now be supplied as a <code>link-glm</code> object (e.g., the output of a call to <code><a href="https://rdrr.io/r/stats/make.link.html" class="external-link">make.link()</a></code>). This allows for more flexibility in the link function used to estimate the propensity score.</p></li>
@@ -304,13 +305,13 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.2" id="weightit-132">
-<code>WeightIt</code> 1.3.2<a class="anchor" aria-label="anchor" href="#weightit-132"></a></h2><p class="text-muted">CRAN release: 2024-11-05</p>
+<em>WeightIt</em> 1.3.2<a class="anchor" aria-label="anchor" href="#weightit-132"></a></h2><p class="text-muted">CRAN release: 2024-11-05</p>
 <ul><li><p>Fixes to tests for CRAN.</p></li>
 <li><p>Improvements to weight calculation for continuous treatments with small densities.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.1" id="weightit-131">
-<code>WeightIt</code> 1.3.1<a class="anchor" aria-label="anchor" href="#weightit-131"></a></h2><p class="text-muted">CRAN release: 2024-10-04</p>
+<em>WeightIt</em> 1.3.1<a class="anchor" aria-label="anchor" href="#weightit-131"></a></h2><p class="text-muted">CRAN release: 2024-10-04</p>
 <ul><li><p><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for <code>glm_weightit</code> objects (and their relatives) now have a <code>vcov</code> argument that can be used to specify how the variance matrix is computed. This makes it possible to compute a variance matrix different from the one specified in the model fitting call without having to refit the model. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> now displays which variance matrix was used.</p></li>
 <li><p>Added <code><a href="https://rdrr.io/r/stats/update.html" class="external-link">update()</a></code> methods for <code>glm_weightit</code>, <code>multinom_weightit</code>, <code>ordinal_weightit</code>, and <code>coxph_weightit</code> objects to update the model formula, dataset, or variance matrix. Updating the dataset also refits the <code>weightit</code> object included, if any.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> for <code>glm_weightit</code> objects gets its own help page at <code>help("anova.glm_weightit()")</code>.</p></li>
@@ -324,7 +325,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="weightit-130">
-<code>WeightIt</code> 1.3.0<a class="anchor" aria-label="anchor" href="#weightit-130"></a></h2><p class="text-muted">CRAN release: 2024-08-24</p>
+<em>WeightIt</em> 1.3.0<a class="anchor" aria-label="anchor" href="#weightit-130"></a></h2><p class="text-muted">CRAN release: 2024-08-24</p>
 <ul><li><p>Added <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> methods for <code>glm_weightit</code>, <code>multinom_weightit</code>, <code>ordinal_weightit</code>, and <code>coxph_weightit</code> objects to perform Wald tests for comparing nested models. The models do not have to be symbolically nested.</p></li>
 <li><p>Added the new user-facing object <code>.weightit_methods</code>, which contains information on each method and the options allowed with it. This is used within <code>WeightIt</code> for checking arguments but can also be used by other package developers who call functions in <code>WeightIt</code>. See <code><a href="../reference/dot-weightit_methods.html">help(".weightit_methods")</a></code> for details.</p></li>
 <li><p><code><a href="../reference/plot.weightit.html">plot.weightit()</a></code> can be used with <code>method = "optweight"</code> to display the dual variables.</p></li>
@@ -338,7 +339,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="weightit-120">
-<code>WeightIt</code> 1.2.0<a class="anchor" aria-label="anchor" href="#weightit-120"></a></h2><p class="text-muted">CRAN release: 2024-07-26</p>
+<em>WeightIt</em> 1.2.0<a class="anchor" aria-label="anchor" href="#weightit-120"></a></h2><p class="text-muted">CRAN release: 2024-07-26</p>
 <ul><li><p>Added two new functions, <code><a href="../reference/multinom_weightit.html">multinom_weightit()</a></code> and <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code> for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>family = "multinomial"</code>; this has been deprecated.</p></li>
 <li><p>M-estimation can now be used for weighting with ordinal regression for weights with multi-category ordered treatments with <code>method = "glm"</code>.</p></li>
 <li><p>M-estimation can now be used with bias-reduced regression as implemented in <code>brglm2</code> for the propensity score (<code>method = "glm"</code> with <code>link = "br.{.}"</code>) and for the outcome model (<code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>br = TRUE</code>). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.</p></li>
@@ -363,7 +364,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="weightit-110">
-<code>WeightIt</code> 1.1.0<a class="anchor" aria-label="anchor" href="#weightit-110"></a></h2><p class="text-muted">CRAN release: 2024-05-04</p>
+<em>WeightIt</em> 1.1.0<a class="anchor" aria-label="anchor" href="#weightit-110"></a></h2><p class="text-muted">CRAN release: 2024-05-04</p>
 <ul><li><p>Added a new function, <code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code>, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> methods for <code>glm_weightit</code> objects, which are different from those for <code>coxph</code> objects.</p></li>
 <li><p><code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> gets a new <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that omits some invalid statistics displayed by the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method for <code>glm</code> objects and displays the type of standard error estimated.</p></li>
 <li><p><code><a href="../reference/glm_weightit-methods.html">summary.glm_weightit()</a></code> (which is also used for <code>coxph_weightit</code> objects) gets a new argument, <code>transform</code>, which can be used to transform the displayed coefficients and confidence interval bounds (if requested), e.g., by exponentiating them.</p></li>
@@ -383,7 +384,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="weightit-100">
-<code>WeightIt</code> 1.0.0<a class="anchor" aria-label="anchor" href="#weightit-100"></a></h2><p class="text-muted">CRAN release: 2024-03-23</p>
+<em>WeightIt</em> 1.0.0<a class="anchor" aria-label="anchor" href="#weightit-100"></a></h2><p class="text-muted">CRAN release: 2024-03-23</p>
 <ul><li><p>Added a new function, <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> (along with wrapper <code><a href="../reference/glm_weightit.html">lm_weightit()</a></code>) and associated methods for fitting generalized linear models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via M-estimation or two forms of bootstrapping. <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> also supports multinomial logistic regression in addition to all models supported by <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. Cluster-robust standard errors are supported, and output is compatible with any functions that accept <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> objects. Not all weighting methods support M-estimation, but for those that do, a new component is added to the <code>weightit</code> output object. Currently, GLM propensity scores, entropy balancing, just-identified CBPS, and inverse probability tilting (described below) support M-estimation-based standard errors with <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>.</p></li>
 <li><p>Added inverse probability tilting (IPT) as described by Graham, Pinto, and Egel (2012), which can be requested by setting <code>method = "ipt"</code>. This is similar to entropy balancing and CBPS in that it enforces exact balance and yields a propensity score, but has some theoretical advantages to both methods. IPT does not rely on any other packages and runs very quickly.</p></li>
 <li><p>Estimating covariate balancing propensity score weights (i.e., <code>method = "cbps"</code>) no longer depends on the <code>CBPS</code> package. The default is now the just-identified versions of the method; the over-identified version can be requested by setting <code>over = TRUE</code>. The ATT for multi-category treatments is now supported, as are arbitrary numbers of treatment groups (<code>CBPS</code> only natively support up to 4 groups and only the ATE for multi-category treatments). For binary treatments, generalized linear models other than logistic regression are now supported (e.g., probit or Poisson regression).</p></li>
@@ -402,20 +403,20 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.2" id="weightit-0142">
-<code>WeightIt</code> 0.14.2<a class="anchor" aria-label="anchor" href="#weightit-0142"></a></h2><p class="text-muted">CRAN release: 2023-05-23</p>
+<em>WeightIt</em> 0.14.2<a class="anchor" aria-label="anchor" href="#weightit-0142"></a></h2><p class="text-muted">CRAN release: 2023-05-23</p>
 <ul><li><p>Fixed a bug when using <code>estimand = "ATC"</code> with multi-category treatments. (<a href="https://github.com/ngreifer/WeightIt/issues/47" class="external-link">#47</a>)</p></li>
 <li><p>Fixed a bug in the Estimating Effects vignette. (<a href="https://github.com/ngreifer/WeightIt/issues/46" class="external-link">#46</a>)</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.1" id="weightit-0141">
-<code>WeightIt</code> 0.14.1<a class="anchor" aria-label="anchor" href="#weightit-0141"></a></h2><p class="text-muted">CRAN release: 2023-05-09</p>
+<em>WeightIt</em> 0.14.1<a class="anchor" aria-label="anchor" href="#weightit-0141"></a></h2><p class="text-muted">CRAN release: 2023-05-09</p>
 <ul><li><p><code>cobalt</code> version 4.5.1 or greater is now required.</p></li>
 <li><p>Fixed a bug when using balance Super Learner with <code>cobalt</code> 4.5.1.</p></li>
 <li><p>Added a section to the Estimating Effects vignette (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>) on estimating the effect of a continuous treatment after weighting.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.0" id="weightit-0140">
-<code>WeightIt</code> 0.14.0<a class="anchor" aria-label="anchor" href="#weightit-0140"></a></h2><p class="text-muted">CRAN release: 2023-04-12</p>
+<em>WeightIt</em> 0.14.0<a class="anchor" aria-label="anchor" href="#weightit-0140"></a></h2><p class="text-muted">CRAN release: 2023-04-12</p>
 <ul><li><p>Added energy balancing for continuous treatments, requested using <code>method = "energy"</code>, as described in <a href="https://doi.org/10.1080/01621459.2023.2213485" class="external-link">Huling et al. (2024)</a>. These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the <code>independenceWeights</code> package. See <code><a href="../reference/method_energy.html">?method_energy</a></code> for details.</p></li>
 <li><p>Added a new vignette on estimating effects after weighting, accessible using <code><a href="../articles/estimating-effects.html">vignette("estimating-effects", package = "WeightIt")</a></code>. The new workflow relies on the <code>marginaleffects</code> package. The main vignette (<code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code>) has been modernized as well.</p></li>
 <li><p>Added a new dataset, <code>msmdata</code>, to demonstrate capabilities for longitudinal treatments. <code>twang</code> is no longer a dependency.</p></li>
@@ -432,7 +433,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.13.1" id="weightit-0131">
-<code>WeightIt</code> 0.13.1<a class="anchor" aria-label="anchor" href="#weightit-0131"></a></h2><p class="text-muted">CRAN release: 2022-06-28</p>
+<em>WeightIt</em> 0.13.1<a class="anchor" aria-label="anchor" href="#weightit-0131"></a></h2><p class="text-muted">CRAN release: 2022-06-28</p>
 <ul><li><p>For ordinal multi-category treatments, setting <code>link = "br.logit"</code> now uses <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code> to fit a bias-reduced ordinal regression model.</p></li>
 <li><p>Added the vignette “Installing Supporting Packages” to explain how to install the various packages that might be needed for <code>WeightIt</code> to use certain methods, including when the package is not on CRAN. See the vignette at <code><a href="../articles/installing-packages.html">vignette("installing-packages")</a></code>.</p></li>
 <li><p>Fixed a bug that would occur when a factor or character predictor with a single level was passed to <code><a href="../reference/weightit.html">weightit()</a></code>.</p></li>
@@ -442,7 +443,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.13.0" id="weightit-0130">
-<code>WeightIt</code> 0.13.0<a class="anchor" aria-label="anchor" href="#weightit-0130"></a></h2>
+<em>WeightIt</em> 0.13.0<a class="anchor" aria-label="anchor" href="#weightit-0130"></a></h2>
 <ul><li><p>Fixed a bug that would occur when the <code>formula.tools</code> package was loaded, which would occur most commonly when <code>logistf</code> was loaded. It would cause the error <code>The treatment and covariates must have the same number of units.</code> (<a href="https://github.com/ngreifer/WeightIt/issues/25" class="external-link">#25</a>)</p></li>
 <li><p>Fixed a bug where the <code>info</code> component would not be included in the output of <code><a href="../reference/weightit.html">weightit()</a></code> when using <code>method = "super"</code>.</p></li>
 <li><p>Added the ability to specify <code>num.formula</code> as a list of formulas in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>. This is primarily to get around the fact that when <code>stabilize = TRUE</code>, a fully saturated model with all treatments is used to compute the stabilization factor, which, for many time points, is time-consuming and may be impossible (especially if not all treatment combinations are observed). Thanks to <a href="https://github.com/maellecoursonnais" class="external-link">@maellecoursonnais</a> for bringing up this issue (<a href="https://github.com/ngreifer/WeightIt/issues/27" class="external-link">#27</a>).</p></li>
@@ -458,7 +459,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.12.0" id="weightit-0120">
-<code>WeightIt</code> 0.12.0<a class="anchor" aria-label="anchor" href="#weightit-0120"></a></h2><p class="text-muted">CRAN release: 2021-04-03</p>
+<em>WeightIt</em> 0.12.0<a class="anchor" aria-label="anchor" href="#weightit-0120"></a></h2><p class="text-muted">CRAN release: 2021-04-03</p>
 <ul><li><p>The use of <code>method = "twang"</code> has been retired and will now give an error message. Use <code>method = "gbm"</code> for nearly identical functionality with more options, as detailed at <code><a href="../reference/method_gbm.html">?method_gbm</a></code>.</p></li>
 <li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
 <li><p>Added a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>summary.weightitMSM</code> objects that functions just like <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code> for each time point.</p></li>
@@ -472,7 +473,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.0" id="weightit-0110">
-<code>WeightIt</code> 0.11.0<a class="anchor" aria-label="anchor" href="#weightit-0110"></a></h2><p class="text-muted">CRAN release: 2021-02-02</p>
+<em>WeightIt</em> 0.11.0<a class="anchor" aria-label="anchor" href="#weightit-0110"></a></h2><p class="text-muted">CRAN release: 2021-02-02</p>
 <ul><li><p>Added support for estimating propensity scores using Bayesian additive regression trees (BART) with <code>method = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>dbarts</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.</p></li>
 <li><p>Fixed a bug when using <code>method = "gbm"</code> with <code>stop.method = "cv{#}"</code>.</p></li>
 <li><p>Fixed a bug when setting <code>estimand = "ATC"</code> for methods that produce a propensity score. In the past, the output propensity score was the probability of being in the control group; now, it is the probability of being in the treated group, as it is for all other estimands. This does not affect the weights.</p></li>
@@ -487,12 +488,12 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.10.2" id="weightit-0102">
-<code>WeightIt</code> 0.10.2<a class="anchor" aria-label="anchor" href="#weightit-0102"></a></h2><p class="text-muted">CRAN release: 2020-08-27</p>
+<em>WeightIt</em> 0.10.2<a class="anchor" aria-label="anchor" href="#weightit-0102"></a></h2><p class="text-muted">CRAN release: 2020-08-27</p>
 <ul><li>Fixed a bug where treatment values were accidentally switched for some methods.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.10.1" id="weightit-0101">
-<code>WeightIt</code> 0.10.1<a class="anchor" aria-label="anchor" href="#weightit-0101"></a></h2><p class="text-muted">CRAN release: 2020-08-12</p>
+<em>WeightIt</em> 0.10.1<a class="anchor" aria-label="anchor" href="#weightit-0101"></a></h2><p class="text-muted">CRAN release: 2020-08-12</p>
 <ul><li><p>With <code>method = "gbm"</code>, added the ability to tune hyperparameters like <code>interaction.depth</code> and <code>distribution</code> using the same criteria as is used to select the optimal tree. A summary of the tuning results is included in <code>info</code> in the <code>weightit</code> output object.</p></li>
 <li><p>Fixed a bug where <code>moments</code> and <code>int</code> were ignored unless both were specified.</p></li>
 <li><p>Effective sample sizes now print only up to two digits (believe me, you don’t need three) and print more cleanly with whole numbers.</p></li>
@@ -502,7 +503,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.10.0" id="weightit-0100">
-<code>WeightIt</code> 0.10.0<a class="anchor" aria-label="anchor" href="#weightit-0100"></a></h2><p class="text-muted">CRAN release: 2020-07-07</p>
+<em>WeightIt</em> 0.10.0<a class="anchor" aria-label="anchor" href="#weightit-0100"></a></h2><p class="text-muted">CRAN release: 2020-07-07</p>
 <ul><li><p>Added support for energy balancing with <code>method = "energy"</code>. This method minimizes the energy distance between samples, which is a multivariate distance measure. This method uses code written specifically for <code>WeightIt</code> (i.e., it does not call a package specifically designed for energy balancing) using the <code>osqp</code> package for the optimization (same as <code>optweight</code>). See Huling &amp; Mak (2020) for details on this method. Also included is an option to require exact balance on moments of the covariates while minimizing the energy distance. The method works for binary and multinomial treatments with the ATE, ATT, or ATC. Sampling weights are supported. Because the method requires the calculation and manipulation of a distance matrix for all units, it can be slow and/or memory intensive for large datasets.</p></li>
 <li><p>Improvements to <code>method = "gbm"</code> and to <code>method = "super"</code> with <code>SL.method = "method.balance"</code>. A new suite of <code>stop.method</code>s are allowed. For binary treatments, these include the energy distance, sample Mahalanobis distance, and pseudo-R2 of the weighted treatment model, among others. See <code>?stop.method</code> for allowable options. In addition, performance for both is quite a bit faster.</p></li>
 <li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mnlogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mnlogit = TRUE</code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster for large datasets.</p></li>
@@ -517,7 +518,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0" id="weightit-090">
-<code>WeightIt</code> 0.9.0<a class="anchor" aria-label="anchor" href="#weightit-090"></a></h2><p class="text-muted">CRAN release: 2020-02-11</p>
+<em>WeightIt</em> 0.9.0<a class="anchor" aria-label="anchor" href="#weightit-090"></a></h2><p class="text-muted">CRAN release: 2020-02-11</p>
 <ul><li><p>Added support for entropy balancing (<code>method = "ebal"</code>) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.</p></li>
 <li><p>Added support for Balance SuperLearner as described by Pirracchio and Carone (2018) with <code>method = "super"</code>. Rather than using NNLS to choose the optimal combination of predictions, you can now optimize balance. To do so, set <code>SL.method = "method.balance"</code>. You will need to set an argument to <code>stop.method</code>, which works identically to how it does for <code>method = "gbm"</code>. For example, for <code>stop.method = "es.max"</code>, the predicted values given will be the combination of predicted values that minimizes the largest absolute standardized mean difference of the covariates in the sample weighted using the predicted values as propensity scores.</p></li>
 <li><p>Changed some of the statistics displayed when using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: the weight ratio is gone (because weights can be 0, which is not problematic but would explode the ratio), and the mean absolute deviation and entropy of the weights are now present.</p></li>
@@ -525,7 +526,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="weightit-080">
-<code>WeightIt</code> 0.8.0<a class="anchor" aria-label="anchor" href="#weightit-080"></a></h2><p class="text-muted">CRAN release: 2020-01-12</p>
+<em>WeightIt</em> 0.8.0<a class="anchor" aria-label="anchor" href="#weightit-080"></a></h2><p class="text-muted">CRAN release: 2020-01-12</p>
 <ul><li><p>Formula interfaces now accept <code>poly(x, .)</code> and other matrix-generating functions of variables, including the <code>rms</code>-class-generating functions from the <code>rms</code> package (e.g., <code>pol()</code>, <code>rcs()</code>, etc.) (the <code>rms</code> package must be loaded to use these latter ones) and the <code>basis</code>-class-generating functions from the <code>splines</code> package (i.e., <code>bs()</code> and <code>ns()</code>). A bug in an early version of this was found by <a href="https://github.com/ahinton-mmc" class="external-link">@ahinton-mmc</a>.</p></li>
 <li><p>Added support for marginal mean weighting through stratification (MMWS) as described by Hong (2010, 2012) for <code><a href="../reference/weightit.html">weightit()</a></code> and <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code> through the <code>subclass</code> argument (see References at <code><a href="../reference/get_w_from_ps.html">?get_w_from_ps</a></code>). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. MMWS can be used with any method that produces a propensity score. The implementation here ensures all subclasses have a least one member by filling in empty subclasses with neighboring units.</p></li>
 <li><p>Added <code>stabilize</code> option to <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code>.</p></li>
@@ -542,13 +543,13 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.1" id="weightit-071">
-<code>WeightIt</code> 0.7.1<a class="anchor" aria-label="anchor" href="#weightit-071"></a></h2><p class="text-muted">CRAN release: 2019-10-30</p>
+<em>WeightIt</em> 0.7.1<a class="anchor" aria-label="anchor" href="#weightit-071"></a></h2><p class="text-muted">CRAN release: 2019-10-30</p>
 <ul><li><p>Fixed bug when using <code><a href="../reference/weightit.html">weightit()</a></code> inside another function that passed a <code>by</code> argument explicitly. Also changed the syntax for <code>by</code>; it must now either be a string (which was always possible) or a one-sided formula with the stratifying variable on the right-hand side. To use a variable that is not in <code>data</code>, you must use the formula interface.</p></li>
 <li><p>Fixed bug when trying to use <code>ps</code> with <code>by</code> in <code><a href="../reference/weightit.html">weightit()</a></code>.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="weightit-070">
-<code>WeightIt</code> 0.7.0<a class="anchor" aria-label="anchor" href="#weightit-070"></a></h2><p class="text-muted">CRAN release: 2019-10-16</p>
+<em>WeightIt</em> 0.7.0<a class="anchor" aria-label="anchor" href="#weightit-070"></a></h2><p class="text-muted">CRAN release: 2019-10-16</p>
 <ul><li><p>Added new <code><a href="../reference/sbps.html">sbps()</a></code> function for estimating subgroup balancing propensity score weights, including both the standard method and a new smooth version.</p></li>
 <li><p>Setting <code>method = "gbm"</code> and <code>method = "twang"</code> will now do two different things. <code>method = "gbm"</code> uses <code>gbm</code> and <code>cobalt</code> functions to estimate the weights and is much faster, while <code>method = "twang"</code> uses <code>twang</code> functions to estimate the weights. The results are similar between the two methods. Prior to this version, <code>method = "gbm"</code> and <code>method = "twang"</code> both did what <code>method = "twang"</code> does now.</p></li>
 <li><p>Bug fixes when <code>stabilize = TRUE</code>, thanks to <a href="https://github.com/ulriksartipy" class="external-link">@ulriksartipy</a> and Sven Rieger.</p></li>
@@ -559,7 +560,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="weightit-060">
-<code>WeightIt</code> 0.6.0<a class="anchor" aria-label="anchor" href="#weightit-060"></a></h2><p class="text-muted">CRAN release: 2019-09-05</p>
+<em>WeightIt</em> 0.6.0<a class="anchor" aria-label="anchor" href="#weightit-060"></a></h2><p class="text-muted">CRAN release: 2019-09-05</p>
 <ul><li><p>Bug fixes. Functions now work better when used inside other functions (e.g., <code>lapply</code>).</p></li>
 <li><p>Behavior of <code><a href="../reference/weightit.html">weightit()</a></code> in the presence of non-<code>NULL</code> <code>focal</code> has changed. When <code>focal</code> is specified, <code>estimand</code> is assumed to be <code>ATT</code>. Previously, <code>focal</code> would be ignored unless <code>estimand = "ATT"</code>.</p></li>
 <li><p>Processing of <code>estimand</code> and <code>focal</code> is improved. Functions are smarter about guessing which group is the focal group when one isn’t specified, especially with non-numeric treatments. <code>focal</code> can now be used with <code>estimand = "ATC"</code> to indicate which group is the control group, so <code>"ATC"</code> and <code>"ATT"</code> now function more similarly.</p></li>
@@ -574,14 +575,14 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.1" id="weightit-051">
-<code>WeightIt</code> 0.5.1<a class="anchor" aria-label="anchor" href="#weightit-051"></a></h2><p class="text-muted">CRAN release: 2019-01-16</p>
+<em>WeightIt</em> 0.5.1<a class="anchor" aria-label="anchor" href="#weightit-051"></a></h2><p class="text-muted">CRAN release: 2019-01-16</p>
 <ul><li><p>Fixed a bug when using the <code>ps</code> argument in <code><a href="../reference/weightit.html">weightit()</a></code>.</p></li>
 <li><p>Fixed a bug when setting <code>include.obj = TRUE</code> in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>.</p></li>
 <li><p>Added warnings for using certain methods with longitudinal treatments as they are not validated and may lead to incorrect inferences.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="weightit-050">
-<code>WeightIt</code> 0.5.0<a class="anchor" aria-label="anchor" href="#weightit-050"></a></h2><p class="text-muted">CRAN release: 2018-11-22</p>
+<em>WeightIt</em> 0.5.0<a class="anchor" aria-label="anchor" href="#weightit-050"></a></h2><p class="text-muted">CRAN release: 2018-11-22</p>
 <ul><li><p>Added <code>super</code> method to estimate propensity scores using the <code>SuperLearner</code> package.</p></li>
 <li><p>Added <code>optweight</code> method to estimate weights using optimization (but you should probably just use the <code>optweight</code> package).</p></li>
 <li><p><code><a href="../reference/weightit.html">weightit()</a></code> now uses the correct formula to estimate weights for the ATO with multinomial treatments as described by Li &amp; Li (2018).</p></li>
@@ -592,7 +593,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="weightit-040">
-<code>WeightIt</code> 0.4.0<a class="anchor" aria-label="anchor" href="#weightit-040"></a></h2><p class="text-muted">CRAN release: 2018-06-25</p>
+<em>WeightIt</em> 0.4.0<a class="anchor" aria-label="anchor" href="#weightit-040"></a></h2><p class="text-muted">CRAN release: 2018-06-25</p>
 <ul><li><p>Added <code><a href="../reference/trim.html">trim()</a></code> function to trim weights.</p></li>
 <li><p>Added <code>ps.cont()</code> function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in <code>twang</code>. This function uses the same syntax as <code>ps()</code> in <code>twang</code>, and can also be accessed using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>. Support functions were added to make it compatible with <code>twang</code> functions for assessing balance (e.g., <code>summary</code>, <code>bal.table</code>, <code>plot</code>). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.</p></li>
 <li><p>The input formula is now much more forgiving, allowing objects in the environment to be included. The <code>data</code> argument to <code><a href="../reference/weightit.html">weightit()</a></code> is now optional. To simplify things, the output object no longer contains a <code>data</code> field.</p></li>
@@ -601,7 +602,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.2" id="weightit-032">
-<code>WeightIt</code> 0.3.2<a class="anchor" aria-label="anchor" href="#weightit-032"></a></h2><p class="text-muted">CRAN release: 2018-03-14</p>
+<em>WeightIt</em> 0.3.2<a class="anchor" aria-label="anchor" href="#weightit-032"></a></h2><p class="text-muted">CRAN release: 2018-03-14</p>
 <ul><li><p>Added new <code>moments</code> and <code>int</code> options for some <code><a href="../reference/weightit.html">weightit()</a></code> methods to easily specify moments and interactions of covariates.</p></li>
 <li><p>Fixed bug when using objects not in the data set in <code><a href="../reference/weightit.html">weightit()</a></code>. Behavior has changed to include transformed covariates entered in formula in <code><a href="../reference/weightit.html">weightit()</a></code> output.</p></li>
 <li><p>Fixed bug resulting from potential collinearity when using <code>ebal</code> or <code>ebcw</code>.</p></li>
@@ -609,20 +610,20 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1" id="weightit-031">
-<code>WeightIt</code> 0.3.1<a class="anchor" aria-label="anchor" href="#weightit-031"></a></h2><p class="text-muted">CRAN release: 2018-03-03</p>
+<em>WeightIt</em> 0.3.1<a class="anchor" aria-label="anchor" href="#weightit-031"></a></h2><p class="text-muted">CRAN release: 2018-03-03</p>
 <ul><li><p>Edits to code and help files to protect against missing <code>CBPS</code> package.</p></li>
 <li><p>Corrected sampling weights functionality so they work correctly. Also expanded sampling weights to be able to be used with all methods, including those that do not natively allow for sampling weights (e.g., <code>ATE</code>).</p></li>
 <li><p>Minor bug fixes and spelling corrections.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="weightit-030">
-<code>WeightIt</code> 0.3.0<a class="anchor" aria-label="anchor" href="#weightit-030"></a></h2><p class="text-muted">CRAN release: 2018-01-14</p>
+<em>WeightIt</em> 0.3.0<a class="anchor" aria-label="anchor" href="#weightit-030"></a></h2><p class="text-muted">CRAN release: 2018-01-14</p>
 <ul><li><p>Added <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> function (and supporting <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> functions) to estimate weights for marginal structural models with time-varying treatments and covariates.</p></li>
 <li><p>Fixed some bugs, including when using CBPS with continuous treatments, and when using <code>focal</code> incorrectly.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="weightit-020">
-<code>WeightIt</code> 0.2.0<a class="anchor" aria-label="anchor" href="#weightit-020"></a></h2><p class="text-muted">CRAN release: 2017-11-12</p>
+<em>WeightIt</em> 0.2.0<a class="anchor" aria-label="anchor" href="#weightit-020"></a></h2><p class="text-muted">CRAN release: 2017-11-12</p>
 <ul><li><p>Added <code>method = "sbw"</code> for stable balancing weights (now removed and replaced with <code>method = "optweight"</code>)</p></li>
 <li><p>Allowed for estimation of multinomial propensity scores using multiple binary regressions if <code>mlogit</code> is not installed</p></li>
 <li><p>Allowed for estimation of multinomial CBPS using multiple binary CBPS for more than 4 groups</p></li>
@@ -630,7 +631,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="weightit-010">
-<code>WeightIt</code> 0.1.0<a class="anchor" aria-label="anchor" href="#weightit-010"></a></h2><p class="text-muted">CRAN release: 2017-10-17</p>
+<em>WeightIt</em> 0.1.0<a class="anchor" aria-label="anchor" href="#weightit-010"></a></h2><p class="text-muted">CRAN release: 2017-10-17</p>
 <ul><li>First version!</li>
 </ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

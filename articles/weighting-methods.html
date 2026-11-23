@@ -81,7 +81,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-11-20</h4>
+            <h4 data-toc-skip class="date">2026-11-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/weighting-methods.Rmd" class="external-link"><code>vignettes/weighting-methods.Rmd</code></a></small>
       <div class="d-none name"><code>weighting-methods.Rmd</code></div>
@@ -534,9 +534,13 @@ and the residual variance estimated from the fit, as recommended by
 such as a <span class="math inline">\(t\)</span>-distribution, which
 <span class="citation">Naimi et al. (<a href="#ref-naimiConstructingInverseProbability2014">2014</a>)</span>
 considered as a way to limit the influence of outlying treatment values
-on the weights, or a kernel density estimate of the residuals. The
-weights are highly sensitive to this choice and to the specification of
-the conditional mean, and even small departures can produce extreme
+on the weights, or a kernel density estimate of the residuals. With
+<code>method = "glm"</code>, the <code>family</code> argument changes
+the model itself, so that the variance of the treatment can depend on
+the covariates or the density can be that of a count or positive
+treatment (see the description of <code>method = "glm"</code> below).
+The weights are highly sensitive to this choice and to the specification
+of the conditional mean, and even small departures can produce extreme
 weights <span class="citation">(<a href="#ref-naimiConstructingInverseProbability2014">Naimi et al.
 2014</a>; <a href="#ref-zhuBoostingAlgorithmEstimating2015">Zhu et al.
 2015</a>; <a href="#ref-hulingIndependenceWeightsCausal2024">Huling et
@@ -612,10 +616,18 @@ be used to request a series of binomial models instead, or the
 implementations in the <em>mclogit</em> or <em>MNP</em> packages, and
 for ordered treatments an ordinal regression model is used. For
 continuous treatments, the conditional mean of the treatment is
-estimated by linear regression, and the conditional density is formed
-from the residuals using the distribution specified by
-<code>density</code>. The marginal density in the numerator is estimated
-by marginalizing over the conditional density.</p>
+estimated by linear regression by default, and the conditional density
+is formed from the residuals using the distribution specified by
+<code>density</code>. The <code>family</code> argument changes the
+model: <code>family = "gaussian_ls"</code> fits a Gaussian
+location-scale model, in which the log of the residual variance is also
+linear in the covariates <span class="citation">(<a href="#ref-smythGeneralizedLinearModels1989">Smyth 1989</a>)</span>, and
+<code>"poisson"</code>, <code>"negbin"</code>, and <code>"Gamma"</code>
+fit Poisson, negative binomial, and Gamma regression models for count
+and positive treatments, for which a normal density with a constant
+variance is often a poor description. The marginal density in the
+numerator is estimated by marginalizing over the conditional
+density.</p>
 <p>Several refinements to the standard model are available. When the
 treatment groups are nearly separated by the covariates or one group is
 small, maximum likelihood estimates can be infinite or badly biased and
@@ -1980,6 +1992,11 @@ Techniques in Propensity Score Estimation: A Simulation Study.”</span>
 Shook-Sa, Bonnie E., and Michael G. Hudgens. 2022. <span>“Power and
 Sample Size for Observational Studies of Point Exposure Effects.”</span>
 <em>Biometrics</em> 78 (1): 388–98. <a href="https://doi.org/10.1111/biom.13405" class="external-link">https://doi.org/10.1111/biom.13405</a>.
+</div>
+<div id="ref-smythGeneralizedLinearModels1989" class="csl-entry">
+Smyth, Gordon K. 1989. <span>“Generalized <span>Linear Models</span>
+with <span>Varying Dispersion</span>.”</span> <em>Journal of the Royal
+Statistical Society: Series B (Methodological)</em> 51 (1): 47–60. <a href="https://doi.org/10.1111/j.2517-6161.1989.tb01747.x" class="external-link">https://doi.org/10.1111/j.2517-6161.1989.tb01747.x</a>.
 </div>
 <div id="ref-thoemmesPrimerInverseProbability2016" class="csl-entry">
 Thoemmes, Felix J., and Anthony D. Ong. 2016. <span>“A Primer on Inverse

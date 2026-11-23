@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` 2.2.0
+## *WeightIt* 2.2.0
 
 - Added a new vignette,
   [`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md),
@@ -14,6 +14,17 @@
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
   assessing balance, estimating effects with a marginal structural
   model, and accounting for loss to follow-up with censoring weights.
+
+- With `method = "glm"` and a continuous treatment, the new `family`
+  argument sets the model for the conditional density of the treatment.
+  In addition to linear regression (`family = "gaussian"`, the default),
+  a Gaussian location-scale model in which the variance of the treatment
+  depends on the covariates (`"gaussian_ls"`) and Poisson, negative
+  binomial, and Gamma regression models (`"poisson"`, `"negbin"`, and
+  `"Gamma"`) are available. M-estimation is supported for all of them.
+  See
+  [`?method_glm`](https://ngreifer.github.io/WeightIt/reference/method_glm.md)
+  for details.
 
 - Added [`hatvalues()`](https://rdrr.io/r/stats/influence.measures.html)
   methods for `ordinal_weightit` and `multinom_weightit` objects, which
@@ -547,7 +558,7 @@
   is unreliable and raised a warning each time a model was fit. Results
   may change.
 
-## `WeightIt` 2.1.0
+## *WeightIt* 2.1.0
 
 CRAN release: 2026-09-30
 
@@ -743,7 +754,7 @@ CRAN release: 2026-09-30
   and a local alias, as does supplying a variable that was tagged ahead
   of time.
 
-## `WeightIt` 2.0.0
+## *WeightIt* 2.0.0
 
 CRAN release: 2026-08-03
 
@@ -1284,7 +1295,7 @@ propensity score models.
 
 - Added unit tests for all weighting methods.
 
-## `WeightIt` 1.7.0
+## *WeightIt* 1.7.0
 
 CRAN release: 2026-04-22
 
@@ -1334,7 +1345,7 @@ CRAN release: 2026-04-22
   to be more in line with
   [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md).
 
-## `WeightIt` 1.6.0
+## *WeightIt* 1.6.0
 
 CRAN release: 2026-03-19
 
@@ -1350,7 +1361,7 @@ CRAN release: 2026-03-19
 - *chk* and *crayon* have been removed as dependencies in favor of
   *cli*.
 
-## `WeightIt` 1.5.1
+## *WeightIt* 1.5.1
 
 CRAN release: 2025-11-15
 
@@ -1390,7 +1401,7 @@ CRAN release: 2025-11-15
   `treat ~ . - re78`, that variable no longer is included in the
   covariate output.
 
-## `WeightIt` 1.5.0
+## *WeightIt* 1.5.0
 
 CRAN release: 2025-09-18
 
@@ -1449,7 +1460,7 @@ CRAN release: 2025-09-18
 
 - Typo fixes in vignettes and documentation.
 
-## `WeightIt` 1.4.0
+## *WeightIt* 1.4.0
 
 CRAN release: 2025-02-24
 
@@ -1558,7 +1569,7 @@ CRAN release: 2025-02-24
   [@larsentom](https://github.com/larsentom).
   ([\#79](https://github.com/ngreifer/WeightIt/issues/79))
 
-## `WeightIt` 1.3.2
+## *WeightIt* 1.3.2
 
 CRAN release: 2024-11-05
 
@@ -1567,7 +1578,7 @@ CRAN release: 2024-11-05
 - Improvements to weight calculation for continuous treatments with
   small densities.
 
-## `WeightIt` 1.3.1
+## *WeightIt* 1.3.1
 
 CRAN release: 2024-10-04
 
@@ -1623,7 +1634,7 @@ CRAN release: 2024-10-04
 
 - Typo fixes in documentation.
 
-## `WeightIt` 1.3.0
+## *WeightIt* 1.3.0
 
 CRAN release: 2024-08-24
 
@@ -1667,7 +1678,7 @@ CRAN release: 2024-08-24
 
 - Minor bug, performance, and readability fixes.
 
-## `WeightIt` 1.2.0
+## *WeightIt* 1.2.0
 
 CRAN release: 2024-07-26
 
@@ -1749,7 +1760,7 @@ CRAN release: 2024-07-26
   [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
   to include formulas for the weights.
 
-## `WeightIt` 1.1.0
+## *WeightIt* 1.1.0
 
 CRAN release: 2024-05-04
 
@@ -1833,7 +1844,7 @@ CRAN release: 2024-05-04
 
 - Improved warnings and errors for bad models throughout the package.
 
-## `WeightIt` 1.0.0
+## *WeightIt* 1.0.0
 
 CRAN release: 2024-03-23
 
@@ -1936,7 +1947,7 @@ CRAN release: 2024-03-23
 
 - Reorganization of some functions.
 
-## `WeightIt` 0.14.2
+## *WeightIt* 0.14.2
 
 CRAN release: 2023-05-23
 
@@ -1946,7 +1957,7 @@ CRAN release: 2023-05-23
 - Fixed a bug in the Estimating Effects vignette.
   ([\#46](https://github.com/ngreifer/WeightIt/issues/46))
 
-## `WeightIt` 0.14.1
+## *WeightIt* 0.14.1
 
 CRAN release: 2023-05-09
 
@@ -1958,7 +1969,7 @@ CRAN release: 2023-05-09
   ([`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md))
   on estimating the effect of a continuous treatment after weighting.
 
-## `WeightIt` 0.14.0
+## *WeightIt* 0.14.0
 
 CRAN release: 2023-04-12
 
@@ -2031,7 +2042,7 @@ CRAN release: 2023-04-12
   of most methods, but change others, and doesn’t affect balance
   assessment.
 
-## `WeightIt` 0.13.1
+## *WeightIt* 0.13.1
 
 CRAN release: 2022-06-28
 
@@ -2058,7 +2069,7 @@ CRAN release: 2022-06-28
 
 - Updated the logo, thanks to [Ben Stillerman](https://stillben.com).
 
-## `WeightIt` 0.13.0
+## *WeightIt* 0.13.0
 
 - Fixed a bug that would occur when the `formula.tools` package was
   loaded, which would occur most commonly when `logistf` was loaded. It
@@ -2117,7 +2128,7 @@ CRAN release: 2022-06-28
 - An error is now thrown if an incorrect `link` is supplied with
   `method = "ps"`.
 
-## `WeightIt` 0.12.0
+## *WeightIt* 0.12.0
 
 CRAN release: 2021-04-03
 
@@ -2172,7 +2183,7 @@ CRAN release: 2021-04-03
   MrFlick on StackOverflow for the
   [solution](https://stackoverflow.com/a/66897921/6348551).
 
-## `WeightIt` 0.11.0
+## *WeightIt* 0.11.0
 
 CRAN release: 2021-02-02
 
@@ -2229,14 +2240,14 @@ CRAN release: 2021-02-02
 
 - Cleaned up the documentation.
 
-## `WeightIt` 0.10.2
+## *WeightIt* 0.10.2
 
 CRAN release: 2020-08-27
 
 - Fixed a bug where treatment values were accidentally switched for some
   methods.
 
-## `WeightIt` 0.10.1
+## *WeightIt* 0.10.1
 
 CRAN release: 2020-08-12
 
@@ -2263,7 +2274,7 @@ CRAN release: 2020-08-12
   excessively small and mistaken for all being the same. The weights now
   sum to the number of units.
 
-## `WeightIt` 0.10.0
+## *WeightIt* 0.10.0
 
 CRAN release: 2020-07-07
 
@@ -2332,7 +2343,7 @@ CRAN release: 2020-07-07
   `summary.weightit`. This can be especially helpful when using
   `"optweight"` or `"energy"` methods or when using `estimand = "ATOS"`.
 
-## `WeightIt` 0.9.0
+## *WeightIt* 0.9.0
 
 CRAN release: 2020-02-11
 
@@ -2362,7 +2373,7 @@ CRAN release: 2020-02-11
 - Added `crayon` for prettier printing of
   [`summary()`](https://rdrr.io/r/base/summary.html) output.
 
-## `WeightIt` 0.8.0
+## *WeightIt* 0.8.0
 
 CRAN release: 2020-01-12
 
@@ -2445,7 +2456,7 @@ CRAN release: 2020-01-12
 
 - Performance enhancements.
 
-## `WeightIt` 0.7.1
+## *WeightIt* 0.7.1
 
 CRAN release: 2019-10-30
 
@@ -2460,7 +2471,7 @@ CRAN release: 2019-10-30
 - Fixed bug when trying to use `ps` with `by` in
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
-## `WeightIt` 0.7.0
+## *WeightIt* 0.7.0
 
 CRAN release: 2019-10-16
 
@@ -2501,7 +2512,7 @@ CRAN release: 2019-10-16
   This can be helpful when regular maximum likelihood models fail to
   converge, though this may also be a sign of lack of overlap.
 
-## `WeightIt` 0.6.0
+## *WeightIt* 0.6.0
 
 CRAN release: 2019-09-05
 
@@ -2556,7 +2567,7 @@ CRAN release: 2019-09-05
 
 - Added `ggplot2` to Imports.
 
-## `WeightIt` 0.5.1
+## *WeightIt* 0.5.1
 
 CRAN release: 2019-01-16
 
@@ -2569,7 +2580,7 @@ CRAN release: 2019-01-16
 - Added warnings for using certain methods with longitudinal treatments
   as they are not validated and may lead to incorrect inferences.
 
-## `WeightIt` 0.5.0
+## *WeightIt* 0.5.0
 
 CRAN release: 2018-11-22
 
@@ -2600,7 +2611,7 @@ CRAN release: 2018-11-22
 
 - Other bug fixes and minor changes.
 
-## `WeightIt` 0.4.0
+## *WeightIt* 0.4.0
 
 CRAN release: 2018-06-25
 
@@ -2632,7 +2643,7 @@ CRAN release: 2018-06-25
 - Fixed a bug where variables would be thrown out when
   `method = "ebal"`.
 
-## `WeightIt` 0.3.2
+## *WeightIt* 0.3.2
 
 CRAN release: 2018-03-14
 
@@ -2652,7 +2663,7 @@ CRAN release: 2018-03-14
 
 - Added a vignette.
 
-## `WeightIt` 0.3.1
+## *WeightIt* 0.3.1
 
 CRAN release: 2018-03-03
 
@@ -2666,7 +2677,7 @@ CRAN release: 2018-03-03
 
 - Minor bug fixes and spelling corrections.
 
-## `WeightIt` 0.3.0
+## *WeightIt* 0.3.0
 
 CRAN release: 2018-01-14
 
@@ -2681,7 +2692,7 @@ CRAN release: 2018-01-14
 - Fixed some bugs, including when using CBPS with continuous treatments,
   and when using `focal` incorrectly.
 
-## `WeightIt` 0.2.0
+## *WeightIt* 0.2.0
 
 CRAN release: 2017-11-12
 
@@ -2696,7 +2707,7 @@ CRAN release: 2017-11-12
 
 - Added README and NEWS
 
-## `WeightIt` 0.1.0
+## *WeightIt* 0.1.0
 
 CRAN release: 2017-10-17
 

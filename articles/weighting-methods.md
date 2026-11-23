@@ -366,10 +366,14 @@ Robins et al. ([2000](#ref-robinsMarginalStructuralModels2000)). The
 \\t\\-distribution, which Naimi et al.
 ([2014](#ref-naimiConstructingInverseProbability2014)) considered as a
 way to limit the influence of outlying treatment values on the weights,
-or a kernel density estimate of the residuals. The weights are highly
-sensitive to this choice and to the specification of the conditional
-mean, and even small departures can produce extreme weights ([Naimi et
-al. 2014](#ref-naimiConstructingInverseProbability2014); [Zhu et al.
+or a kernel density estimate of the residuals. With `method = "glm"`,
+the `family` argument changes the model itself, so that the variance of
+the treatment can depend on the covariates or the density can be that of
+a count or positive treatment (see the description of `method = "glm"`
+below). The weights are highly sensitive to this choice and to the
+specification of the conditional mean, and even small departures can
+produce extreme weights ([Naimi et al.
+2014](#ref-naimiConstructingInverseProbability2014); [Zhu et al.
 2015](#ref-zhuBoostingAlgorithmEstimating2015); [Huling et al.
 2024](#ref-hulingIndependenceWeightsCausal2024)). The optimization-based
 methods avoid specifying a density altogether: entropy balancing and
@@ -449,10 +453,17 @@ estimated by multinomial logistic regression, implemented within
 request a series of binomial models instead, or the implementations in
 the *mclogit* or *MNP* packages, and for ordered treatments an ordinal
 regression model is used. For continuous treatments, the conditional
-mean of the treatment is estimated by linear regression, and the
-conditional density is formed from the residuals using the distribution
-specified by `density`. The marginal density in the numerator is
-estimated by marginalizing over the conditional density.
+mean of the treatment is estimated by linear regression by default, and
+the conditional density is formed from the residuals using the
+distribution specified by `density`. The `family` argument changes the
+model: `family = "gaussian_ls"` fits a Gaussian location-scale model, in
+which the log of the residual variance is also linear in the covariates
+([Smyth 1989](#ref-smythGeneralizedLinearModels1989)), and `"poisson"`,
+`"negbin"`, and `"Gamma"` fit Poisson, negative binomial, and Gamma
+regression models for count and positive treatments, for which a normal
+density with a constant variance is often a poor description. The
+marginal density in the numerator is estimated by marginalizing over the
+conditional density.
 
 Several refinements to the standard model are available. When the
 treatment groups are nearly separated by the covariates or one group is
@@ -1627,6 +1638,11 @@ Techniques in Propensity Score Estimation: A Simulation Study.”
 Shook-Sa, Bonnie E., and Michael G. Hudgens. 2022. “Power and Sample
 Size for Observational Studies of Point Exposure Effects.” *Biometrics*
 78 (1): 388–98. <https://doi.org/10.1111/biom.13405>.
+
+Smyth, Gordon K. 1989. “Generalized Linear Models with Varying
+Dispersion.” *Journal of the Royal Statistical Society: Series B
+(Methodological)* 51 (1): 47–60.
+<https://doi.org/10.1111/j.2517-6161.1989.tb01747.x>.
 
 Thoemmes, Felix J., and Anthony D. Ong. 2016. “A Primer on Inverse
 Probability of Treatment Weighting and Marginal Structural Models.”
