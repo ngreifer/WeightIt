@@ -678,7 +678,7 @@ standard errors more accurately ([Mao et al. 2018](#ref-mao2018);
 [Hajage et al. 2018](#ref-hajage2018); [Shu et al.
 2021](#ref-shuVarianceEstimationInverse2021)), though Austin
 ([2016](#ref-austin2016)) also found the bootstrap to be adequate. Zhang
-et al. ([n.d.](#ref-zhangBridgingBalancingWeights2026)) compared SEs
+et al. ([2026](#ref-zhangBridgingBalancingWeights2026)) compared SEs
 estimated in small samples using M-estimation as described by Shu et al.
 ([2021](#ref-shuVarianceEstimationInverse2021)) and bootstrapping and
 found bootstrapping to be more accurate. The M-estimation-based SE is
@@ -1451,9 +1451,10 @@ Xu, Li, Chris Gotwalt, Yili Hong, Caleb B. King, and William Q. Meeker.
 American Statistician* 74 (4): 345–58.
 <https://doi.org/10.1080/00031305.2020.1731599>.
 
-Zhang, Baoshan, Yi Chen, Yu Du, and Tuo Wang. n.d. *Bridging Balancing
+Zhang, Baoshan, Yi Chen, Yu Du, and Tuo Wang. 2026. “Bridging Balancing
 Weights and Augmentation in Covariate-Adjusted Analyses with
-Time-to-Event Endpoints: Theory and Practical Recommendations*.
+Time-to-Event Endpoints: Theory and Practical Recommendations.”
+*arXiv:2608.06774 \[Stat\]*, ahead of print.
 <https://doi.org/10.48550/arXiv.2608.06774>.
 
 ## Code to Generate Data used in Examples
