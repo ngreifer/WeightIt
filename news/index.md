@@ -2,6 +2,8 @@
 
 ## *WeightIt* 2.2.0
 
+CRAN release: 2026-11-23
+
 - Added a new vignette,
   [`vignette("weighting-methods")`](https://ngreifer.github.io/WeightIt/articles/weighting-methods.md),
   which describes the weighting methods available in *WeightIt* and

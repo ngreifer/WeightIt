@@ -53,7 +53,7 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.2.0" id="weightit-220">
-<em>WeightIt</em> 2.2.0<a class="anchor" aria-label="anchor" href="#weightit-220"></a></h2>
+<em>WeightIt</em> 2.2.0<a class="anchor" aria-label="anchor" href="#weightit-220"></a></h2><p class="text-muted">CRAN release: 2026-11-23</p>
 <ul><li><p>Added a new vignette, <code><a href="../articles/weighting-methods.html">vignette("weighting-methods")</a></code>, which describes the weighting methods available in <em>WeightIt</em> and offers guidance on choosing among them.</p></li>
 <li><p>Added a new vignette, <code><a href="../articles/longitudinal-treatments.html">vignette("longitudinal-treatments")</a></code>, which explains the estimand and assumptions for longitudinal treatments and demonstrates estimating weights with <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>, assessing balance, estimating effects with a marginal structural model, and accounting for loss to follow-up with censoring weights.</p></li>
 <li><p>With <code>method = "glm"</code> and a continuous treatment, the new <code>family</code> argument sets the model for the conditional density of the treatment. In addition to linear regression (<code>family = "gaussian"</code>, the default), a Gaussian location-scale model in which the variance of the treatment depends on the covariates (<code>"gaussian_ls"</code>) and Poisson, negative binomial, and Gamma regression models (<code>"poisson"</code>, <code>"negbin"</code>, and <code>"Gamma"</code>) are available. M-estimation is supported for all of them. See <code><a href="../reference/method_glm.html">?method_glm</a></code> for details.</p></li>
